@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Printer, CreditCard, FileText } from "lucide-react";
+import { CreditCard, FileText } from "lucide-react";
 import "@/styles/print-coupon.css";
 import { PrintableCoupons } from "@/components/print/PrintableCoupon";
 import { Button } from "@/components/ui/button";
@@ -79,20 +79,7 @@ export default function Collection() {
     ? agents?.find(a => a.id === selectedCollector)?.name
     : null;
 
-  const [printMode, setPrintMode] = useState<"manifest" | "coupons" | null>(null);
-
-  const handlePrintManifest = () => {
-    if (!manifestContracts?.length) {
-      toast.error("No contracts to print");
-      return;
-    }
-    setPrintMode("manifest");
-    setTimeout(() => {
-      window.print();
-      setPrintMode(null);
-    }, 100);
-    toast.success("Print dialog opened");
-  };
+  const [printMode, setPrintMode] = useState<"coupons" | null>(null);
 
   const handlePrintCoupons = () => {
     if (!manifestContracts?.length) {
@@ -104,7 +91,6 @@ export default function Collection() {
       window.print();
       setPrintMode(null);
     }, 100);
-    toast.success("Coupon print dialog opened");
   };
 
   const handleSubmitPayment = async () => {
@@ -143,29 +129,13 @@ export default function Collection() {
         <PrintableCoupons contracts={manifestContracts} />
       )}
 
-      {/* Manifest Print Header - Hidden on screen, visible on print for manifest mode */}
-      <div className={`hidden ${printMode === "manifest" ? "print:block" : ""} print:mb-6`}>
-        <h1 className="text-xl font-bold text-center print:text-black">
-          DAFTAR TAGIHAN HARIAN
-        </h1>
-        <p className="text-center print:text-black">
-          {new Date().toLocaleDateString('id-ID', { 
-            weekday: 'long', 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
-          })}
-          {selectedRouteName && ` - Jalur: ${selectedRouteName}`}
-          {selectedCollectorName && ` - Penagih: ${selectedCollectorName}`}
-        </p>
-      </div>
 
       <h2 className="text-2xl font-bold print:hidden">Collection & Billing</h2>
 
       <Tabs defaultValue="manifest" className="w-full print:block">
         <TabsList className="grid w-full grid-cols-2 max-w-md print:hidden">
           <TabsTrigger value="manifest">
-            <Printer className="mr-2 h-4 w-4" />
+            <FileText className="mr-2 h-4 w-4" />
             Generate Manifest
           </TabsTrigger>
           <TabsTrigger value="payment">
@@ -219,12 +189,8 @@ export default function Collection() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="flex items-end gap-2">
-                  <Button onClick={handlePrintManifest} className="flex-1 print:hidden">
-                    <Printer className="mr-2 h-4 w-4" />
-                    Print Manifest
-                  </Button>
-                  <Button onClick={handlePrintCoupons} variant="secondary" className="flex-1 print:hidden">
+                <div className="flex items-end">
+                  <Button onClick={handlePrintCoupons} className="flex-1 print:hidden">
                     <FileText className="mr-2 h-4 w-4" />
                     Print Coupons
                   </Button>
