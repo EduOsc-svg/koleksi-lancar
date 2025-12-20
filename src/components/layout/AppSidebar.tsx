@@ -8,8 +8,11 @@ import {
   Wallet,
   BarChart3,
   History,
+  LogOut,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
+import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
 import {
   Sidebar,
   SidebarContent,
@@ -19,6 +22,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarFooter,
 } from "@/components/ui/sidebar";
 
 const mainItems = [
@@ -40,6 +44,7 @@ const operationItems = [
 
 export function AppSidebar() {
   const location = useLocation();
+  const { user, signOut } = useAuth();
   const isActive = (path: string) => location.pathname === path;
 
   return (
@@ -105,6 +110,23 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+
+      <SidebarFooter className="border-t p-4">
+        <div className="flex flex-col gap-2">
+          <p className="text-xs text-muted-foreground truncate">
+            {user?.email}
+          </p>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={signOut}
+            className="w-full"
+          >
+            <LogOut className="mr-2 h-4 w-4" />
+            Logout
+          </Button>
+        </div>
+      </SidebarFooter>
     </Sidebar>
   );
 }
