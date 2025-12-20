@@ -89,6 +89,7 @@ interface PrintableCouponsProps {
     contract_ref: string;
     current_installment_index: number;
     daily_installment_amount: number;
+    tenor_days: number;
     customers?: {
       name: string;
       address?: string | null;
@@ -97,6 +98,7 @@ interface PrintableCouponsProps {
       } | null;
       sales_agents?: {
         agent_code: string;
+        name: string;
       } | null;
     } | null;
   }>;
@@ -113,11 +115,12 @@ export function PrintableCoupons({ contracts }: PrintableCouponsProps) {
   return (
     <div className="print-coupons-container">
       {contracts.map((contract) => {
-        // Generate No. Faktur: installmentIndex/RouteCode/AgentCode
-        const routeCode = contract.customers?.routes?.code || "X";
+        // Generate No. Faktur: [Tenor][Kode Sales][Nama Sales]
+        const tenor = contract.tenor_days || 0;
         const agentCode = contract.customers?.sales_agents?.agent_code || "X";
+        const agentName = contract.customers?.sales_agents?.name || "X";
         const installmentNumber = contract.current_installment_index + 1;
-        const noFaktur = `${installmentNumber}/${routeCode}/${agentCode}`;
+        const noFaktur = `${tenor}/${agentCode}/${agentName}`;
 
         return (
           <PrintableCoupon
