@@ -22,6 +22,8 @@ import {
 import { usePayments } from "@/hooks/usePayments";
 import { useSalesAgents } from "@/hooks/useSalesAgents";
 import { formatRupiah, formatDate } from "@/lib/format";
+import { usePagination } from "@/hooks/usePagination";
+import { TablePagination } from "@/components/TablePagination";
 
 export default function Reports() {
   const { data: agents } = useSalesAgents();
@@ -37,6 +39,7 @@ export default function Reports() {
     collectorId || undefined
   );
 
+  const { currentPage, totalPages, paginatedItems, goToPage, totalItems } = usePagination(payments);
   const totalAmount = payments?.reduce((sum, p) => sum + Number(p.amount_paid), 0) ?? 0;
 
   const handleExport = () => {
@@ -139,7 +142,7 @@ export default function Reports() {
               </TableRow>
             ) : (
               <>
-                {payments?.map((payment) => (
+                {paginatedItems.map((payment) => (
                   <TableRow key={payment.id}>
                     <TableCell>{formatDate(payment.payment_date)}</TableCell>
                     <TableCell>{payment.credit_contracts?.customers?.name}</TableCell>
@@ -160,6 +163,12 @@ export default function Reports() {
             )}
           </TableBody>
         </Table>
+        <TablePagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={goToPage}
+          totalItems={totalItems}
+        />
       </div>
     </div>
   );

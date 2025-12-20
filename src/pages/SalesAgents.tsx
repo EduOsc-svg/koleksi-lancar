@@ -36,12 +36,15 @@ import {
   useDeleteSalesAgent,
   SalesAgent,
 } from "@/hooks/useSalesAgents";
+import { usePagination } from "@/hooks/usePagination";
+import { TablePagination } from "@/components/TablePagination";
 
 export default function SalesAgents() {
   const { data: agents, isLoading } = useSalesAgents();
   const createAgent = useCreateSalesAgent();
   const updateAgent = useUpdateSalesAgent();
   const deleteAgent = useDeleteSalesAgent();
+  const { currentPage, totalPages, paginatedItems, goToPage, totalItems } = usePagination(agents);
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -121,7 +124,7 @@ export default function SalesAgents() {
                 </TableCell>
               </TableRow>
             ) : (
-              agents?.map((agent) => (
+              paginatedItems.map((agent) => (
                 <TableRow key={agent.id}>
                   <TableCell className="font-medium">{agent.agent_code}</TableCell>
                   <TableCell>{agent.name}</TableCell>
@@ -146,6 +149,12 @@ export default function SalesAgents() {
             )}
           </TableBody>
         </Table>
+        <TablePagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={goToPage}
+          totalItems={totalItems}
+        />
       </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>

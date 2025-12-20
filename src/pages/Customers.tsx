@@ -47,6 +47,8 @@ import {
 } from "@/hooks/useCustomers";
 import { useSalesAgents } from "@/hooks/useSalesAgents";
 import { useRoutes } from "@/hooks/useRoutes";
+import { usePagination } from "@/hooks/usePagination";
+import { TablePagination } from "@/components/TablePagination";
 
 export default function Customers() {
   const { data: customers, isLoading } = useCustomers();
@@ -55,6 +57,7 @@ export default function Customers() {
   const createCustomer = useCreateCustomer();
   const updateCustomer = useUpdateCustomer();
   const deleteCustomer = useDeleteCustomer();
+  const { currentPage, totalPages, paginatedItems, goToPage, totalItems } = usePagination(customers);
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -147,7 +150,7 @@ export default function Customers() {
                 </TableCell>
               </TableRow>
             ) : (
-              customers?.map((customer) => (
+              paginatedItems.map((customer) => (
                 <TableRow key={customer.id}>
                   <TableCell className="font-medium">{customer.name}</TableCell>
                   <TableCell>
@@ -177,6 +180,12 @@ export default function Customers() {
             )}
           </TableBody>
         </Table>
+        <TablePagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={goToPage}
+          totalItems={totalItems}
+        />
       </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
