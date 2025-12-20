@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Eye } from "lucide-react";
+import { Plus, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,6 +19,16 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -28,7 +38,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
-import { useContracts, useCreateContract, useInvoiceDetails } from "@/hooks/useContracts";
+import { useContracts, useCreateContract, useUpdateContract, useDeleteContract, useInvoiceDetails, ContractWithCustomer } from "@/hooks/useContracts";
 import { useCustomers } from "@/hooks/useCustomers";
 import { formatRupiah } from "@/lib/format";
 
@@ -37,8 +47,12 @@ export default function Contracts() {
   const { data: invoiceDetails } = useInvoiceDetails();
   const { data: customers } = useCustomers();
   const createContract = useCreateContract();
+  const updateContract = useUpdateContract();
+  const deleteContract = useDeleteContract();
 
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedContract, setSelectedContract] = useState<ContractWithCustomer | null>(null);
   const [formData, setFormData] = useState({
     contract_ref: "",
     customer_id: "",
@@ -50,6 +64,7 @@ export default function Contracts() {
   });
 
   const handleOpenCreate = () => {
+    setSelectedContract(null);
     setFormData({
       contract_ref: "",
       customer_id: "",
@@ -58,6 +73,20 @@ export default function Contracts() {
       tenor_days: "100",
       daily_installment_amount: "",
       status: "active",
+    });
+    setDialogOpen(true);
+  };
+
+  const handleOpenEdit = (contract: ContractWithCustomer) => {
+    setSelectedContract(contract);
+    setFormData({
+      contract_ref: contract.contract_ref,
+      customer_id: contract.customer_id,
+      product_type: contract.product_type || "",
+      total_loan_amount: contract.total_loan_amount.toString(),
+      tenor_days: contract.tenor_days.toString(),
+      daily_installment_amount: contract.daily_installment_amount.toString(),
+      status: contract.status,
     });
     setDialogOpen(true);
   };
@@ -74,19 +103,45 @@ export default function Contracts() {
       return;
     }
     try {
-      await createContract.mutateAsync({
-        contract_ref: formData.contract_ref,
-        customer_id: formData.customer_id,
-        product_type: formData.product_type || null,
-        total_loan_amount: parseFloat(formData.total_loan_amount) || 0,
-        tenor_days: parseInt(formData.tenor_days) || 100,
-        daily_installment_amount: parseFloat(formData.daily_installment_amount) || calculateInstallment(),
-        status: formData.status,
-      });
-      toast.success("Contract created successfully");
+      if (selectedContract) {
+        await updateContract.mutateAsync({
+          id: selectedContract.id,
+          contract_ref: formData.contract_ref,
+          customer_id: formData.customer_id,
+          product_type: formData.product_type || null,
+          total_loan_amount: parseFloat(formData.total_loan_amount) || 0,
+          tenor_days: parseInt(formData.tenor_days) || 100,
+          daily_installment_amount: parseFloat(formData.daily_installment_amount) || calculateInstallment(),
+          status: formData.status,
+        });
+        toast.success("Contract updated successfully");
+      } else {
+        await createContract.mutateAsync({
+          contract_ref: formData.contract_ref,
+          customer_id: formData.customer_id,
+          product_type: formData.product_type || null,
+          total_loan_amount: parseFloat(formData.total_loan_amount) || 0,
+          tenor_days: parseInt(formData.tenor_days) || 100,
+          daily_installment_amount: parseFloat(formData.daily_installment_amount) || calculateInstallment(),
+          status: formData.status,
+        });
+        toast.success("Contract created successfully");
+      }
       setDialogOpen(false);
     } catch (error) {
-      toast.error("Failed to create contract");
+      toast.error("Failed to save contract");
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!selectedContract) return;
+    try {
+      await deleteContract.mutateAsync(selectedContract.id);
+      toast.success("Contract deleted successfully");
+      setDeleteDialogOpen(false);
+      setSelectedContract(null);
+    } catch (error) {
+      toast.error("Failed to delete contract. It may have payment records.");
     }
   };
 
@@ -114,16 +169,17 @@ export default function Contracts() {
               <TableHead>Loan Amount</TableHead>
               <TableHead>Progress</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center">Loading...</TableCell>
+                <TableCell colSpan={7} className="text-center">Loading...</TableCell>
               </TableRow>
             ) : contracts?.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-muted-foreground">
+                <TableCell colSpan={7} className="text-center text-muted-foreground">
                   No contracts found
                 </TableCell>
               </TableRow>
@@ -188,6 +244,21 @@ export default function Contracts() {
                         </div>
                       </div>
                     </TableCell>
+                    <TableCell className="text-right">
+                      <Button variant="ghost" size="icon" onClick={() => handleOpenEdit(contract)}>
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          setSelectedContract(contract);
+                          setDeleteDialogOpen(true);
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 );
               })
@@ -199,7 +270,7 @@ export default function Contracts() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>New Credit Contract</DialogTitle>
+            <DialogTitle>{selectedContract ? "Edit Contract" : "New Credit Contract"}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
@@ -231,14 +302,32 @@ export default function Contracts() {
                 </Select>
               </div>
             </div>
-            <div>
-              <Label htmlFor="product_type">Product Type</Label>
-              <Input
-                id="product_type"
-                value={formData.product_type}
-                onChange={(e) => setFormData({ ...formData, product_type: e.target.value })}
-                placeholder="e.g., Electronics, Furniture"
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="product_type">Product Type</Label>
+                <Input
+                  id="product_type"
+                  value={formData.product_type}
+                  onChange={(e) => setFormData({ ...formData, product_type: e.target.value })}
+                  placeholder="e.g., Electronics"
+                />
+              </div>
+              <div>
+                <Label htmlFor="status">Status</Label>
+                <Select
+                  value={formData.status}
+                  onValueChange={(v) => setFormData({ ...formData, status: v })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                    <SelectItem value="cancelled">Cancelled</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -278,12 +367,27 @@ export default function Contracts() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleSubmit} disabled={createContract.isPending}>
-              Create Contract
+            <Button onClick={handleSubmit} disabled={createContract.isPending || updateContract.isPending}>
+              {selectedContract ? "Update" : "Create"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Contract?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. Make sure this contract has no payment records.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

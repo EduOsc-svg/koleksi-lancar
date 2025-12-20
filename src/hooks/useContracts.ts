@@ -83,6 +83,23 @@ export const useUpdateContract = () => {
   });
 };
 
+export const useDeleteContract = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('credit_contracts')
+        .delete()
+        .eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['credit_contracts'] });
+      queryClient.invalidateQueries({ queryKey: ['invoice_details'] });
+    },
+  });
+};
+
 export const useInvoiceDetails = () => {
   return useQuery({
     queryKey: ['invoice_details'],
