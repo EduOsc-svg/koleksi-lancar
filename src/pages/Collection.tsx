@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Printer, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,6 +33,7 @@ export default function Collection() {
   const { data: agents } = useSalesAgents();
   const { data: contracts } = useContracts("active");
   const createPayment = useCreatePayment();
+  const printRef = useRef<HTMLDivElement>(null);
 
   // Manifest state
   const [selectedRoute, setSelectedRoute] = useState<string>("");
@@ -68,73 +69,21 @@ export default function Collection() {
     return true;
   });
 
+  // Get filter labels for print header
+  const selectedRouteName = selectedRoute 
+    ? routes?.find(r => r.id === selectedRoute)?.name || routes?.find(r => r.id === selectedRoute)?.code
+    : null;
+  const selectedCollectorName = selectedCollector
+    ? agents?.find(a => a.id === selectedCollector)?.name
+    : null;
+
   const handlePrintManifest = () => {
     if (!manifestContracts?.length) {
       toast.error("No contracts to print");
       return;
     }
-    
-    const printContent = manifestContracts.map((c) => ({
-      customer: c.customers?.name,
-      route: c.customers?.routes?.code,
-      contractRef: c.contract_ref,
-      nextCoupon: c.current_installment_index + 1,
-      amount: c.daily_installment_amount,
-    }));
-
-    const printWindow = window.open("", "_blank");
-    if (printWindow) {
-      printWindow.document.write(`
-        <html>
-          <head>
-            <title>Collection Manifest</title>
-            <style>
-              body { font-family: Arial, sans-serif; padding: 20px; }
-              table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-              th, td { border: 1px solid #000; padding: 8px; text-align: left; }
-              th { background-color: #f0f0f0; }
-              h1 { text-align: center; }
-              .date { text-align: right; margin-bottom: 20px; }
-            </style>
-          </head>
-          <body>
-            <h1>Collection Manifest</h1>
-            <p class="date">Date: ${new Date().toLocaleDateString('id-ID')}</p>
-            <table>
-              <thead>
-                <tr>
-                  <th>No</th>
-                  <th>Customer</th>
-                  <th>Route</th>
-                  <th>Contract</th>
-                  <th>Coupon #</th>
-                  <th>Amount</th>
-                  <th>Collected</th>
-                  <th>Notes</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${printContent.map((item, i) => `
-                  <tr>
-                    <td>${i + 1}</td>
-                    <td>${item.customer}</td>
-                    <td>${item.route}</td>
-                    <td>${item.contractRef}</td>
-                    <td>${item.nextCoupon}</td>
-                    <td>Rp ${item.amount?.toLocaleString('id-ID')}</td>
-                    <td></td>
-                    <td></td>
-                  </tr>
-                `).join('')}
-              </tbody>
-            </table>
-          </body>
-        </html>
-      `);
-      printWindow.document.close();
-      printWindow.print();
-    }
-    toast.success("Manifest generated");
+    window.print();
+    toast.success("Print dialog opened");
   };
 
   const handleSubmitPayment = async () => {
@@ -167,11 +116,28 @@ export default function Collection() {
   };
 
   return (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-bold">Collection & Billing</h2>
+    <div className="space-y-6 print:space-y-0" ref={printRef}>
+      {/* Print Header - Hidden on screen, visible on print */}
+      <div className="hidden print:block print:mb-6">
+        <h1 className="text-xl font-bold text-center print:text-black">
+          DAFTAR TAGIHAN HARIAN
+        </h1>
+        <p className="text-center print:text-black">
+          {new Date().toLocaleDateString('id-ID', { 
+            weekday: 'long', 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+          })}
+          {selectedRouteName && ` - Jalur: ${selectedRouteName}`}
+          {selectedCollectorName && ` - Penagih: ${selectedCollectorName}`}
+        </p>
+      </div>
 
-      <Tabs defaultValue="manifest" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 max-w-md">
+      <h2 className="text-2xl font-bold print:hidden">Collection & Billing</h2>
+
+      <Tabs defaultValue="manifest" className="w-full print:block">
+        <TabsList className="grid w-full grid-cols-2 max-w-md print:hidden">
           <TabsTrigger value="manifest">
             <Printer className="mr-2 h-4 w-4" />
             Generate Manifest
@@ -182,8 +148,8 @@ export default function Collection() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="manifest" className="space-y-4">
-          <Card>
+        <TabsContent value="manifest" className="space-y-4 print:space-y-0 print:block">
+          <Card className="print:hidden">
             <CardHeader>
               <CardTitle>Filter Manifest</CardTitle>
             </CardHeader>
@@ -228,7 +194,7 @@ export default function Collection() {
                   </Select>
                 </div>
                 <div className="flex items-end">
-                  <Button onClick={handlePrintManifest} className="w-full">
+                  <Button onClick={handlePrintManifest} className="w-full print:hidden">
                     <Printer className="mr-2 h-4 w-4" />
                     Print Manifest
                   </Button>
@@ -237,38 +203,43 @@ export default function Collection() {
             </CardContent>
           </Card>
 
-          <div className="border rounded-lg">
-            <Table>
+          {/* Printable Table */}
+          <div className="border rounded-lg print:border-0 print:rounded-none print:w-full print:m-0">
+            <Table className="print:w-full">
               <TableHeader>
-                <TableRow>
-                  <TableHead>#</TableHead>
-                  <TableHead>Customer</TableHead>
-                  <TableHead>Route</TableHead>
-                  <TableHead>Contract</TableHead>
-                  <TableHead>Next Coupon</TableHead>
-                  <TableHead>Amount</TableHead>
+                <TableRow className="print:break-inside-avoid">
+                  <TableHead className="print:text-black print:border print:border-black print:bg-gray-100">#</TableHead>
+                  <TableHead className="print:text-black print:border print:border-black print:bg-gray-100">Customer</TableHead>
+                  <TableHead className="print:text-black print:border print:border-black print:bg-gray-100">Route</TableHead>
+                  <TableHead className="print:text-black print:border print:border-black print:bg-gray-100">Contract</TableHead>
+                  <TableHead className="print:text-black print:border print:border-black print:bg-gray-100">Coupon #</TableHead>
+                  <TableHead className="print:text-black print:border print:border-black print:bg-gray-100">Amount</TableHead>
+                  <TableHead className="hidden print:table-cell print:text-black print:border print:border-black print:bg-gray-100">Collected</TableHead>
+                  <TableHead className="hidden print:table-cell print:text-black print:border print:border-black print:bg-gray-100">Notes</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {manifestContracts?.length === 0 ? (
-                  <TableRow>
+                  <TableRow className="print:hidden">
                     <TableCell colSpan={6} className="text-center text-muted-foreground">
                       No contracts found
                     </TableCell>
                   </TableRow>
                 ) : (
                   manifestContracts?.map((contract, i) => (
-                    <TableRow key={contract.id}>
-                      <TableCell>{i + 1}</TableCell>
-                      <TableCell className="font-medium">{contract.customers?.name}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{contract.customers?.routes?.code}</Badge>
+                    <TableRow key={contract.id} className="print:break-inside-avoid">
+                      <TableCell className="print:text-black print:border print:border-black">{i + 1}</TableCell>
+                      <TableCell className="font-medium print:text-black print:border print:border-black">{contract.customers?.name}</TableCell>
+                      <TableCell className="print:text-black print:border print:border-black">
+                        <Badge variant="outline" className="print:border-black print:text-black">{contract.customers?.routes?.code}</Badge>
                       </TableCell>
-                      <TableCell>{contract.contract_ref}</TableCell>
-                      <TableCell>
-                        <Badge>{contract.current_installment_index + 1}</Badge>
+                      <TableCell className="print:text-black print:border print:border-black">{contract.contract_ref}</TableCell>
+                      <TableCell className="print:text-black print:border print:border-black">
+                        <Badge className="print:bg-transparent print:text-black print:border print:border-black">{contract.current_installment_index + 1}</Badge>
                       </TableCell>
-                      <TableCell>{formatRupiah(contract.daily_installment_amount)}</TableCell>
+                      <TableCell className="print:text-black print:border print:border-black">{formatRupiah(contract.daily_installment_amount)}</TableCell>
+                      <TableCell className="hidden print:table-cell print:text-black print:border print:border-black print:min-w-[80px]"></TableCell>
+                      <TableCell className="hidden print:table-cell print:text-black print:border print:border-black print:min-w-[100px]"></TableCell>
                     </TableRow>
                   ))
                 )}
@@ -277,7 +248,7 @@ export default function Collection() {
           </div>
         </TabsContent>
 
-        <TabsContent value="payment" className="space-y-4">
+        <TabsContent value="payment" className="space-y-4 print:hidden">
           <Card>
             <CardHeader>
               <CardTitle>Record Payment</CardTitle>
