@@ -93,13 +93,31 @@ export default function Collection() {
     }, 100);
   };
 
+  // Format number as currency
+  const formatCurrencyInput = (value: string) => {
+    const numericValue = value.replace(/\D/g, "");
+    if (!numericValue) return "";
+    return new Intl.NumberFormat("id-ID").format(parseInt(numericValue));
+  };
+
+  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatCurrencyInput(e.target.value);
+    setPaymentAmount(formatted);
+  };
+
+  const getNumericAmount = () => {
+    return parseFloat(paymentAmount.replace(/\./g, "")) || 0;
+  };
+
   const handleSubmitPayment = async () => {
     if (!selectedContract) {
       toast.error("Please select a contract");
       return;
     }
     
-    const amount = parseFloat(paymentAmount) || selectedContractData?.daily_installment_amount || 0;
+    const amount = getNumericAmount() || selectedContractData?.daily_installment_amount || 0;
+    const defaultNote = `Pembayaran ke-${nextCoupon}`;
+    const finalNotes = paymentNotes.trim() || defaultNote;
     
     try {
       await createPayment.mutateAsync({
@@ -108,7 +126,7 @@ export default function Collection() {
         installment_index: nextCoupon,
         amount_paid: amount,
         collector_id: paymentCollector || null,
-        notes: paymentNotes || null,
+        notes: finalNotes,
       });
       
       toast.success(`Payment recorded for Coupon #${nextCoupon}`);
@@ -299,10 +317,11 @@ export default function Collection() {
                 <div>
                   <Label>Amount (Rp)</Label>
                   <Input
-                    type="number"
+                    type="text"
+                    inputMode="numeric"
                     value={paymentAmount}
-                    onChange={(e) => setPaymentAmount(e.target.value)}
-                    placeholder={selectedContractData?.daily_installment_amount?.toString() || "0"}
+                    onChange={handleAmountChange}
+                    placeholder={selectedContractData ? formatRupiah(selectedContractData.daily_installment_amount).replace("Rp ", "") : "0"}
                   />
                   {selectedContractData && (
                     <p className="text-xs text-muted-foreground mt-1">
@@ -332,7 +351,7 @@ export default function Collection() {
                 <Input
                   value={paymentNotes}
                   onChange={(e) => setPaymentNotes(e.target.value)}
-                  placeholder="Optional notes"
+                  placeholder={`Default: Pembayaran ke-${nextCoupon}`}
                 />
               </div>
 

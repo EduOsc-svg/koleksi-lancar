@@ -67,26 +67,31 @@ export default function CustomerHistory() {
             />
           </div>
 
-          {searchTerm && filteredCustomers && filteredCustomers.length > 0 && (
-            <div className="border rounded-lg max-h-48 overflow-y-auto">
-              {filteredCustomers.map((customer) => (
-                <div
-                  key={customer.id}
-                  className="p-3 hover:bg-muted cursor-pointer border-b last:border-b-0"
-                  onClick={() => {
-                    setSelectedCustomerId(customer.id);
-                    setSelectedContractId("");
-                    setSearchTerm("");
-                  }}
-                >
-                  <div className="font-medium">{customer.name}</div>
-                  <div className="text-xs text-muted-foreground">
-                    Route: {customer.routes?.code} | Agent: {customer.sales_agents?.name || "-"}
-                  </div>
+          {/* Show filtered list or all customers ascending */}
+          <div className="border rounded-lg max-h-64 overflow-y-auto">
+            {(searchTerm ? filteredCustomers : customers)?.map((customer) => (
+              <div
+                key={customer.id}
+                className={`p-3 hover:bg-muted cursor-pointer border-b last:border-b-0 ${
+                  selectedCustomerId === customer.id ? "bg-muted" : ""
+                }`}
+                onClick={() => {
+                  setSelectedCustomerId(customer.id);
+                  setSelectedContractId("");
+                }}
+              >
+                <div className="font-medium">{customer.name}</div>
+                <div className="text-xs text-muted-foreground">
+                  Route: {customer.routes?.code} | Agent: {customer.sales_agents?.name || "-"}
                 </div>
-              ))}
-            </div>
-          )}
+              </div>
+            ))}
+            {(!searchTerm ? customers : filteredCustomers)?.length === 0 && (
+              <div className="p-3 text-center text-muted-foreground">
+                No customers found
+              </div>
+            )}
+          </div>
 
           {selectedCustomerId && (
             <div>
@@ -211,9 +216,9 @@ export default function CustomerHistory() {
         </>
       )}
 
-      {!selectedCustomerId && (
-        <div className="text-center py-12 text-muted-foreground">
-          Search for a customer to view their loan history
+      {!selectedCustomerId && customers && customers.length > 0 && (
+        <div className="text-center py-6 text-muted-foreground">
+          Select a customer from the list above to view their loan history
         </div>
       )}
     </div>

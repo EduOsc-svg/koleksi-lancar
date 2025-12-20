@@ -130,6 +130,35 @@ export default function Contracts() {
             ) : (
               contracts?.map((contract) => {
                 const progress = (contract.current_installment_index / contract.tenor_days) * 100;
+                const paidAmount = contract.current_installment_index * contract.daily_installment_amount;
+                const remainingAmount = (contract.tenor_days - contract.current_installment_index) * contract.daily_installment_amount;
+                
+                // Calculate days_per_due performance score
+                const createdAt = new Date(contract.created_at);
+                const today = new Date();
+                const daysElapsed = Math.max(1, Math.floor((today.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24)));
+                const daysPerDue = contract.current_installment_index > 0 
+                  ? (daysElapsed / contract.current_installment_index).toFixed(1) 
+                  : "0";
+                const daysPerDueNum = parseFloat(daysPerDue);
+                
+                // Performance status: higher days_per_due = worse
+                let statusVariant: "default" | "secondary" | "destructive" | "outline" = "default";
+                let statusLabel = "Lancar";
+                if (contract.status !== "active") {
+                  statusVariant = "secondary";
+                  statusLabel = "Completed";
+                } else if (daysPerDueNum <= 1.2) {
+                  statusVariant = "default";
+                  statusLabel = "Lancar";
+                } else if (daysPerDueNum <= 2.0) {
+                  statusVariant = "outline";
+                  statusLabel = "Kurang Lancar";
+                } else {
+                  statusVariant = "destructive";
+                  statusLabel = "Macet";
+                }
+                
                 return (
                   <TableRow key={contract.id}>
                     <TableCell className="font-medium">{contract.contract_ref}</TableCell>
@@ -137,17 +166,27 @@ export default function Contracts() {
                     <TableCell>{contract.customers?.name}</TableCell>
                     <TableCell>{formatRupiah(contract.total_loan_amount)}</TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Progress value={progress} className="w-20 h-2" />
-                        <span className="text-xs text-muted-foreground">
-                          {contract.current_installment_index}/{contract.tenor_days}
-                        </span>
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <Progress value={progress} className="w-20 h-2" />
+                          <span className="text-xs text-muted-foreground">
+                            {contract.current_installment_index}/{contract.tenor_days}
+                          </span>
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          Terbayar: {formatRupiah(paidAmount)} | Sisa: {formatRupiah(remainingAmount)}
+                        </div>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={contract.status === "active" ? "default" : "secondary"}>
-                        {contract.status === "active" ? "Lancar" : "Completed"}
-                      </Badge>
+                      <div className="space-y-1">
+                        <Badge variant={statusVariant}>
+                          {statusLabel}
+                        </Badge>
+                        <div className="text-xs text-muted-foreground">
+                          {daysPerDue} hari/cicilan
+                        </div>
+                      </div>
                     </TableCell>
                   </TableRow>
                 );
