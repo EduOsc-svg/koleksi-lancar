@@ -14,10 +14,272 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      credit_contracts: {
+        Row: {
+          contract_ref: string
+          created_at: string
+          current_installment_index: number
+          customer_id: string
+          daily_installment_amount: number
+          id: string
+          product_type: string | null
+          status: string
+          tenor_days: number
+          total_loan_amount: number
+        }
+        Insert: {
+          contract_ref: string
+          created_at?: string
+          current_installment_index?: number
+          customer_id: string
+          daily_installment_amount?: number
+          id?: string
+          product_type?: string | null
+          status?: string
+          tenor_days?: number
+          total_loan_amount?: number
+        }
+        Update: {
+          contract_ref?: string
+          created_at?: string
+          current_installment_index?: number
+          customer_id?: string
+          daily_installment_amount?: number
+          id?: string
+          product_type?: string | null
+          status?: string
+          tenor_days?: number
+          total_loan_amount?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credit_contracts_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      customers: {
+        Row: {
+          address: string | null
+          assigned_sales_id: string | null
+          created_at: string
+          id: string
+          name: string
+          phone: string | null
+          route_id: string
+        }
+        Insert: {
+          address?: string | null
+          assigned_sales_id?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          phone?: string | null
+          route_id: string
+        }
+        Update: {
+          address?: string | null
+          assigned_sales_id?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          phone?: string | null
+          route_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customers_assigned_sales_id_fkey"
+            columns: ["assigned_sales_id"]
+            isOneToOne: false
+            referencedRelation: "invoice_details"
+            referencedColumns: ["sales_agent_id"]
+          },
+          {
+            foreignKeyName: "customers_assigned_sales_id_fkey"
+            columns: ["assigned_sales_id"]
+            isOneToOne: false
+            referencedRelation: "sales_agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customers_route_id_fkey"
+            columns: ["route_id"]
+            isOneToOne: false
+            referencedRelation: "invoice_details"
+            referencedColumns: ["route_id"]
+          },
+          {
+            foreignKeyName: "customers_route_id_fkey"
+            columns: ["route_id"]
+            isOneToOne: false
+            referencedRelation: "routes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payment_logs: {
+        Row: {
+          amount_paid: number
+          collector_id: string | null
+          contract_id: string
+          created_at: string
+          id: string
+          installment_index: number
+          notes: string | null
+          payment_date: string
+        }
+        Insert: {
+          amount_paid: number
+          collector_id?: string | null
+          contract_id: string
+          created_at?: string
+          id?: string
+          installment_index: number
+          notes?: string | null
+          payment_date?: string
+        }
+        Update: {
+          amount_paid?: number
+          collector_id?: string | null
+          contract_id?: string
+          created_at?: string
+          id?: string
+          installment_index?: number
+          notes?: string | null
+          payment_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_logs_collector_id_fkey"
+            columns: ["collector_id"]
+            isOneToOne: false
+            referencedRelation: "invoice_details"
+            referencedColumns: ["sales_agent_id"]
+          },
+          {
+            foreignKeyName: "payment_logs_collector_id_fkey"
+            columns: ["collector_id"]
+            isOneToOne: false
+            referencedRelation: "sales_agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_logs_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "credit_contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_logs_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "invoice_details"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      routes: {
+        Row: {
+          code: string
+          created_at: string
+          default_collector_id: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          default_collector_id?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          default_collector_id?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "routes_default_collector_id_fkey"
+            columns: ["default_collector_id"]
+            isOneToOne: false
+            referencedRelation: "invoice_details"
+            referencedColumns: ["sales_agent_id"]
+          },
+          {
+            foreignKeyName: "routes_default_collector_id_fkey"
+            columns: ["default_collector_id"]
+            isOneToOne: false
+            referencedRelation: "sales_agents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sales_agents: {
+        Row: {
+          agent_code: string
+          created_at: string
+          id: string
+          name: string
+          phone: string | null
+        }
+        Insert: {
+          agent_code: string
+          created_at?: string
+          id?: string
+          name: string
+          phone?: string | null
+        }
+        Update: {
+          agent_code?: string
+          created_at?: string
+          id?: string
+          name?: string
+          phone?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
-      [_ in never]: never
+      invoice_details: {
+        Row: {
+          agent_code: string | null
+          contract_ref: string | null
+          created_at: string | null
+          current_installment_index: number | null
+          customer_address: string | null
+          customer_id: string | null
+          customer_name: string | null
+          customer_phone: string | null
+          daily_installment_amount: number | null
+          id: string | null
+          no_faktur: string | null
+          product_type: string | null
+          route_code: string | null
+          route_id: string | null
+          route_name: string | null
+          sales_agent_id: string | null
+          sales_agent_name: string | null
+          status: string | null
+          tenor_days: number | null
+          total_loan_amount: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credit_contracts_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       get_next_coupon: { Args: { contract_id: string }; Returns: number }
