@@ -44,6 +44,8 @@ import {
   RouteWithCollector,
 } from "@/hooks/useRoutes";
 import { useSalesAgents } from "@/hooks/useSalesAgents";
+import { usePagination } from "@/hooks/usePagination";
+import { TablePagination } from "@/components/TablePagination";
 
 export default function Routes() {
   const { data: routes, isLoading } = useRoutes();
@@ -51,6 +53,7 @@ export default function Routes() {
   const createRoute = useCreateRoute();
   const updateRoute = useUpdateRoute();
   const deleteRoute = useDeleteRoute();
+  const { currentPage, totalPages, paginatedItems, goToPage, totalItems } = usePagination(routes);
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -134,7 +137,7 @@ export default function Routes() {
                 </TableCell>
               </TableRow>
             ) : (
-              routes?.map((route) => (
+              paginatedItems.map((route) => (
                 <TableRow key={route.id}>
                   <TableCell className="font-medium">{route.code}</TableCell>
                   <TableCell>{route.name}</TableCell>
@@ -159,6 +162,12 @@ export default function Routes() {
             )}
           </TableBody>
         </Table>
+        <TablePagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={goToPage}
+          totalItems={totalItems}
+        />
       </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>

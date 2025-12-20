@@ -41,6 +41,8 @@ import { toast } from "sonner";
 import { useContracts, useCreateContract, useUpdateContract, useDeleteContract, useInvoiceDetails, ContractWithCustomer } from "@/hooks/useContracts";
 import { useCustomers } from "@/hooks/useCustomers";
 import { formatRupiah } from "@/lib/format";
+import { usePagination } from "@/hooks/usePagination";
+import { TablePagination } from "@/components/TablePagination";
 
 export default function Contracts() {
   const { data: contracts, isLoading } = useContracts();
@@ -49,6 +51,7 @@ export default function Contracts() {
   const createContract = useCreateContract();
   const updateContract = useUpdateContract();
   const deleteContract = useDeleteContract();
+  const { currentPage, totalPages, paginatedItems, goToPage, totalItems } = usePagination(contracts);
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -184,7 +187,7 @@ export default function Contracts() {
                 </TableCell>
               </TableRow>
             ) : (
-              contracts?.map((contract) => {
+              paginatedItems.map((contract) => {
                 const progress = (contract.current_installment_index / contract.tenor_days) * 100;
                 const paidAmount = contract.current_installment_index * contract.daily_installment_amount;
                 const remainingAmount = (contract.tenor_days - contract.current_installment_index) * contract.daily_installment_amount;
@@ -265,6 +268,12 @@ export default function Contracts() {
             )}
           </TableBody>
         </Table>
+        <TablePagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={goToPage}
+          totalItems={totalItems}
+        />
       </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
