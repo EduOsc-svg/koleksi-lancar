@@ -1,0 +1,161 @@
+/* Coupon Print Styles - Only visible when printing */
+
+/* Hide coupon container on screen */
+.print-coupons-container {
+  display: none;
+}
+
+@media print {
+  /* Show coupons when printing */
+  .print-coupons-container {
+    display: block;
+  }
+
+  /* Coupon Card Styles */
+  .coupon-card {
+    width: 450px;
+    max-width: 100%;
+    background-color: #fcfcfc;
+    border: 1px solid #d0d0d0;
+    padding: 20px 25px;
+    position: relative;
+    color: #333;
+    page-break-inside: avoid;
+    break-inside: avoid;
+    margin: 0 auto 20px auto;
+  }
+
+  /* Contract Reference - Top Right */
+  .contract-ref {
+    position: absolute;
+    top: 20px;
+    right: 25px;
+    font-weight: bold;
+    font-size: 16px;
+    font-family: "Courier New", Courier, monospace;
+    color: #000;
+  }
+
+  /* Header Branding */
+  .header-branding {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 5px;
+  }
+
+  .house-icon {
+    width: 24px;
+    height: 24px;
+    margin-right: 10px;
+    fill: #c62828;
+  }
+
+  .company-name {
+    font-size: 18px;
+    font-weight: 700;
+    color: #c62828;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* Address */
+  .address {
+    text-align: center;
+    font-size: 13px;
+    line-height: 1.4;
+    margin-bottom: 15px;
+    color: #555;
+  }
+
+  /* Voucher Title */
+  .voucher-title {
+    text-align: center;
+    font-weight: bold;
+    text-decoration: underline;
+    font-size: 15px;
+    margin: 20px 0;
+  }
+
+  /* Data Container */
+  .data-container {
+    margin-bottom: 20px;
+  }
+
+  .data-row {
+    display: flex;
+    font-size: 14px;
+    margin-bottom: 8px;
+    align-items: flex-start;
+  }
+
+  .data-row .label {
+    flex: 0 0 110px;
+    font-weight: 600;
+  }
+
+  .data-row .colon {
+    flex: 0 0 20px;
+    text-align: center;
+    font-weight: 600;
+  }
+
+  .data-row .value {
+    flex: 1;
+    font-weight: 500;
+  }
+
+  /* Amount Section */
+  .amount-section {
+    text-align: right;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed #ccc;
+  }
+
+  .amount-label {
+    font-size: 14px;
+    font-weight: bold;
+    margin-bottom: 5px;
+    text-decoration: underline;
+  }
+
+  .amount-value-container {
+    display: flex;
+    justify-content: flex-end;
+    align-items: baseline;
+    color: #c62828;
+    font-weight: bold;
+  }
+
+  .currency {
+    font-size: 14px;
+    margin-right: 5px;
+  }
+
+  .amount-number {
+    font-size: 22px;
+  }
+
+  /* Footer */
+  .coupon-card .footer {
+    text-align: center;
+    margin-top: 20px;
+    padding-top: 10px;
+    border-top: 2px solid #c62828;
+    font-size: 13px;
+    font-weight: bold;
+    color: #c62828;
+  }
+
+  /* Print layout: 2 coupons per page (A4) */
+  .print-coupons-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .coupon-card:nth-child(2n) {
+    page-break-after: always;
+  }
+}

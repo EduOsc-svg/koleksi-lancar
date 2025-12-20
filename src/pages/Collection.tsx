@@ -1,5 +1,7 @@
 import { useState, useRef } from "react";
-import { Printer, CreditCard } from "lucide-react";
+import { Printer, CreditCard, FileText } from "lucide-react";
+import "@/styles/print-coupon.css";
+import { PrintableCoupons } from "@/components/print/PrintableCoupon";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -77,13 +79,32 @@ export default function Collection() {
     ? agents?.find(a => a.id === selectedCollector)?.name
     : null;
 
+  const [printMode, setPrintMode] = useState<"manifest" | "coupons" | null>(null);
+
   const handlePrintManifest = () => {
     if (!manifestContracts?.length) {
       toast.error("No contracts to print");
       return;
     }
-    window.print();
+    setPrintMode("manifest");
+    setTimeout(() => {
+      window.print();
+      setPrintMode(null);
+    }, 100);
     toast.success("Print dialog opened");
+  };
+
+  const handlePrintCoupons = () => {
+    if (!manifestContracts?.length) {
+      toast.error("No contracts to print");
+      return;
+    }
+    setPrintMode("coupons");
+    setTimeout(() => {
+      window.print();
+      setPrintMode(null);
+    }, 100);
+    toast.success("Coupon print dialog opened");
   };
 
   const handleSubmitPayment = async () => {
@@ -117,8 +138,13 @@ export default function Collection() {
 
   return (
     <div className="space-y-6 print:space-y-0" ref={printRef}>
-      {/* Print Header - Hidden on screen, visible on print */}
-      <div className="hidden print:block print:mb-6">
+      {/* Coupon Print Mode - Hidden on screen, visible only when printing coupons */}
+      {printMode === "coupons" && manifestContracts && (
+        <PrintableCoupons contracts={manifestContracts} />
+      )}
+
+      {/* Manifest Print Header - Hidden on screen, visible on print for manifest mode */}
+      <div className={`hidden ${printMode === "manifest" ? "print:block" : ""} print:mb-6`}>
         <h1 className="text-xl font-bold text-center print:text-black">
           DAFTAR TAGIHAN HARIAN
         </h1>
@@ -193,18 +219,22 @@ export default function Collection() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="flex items-end">
-                  <Button onClick={handlePrintManifest} className="w-full print:hidden">
+                <div className="flex items-end gap-2">
+                  <Button onClick={handlePrintManifest} className="flex-1 print:hidden">
                     <Printer className="mr-2 h-4 w-4" />
                     Print Manifest
+                  </Button>
+                  <Button onClick={handlePrintCoupons} variant="secondary" className="flex-1 print:hidden">
+                    <FileText className="mr-2 h-4 w-4" />
+                    Print Coupons
                   </Button>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* Printable Table */}
-          <div className="border rounded-lg print:border-0 print:rounded-none print:w-full print:m-0">
+          {/* Printable Table - Only show in manifest mode */}
+          <div className={`border rounded-lg ${printMode === "coupons" ? "print:hidden" : "print:border-0 print:rounded-none print:w-full print:m-0"}`}>
             <Table className="print:w-full">
               <TableHeader>
                 <TableRow className="print:break-inside-avoid">
