@@ -1,5 +1,5 @@
-import { useState, useRef } from "react";
-import { CreditCard, FileText } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { CreditCard, FileText, AlertTriangle } from "lucide-react";
 import "@/styles/print-coupon.css";
 import { PrintableCoupons } from "@/components/print/PrintableCoupon";
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,8 @@ import { useContracts } from "@/hooks/useContracts";
 import { useCreatePayment } from "@/hooks/usePayments";
 import { formatRupiah } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
+import { useLastPaymentDate, calculateLateNote } from "@/hooks/useLastPaymentDate";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function Collection() {
   const { data: routes } = useRoutes();
@@ -52,6 +54,23 @@ export default function Collection() {
   const nextCoupon = selectedContractData
     ? selectedContractData.current_installment_index + 1
     : 1;
+
+  // Fetch last payment date for late notes calculation
+  const { data: lastPaymentDate } = useLastPaymentDate(selectedContract || null);
+  const [autoLateNote, setAutoLateNote] = useState<string | null>(null);
+
+  // Calculate late note when payment date or contract changes
+  useEffect(() => {
+    if (selectedContract && lastPaymentDate && paymentDate) {
+      const lateNote = calculateLateNote(lastPaymentDate, paymentDate);
+      setAutoLateNote(lateNote);
+      if (lateNote && !paymentNotes) {
+        setPaymentNotes(lateNote);
+      }
+    } else {
+      setAutoLateNote(null);
+    }
+  }, [selectedContract, lastPaymentDate, paymentDate]);
 
   const filteredContracts = contracts?.filter((c) => {
     if (selectedRoute && c.customers?.routes?.code) {
@@ -310,7 +329,23 @@ export default function Collection() {
                     <span className="text-muted-foreground">Next Coupon #:</span>
                     <Badge className="text-lg">{nextCoupon}</Badge>
                   </div>
+                  {lastPaymentDate && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Last Payment:</span>
+                      <span className="font-medium">{lastPaymentDate}</span>
+                    </div>
+                  )}
                 </div>
+              )}
+
+              {autoLateNote && (
+                <Alert variant="destructive">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertDescription>
+                    <span className="font-medium">Late Payment Detected: </span>
+                    {autoLateNote}
+                  </AlertDescription>
+                </Alert>
               )}
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

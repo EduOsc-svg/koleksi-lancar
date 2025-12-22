@@ -64,6 +64,7 @@ export default function Customers() {
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerWithRelations | null>(null);
   const [formData, setFormData] = useState({
     name: "",
+    customer_code: "",
     address: "",
     phone: "",
     route_id: "",
@@ -72,7 +73,7 @@ export default function Customers() {
 
   const handleOpenCreate = () => {
     setSelectedCustomer(null);
-    setFormData({ name: "", address: "", phone: "", route_id: "", assigned_sales_id: null });
+    setFormData({ name: "", customer_code: "", address: "", phone: "", route_id: "", assigned_sales_id: null });
     setDialogOpen(true);
   };
 
@@ -80,6 +81,7 @@ export default function Customers() {
     setSelectedCustomer(customer);
     setFormData({
       name: customer.name,
+      customer_code: customer.customer_code || "",
       address: customer.address || "",
       phone: customer.phone || "",
       route_id: customer.route_id,
@@ -93,17 +95,29 @@ export default function Customers() {
       toast.error("Please select a route");
       return;
     }
+    if (!formData.customer_code.trim()) {
+      toast.error("Please enter a customer code");
+      return;
+    }
     try {
+      const submitData = {
+        ...formData,
+        customer_code: formData.customer_code.trim() || null,
+      };
       if (selectedCustomer) {
-        await updateCustomer.mutateAsync({ id: selectedCustomer.id, ...formData });
+        await updateCustomer.mutateAsync({ id: selectedCustomer.id, ...submitData });
         toast.success("Customer updated successfully");
       } else {
-        await createCustomer.mutateAsync(formData);
+        await createCustomer.mutateAsync(submitData);
         toast.success("Customer created successfully");
       }
       setDialogOpen(false);
-    } catch (error) {
-      toast.error("Failed to save customer");
+    } catch (error: any) {
+      if (error?.message?.includes('duplicate') || error?.code === '23505') {
+        toast.error("Customer code already exists. Please use a unique code.");
+      } else {
+        toast.error("Failed to save customer");
+      }
     }
   };
 
@@ -131,6 +145,7 @@ export default function Customers() {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead>Code</TableHead>
               <TableHead>Name</TableHead>
               <TableHead>Route</TableHead>
               <TableHead>Sales Agent</TableHead>
@@ -141,17 +156,20 @@ export default function Customers() {
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center">Loading...</TableCell>
+                <TableCell colSpan={6} className="text-center">Loading...</TableCell>
               </TableRow>
             ) : customers?.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center text-muted-foreground">
+                <TableCell colSpan={6} className="text-center text-muted-foreground">
                   No customers found
                 </TableCell>
               </TableRow>
             ) : (
               paginatedItems.map((customer) => (
                 <TableRow key={customer.id}>
+                  <TableCell>
+                    <Badge variant="secondary">{customer.customer_code || "-"}</Badge>
+                  </TableCell>
                   <TableCell className="font-medium">{customer.name}</TableCell>
                   <TableCell>
                     <Badge variant="outline">{customer.routes?.code}</Badge>
@@ -195,7 +213,18 @@ export default function Customers() {
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label htmlFor="name">Name</Label>
+              <Label htmlFor="customer_code">Customer Code *</Label>
+              <Input
+                id="customer_code"
+                value={formData.customer_code}
+                onChange={(e) => setFormData({ ...formData, customer_code: e.target.value.toUpperCase() })}
+                placeholder="e.g., C001"
+                maxLength={20}
+              />
+              <p className="text-xs text-muted-foreground mt-1">Unique identifier for the customer</p>
+            </div>
+            <div>
+              <Label htmlFor="name">Name *</Label>
               <Input
                 id="name"
                 value={formData.name}

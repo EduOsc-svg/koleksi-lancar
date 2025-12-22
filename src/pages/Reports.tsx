@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Download } from "lucide-react";
+import { Download, FileSpreadsheet } from "lucide-react";
+import * as XLSX from "xlsx";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -42,26 +43,49 @@ export default function Reports() {
   const { currentPage, totalPages, paginatedItems, goToPage, totalItems } = usePagination(payments);
   const totalAmount = payments?.reduce((sum, p) => sum + p.total_amount, 0) ?? 0;
 
-  const handleExport = () => {
+  const handleExportExcel = () => {
     if (!payments?.length) return;
 
-    const headers = ["Date", "Customer", "Contract", "Coupons Paid", "Total Amount", "Collector"];
-    const rows = payments.map((p) => [
-      p.payment_date,
-      p.customer_name,
-      p.contract_ref,
-      p.coupon_count,
-      p.total_amount,
-      p.collector_name || "",
-    ]);
+    // Prepare data for Excel
+    const data = payments.map((p) => ({
+      "Date": p.payment_date,
+      "Customer": p.customer_name,
+      "Contract": p.contract_ref,
+      "Coupons Paid": p.coupon_count,
+      "Coupon Numbers": `#${p.coupon_indices.join(', #')}`,
+      "Total Amount (Rp)": p.total_amount,
+      "Collector": p.collector_name || "-",
+    }));
 
-    const csv = [headers, ...rows].map((r) => r.join(",")).join("\n");
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `payment-report-${dateFrom}-${dateTo}.csv`;
-    a.click();
+    // Create worksheet
+    const ws = XLSX.utils.json_to_sheet(data);
+
+    // Add total row with formula
+    const lastRow = data.length + 1; // +1 for header
+    const totalRowIndex = lastRow + 1;
+    
+    // Add total row
+    XLSX.utils.sheet_add_aoa(ws, [
+      ["", "", "", "", "TOTAL:", { t: 'n', f: `SUM(F2:F${lastRow})` }, ""]
+    ], { origin: `A${totalRowIndex}` });
+
+    // Set column widths
+    ws['!cols'] = [
+      { wch: 12 },  // Date
+      { wch: 25 },  // Customer
+      { wch: 15 },  // Contract
+      { wch: 12 },  // Coupons Paid
+      { wch: 20 },  // Coupon Numbers
+      { wch: 18 },  // Total Amount
+      { wch: 15 },  // Collector
+    ];
+
+    // Create workbook
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Payment Report");
+
+    // Generate and download file
+    XLSX.writeFile(wb, `payment-report-${dateFrom}-${dateTo}.xlsx`);
   };
 
   return (
@@ -107,9 +131,9 @@ export default function Reports() {
               </Select>
             </div>
             <div className="flex items-end">
-              <Button onClick={handleExport} variant="outline" className="w-full">
-                <Download className="mr-2 h-4 w-4" />
-                Export CSV
+              <Button onClick={handleExportExcel} variant="outline" className="w-full">
+                <FileSpreadsheet className="mr-2 h-4 w-4" />
+                Export Excel
               </Button>
             </div>
           </div>
