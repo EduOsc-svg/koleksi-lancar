@@ -5,6 +5,7 @@ import { useLogActivity } from './useActivityLog';
 export interface Customer {
   id: string;
   name: string;
+  customer_code: string | null;
   address: string | null;
   phone: string | null;
   assigned_sales_id: string | null;
@@ -13,6 +14,7 @@ export interface Customer {
 }
 
 export interface CustomerWithRelations extends Customer {
+  customer_code: string | null;
   sales_agents: { name: string; agent_code: string } | null;
   routes: { code: string; name: string } | null;
 }

@@ -173,6 +173,7 @@ export type Database = {
           address: string | null
           assigned_sales_id: string | null
           created_at: string
+          customer_code: string | null
           id: string
           name: string
           nik: string | null
@@ -183,6 +184,7 @@ export type Database = {
           address?: string | null
           assigned_sales_id?: string | null
           created_at?: string
+          customer_code?: string | null
           id?: string
           name: string
           nik?: string | null
@@ -193,6 +195,7 @@ export type Database = {
           address?: string | null
           assigned_sales_id?: string | null
           created_at?: string
+          customer_code?: string | null
           id?: string
           name?: string
           nik?: string | null
