@@ -14,6 +14,113 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_logs: {
+        Row: {
+          action: string
+          contract_id: string | null
+          created_at: string
+          customer_id: string | null
+          description: string
+          details: Json | null
+          entity_id: string | null
+          entity_type: string
+          id: string
+          ip_address: unknown
+          route_id: string | null
+          sales_agent_id: string | null
+          user_agent: string | null
+          user_id: string | null
+          user_name: string | null
+          user_role: string | null
+        }
+        Insert: {
+          action: string
+          contract_id?: string | null
+          created_at?: string
+          customer_id?: string | null
+          description: string
+          details?: Json | null
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+          ip_address?: unknown
+          route_id?: string | null
+          sales_agent_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+          user_name?: string | null
+          user_role?: string | null
+        }
+        Update: {
+          action?: string
+          contract_id?: string | null
+          created_at?: string
+          customer_id?: string | null
+          description?: string
+          details?: Json | null
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          ip_address?: unknown
+          route_id?: string | null
+          sales_agent_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+          user_name?: string | null
+          user_role?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_logs_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "credit_contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activity_logs_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "invoice_details"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activity_logs_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activity_logs_route_id_fkey"
+            columns: ["route_id"]
+            isOneToOne: false
+            referencedRelation: "invoice_details"
+            referencedColumns: ["route_id"]
+          },
+          {
+            foreignKeyName: "activity_logs_route_id_fkey"
+            columns: ["route_id"]
+            isOneToOne: false
+            referencedRelation: "routes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activity_logs_sales_agent_id_fkey"
+            columns: ["sales_agent_id"]
+            isOneToOne: false
+            referencedRelation: "invoice_details"
+            referencedColumns: ["sales_agent_id"]
+          },
+          {
+            foreignKeyName: "activity_logs_sales_agent_id_fkey"
+            columns: ["sales_agent_id"]
+            isOneToOne: false
+            referencedRelation: "sales_agents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       credit_contracts: {
         Row: {
           contract_ref: string
@@ -68,6 +175,7 @@ export type Database = {
           created_at: string
           id: string
           name: string
+          nik: string | null
           phone: string | null
           route_id: string
         }
@@ -77,6 +185,7 @@ export type Database = {
           created_at?: string
           id?: string
           name: string
+          nik?: string | null
           phone?: string | null
           route_id: string
         }
@@ -86,6 +195,7 @@ export type Database = {
           created_at?: string
           id?: string
           name?: string
+          nik?: string | null
           phone?: string | null
           route_id?: string
         }
