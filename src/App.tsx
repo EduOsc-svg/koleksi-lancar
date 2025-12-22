@@ -14,6 +14,7 @@ import Contracts from "./pages/Contracts";
 import Collection from "./pages/Collection";
 import Reports from "./pages/Reports";
 import CustomerHistory from "./pages/CustomerHistory";
+import AuditLog from "./pages/AuditLog";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -67,6 +68,7 @@ const AppRoutes = () => {
                 <Route path="/collection" element={<Collection />} />
                 <Route path="/reports" element={<Reports />} />
                 <Route path="/history" element={<CustomerHistory />} />
+                <Route path="/audit-log" element={<AuditLog />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </AppLayout>

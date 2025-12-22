@@ -9,6 +9,7 @@ import {
   BarChart3,
   History,
   LogOut,
+  Shield,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/hooks/useAuth";
@@ -40,6 +41,10 @@ const operationItems = [
   { title: "Collection", url: "/collection", icon: Wallet },
   { title: "Reports", url: "/reports", icon: BarChart3 },
   { title: "Customer History", url: "/history", icon: History },
+];
+
+const systemItems = [
+  { title: "Audit Log", url: "/audit-log", icon: Shield },
 ];
 
 export function AppSidebar() {
@@ -97,6 +102,26 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {operationItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild isActive={isActive(item.url)}>
+                    <NavLink to={item.url}>
+                      <item.icon className="mr-2 h-4 w-4" />
+                      <span>{item.title}</span>
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            System
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {systemItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild isActive={isActive(item.url)}>
                     <NavLink to={item.url}>

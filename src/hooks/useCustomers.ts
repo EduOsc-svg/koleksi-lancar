@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useLogActivity } from './useActivityLog';
 
 export interface Customer {
   id: string;
@@ -32,6 +33,8 @@ export const useCustomers = () => {
 
 export const useCreateCustomer = () => {
   const queryClient = useQueryClient();
+  const logActivity = useLogActivity();
+  
   return useMutation({
     mutationFn: async (customer: Omit<Customer, 'id' | 'created_at'>) => {
       const { data, error } = await supabase
@@ -42,14 +45,24 @@ export const useCreateCustomer = () => {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['customers'] });
+      
+      logActivity.mutate({
+        action: 'CREATE',
+        entity_type: 'customer',
+        entity_id: data.id,
+        description: `Created customer ${data.name}`,
+        customer_id: data.id,
+      });
     },
   });
 };
 
 export const useUpdateCustomer = () => {
   const queryClient = useQueryClient();
+  const logActivity = useLogActivity();
+  
   return useMutation({
     mutationFn: async ({ id, ...customer }: Partial<Customer> & { id: string }) => {
       const { data, error } = await supabase
@@ -61,24 +74,49 @@ export const useUpdateCustomer = () => {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['customers'] });
+      
+      logActivity.mutate({
+        action: 'UPDATE',
+        entity_type: 'customer',
+        entity_id: data.id,
+        description: `Updated customer ${data.name}`,
+        customer_id: data.id,
+      });
     },
   });
 };
 
 export const useDeleteCustomer = () => {
   const queryClient = useQueryClient();
+  const logActivity = useLogActivity();
+  
   return useMutation({
     mutationFn: async (id: string) => {
+      // Get customer info before deleting
+      const { data: customerData } = await supabase
+        .from('customers')
+        .select('name')
+        .eq('id', id)
+        .single();
+      
       const { error } = await supabase
         .from('customers')
         .delete()
         .eq('id', id);
       if (error) throw error;
+      return { id, name: customerData?.name };
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['customers'] });
+      
+      logActivity.mutate({
+        action: 'DELETE',
+        entity_type: 'customer',
+        entity_id: data.id,
+        description: `Deleted customer ${data.name || data.id}`,
+      });
     },
   });
 };
