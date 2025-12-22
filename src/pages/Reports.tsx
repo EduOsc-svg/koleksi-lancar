@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { usePayments } from "@/hooks/usePayments";
+import { useAggregatedPayments } from "@/hooks/useAggregatedPayments";
 import { useSalesAgents } from "@/hooks/useSalesAgents";
 import { formatRupiah, formatDate } from "@/lib/format";
 import { usePagination } from "@/hooks/usePagination";
@@ -33,27 +33,26 @@ export default function Reports() {
   const [dateTo, setDateTo] = useState(new Date().toISOString().split("T")[0]);
   const [collectorId, setCollectorId] = useState<string>("");
 
-  const { data: payments, isLoading } = usePayments(
+  const { data: payments, isLoading } = useAggregatedPayments(
     dateFrom,
     dateTo,
     collectorId || undefined
   );
 
   const { currentPage, totalPages, paginatedItems, goToPage, totalItems } = usePagination(payments);
-  const totalAmount = payments?.reduce((sum, p) => sum + Number(p.amount_paid), 0) ?? 0;
+  const totalAmount = payments?.reduce((sum, p) => sum + p.total_amount, 0) ?? 0;
 
   const handleExport = () => {
     if (!payments?.length) return;
 
-    const headers = ["Date", "Customer", "Contract", "Coupon #", "Amount", "Collector", "Notes"];
+    const headers = ["Date", "Customer", "Contract", "Coupons Paid", "Total Amount", "Collector"];
     const rows = payments.map((p) => [
       p.payment_date,
-      p.credit_contracts?.customers?.name || "",
-      p.credit_contracts?.contract_ref || "",
-      p.installment_index,
-      p.amount_paid,
-      p.sales_agents?.name || "",
-      p.notes || "",
+      p.customer_name,
+      p.contract_ref,
+      p.coupon_count,
+      p.total_amount,
+      p.collector_name || "",
     ]);
 
     const csv = [headers, ...rows].map((r) => r.join(",")).join("\n");
@@ -124,8 +123,8 @@ export default function Reports() {
               <TableHead>Date</TableHead>
               <TableHead>Customer</TableHead>
               <TableHead>Contract</TableHead>
-              <TableHead>Coupon #</TableHead>
-              <TableHead className="text-right">Amount</TableHead>
+              <TableHead>Coupons Paid</TableHead>
+              <TableHead className="text-right">Total Amount</TableHead>
               <TableHead>Collector</TableHead>
             </TableRow>
           </TableHeader>
@@ -142,16 +141,21 @@ export default function Reports() {
               </TableRow>
             ) : (
               <>
-                {paginatedItems.map((payment) => (
-                  <TableRow key={payment.id}>
+                {paginatedItems.map((payment, idx) => (
+                  <TableRow key={`${payment.customer_id}-${payment.payment_date}-${idx}`}>
                     <TableCell>{formatDate(payment.payment_date)}</TableCell>
-                    <TableCell>{payment.credit_contracts?.customers?.name}</TableCell>
-                    <TableCell>{payment.credit_contracts?.contract_ref}</TableCell>
-                    <TableCell>{payment.installment_index}</TableCell>
-                    <TableCell className="text-right font-medium">
-                      {formatRupiah(Number(payment.amount_paid))}
+                    <TableCell>{payment.customer_name}</TableCell>
+                    <TableCell>{payment.contract_ref}</TableCell>
+                    <TableCell>
+                      <span className="font-medium">{payment.coupon_count} coupon{payment.coupon_count > 1 ? 's' : ''}</span>
+                      <span className="text-muted-foreground text-xs ml-2">
+                        (#{payment.coupon_indices.join(', #')})
+                      </span>
                     </TableCell>
-                    <TableCell>{payment.sales_agents?.name || "-"}</TableCell>
+                    <TableCell className="text-right font-medium">
+                      {formatRupiah(payment.total_amount)}
+                    </TableCell>
+                    <TableCell>{payment.collector_name || "-"}</TableCell>
                   </TableRow>
                 ))}
                 <TableRow className="bg-muted/50 font-bold">

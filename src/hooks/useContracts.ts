@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useLogActivity } from './useActivityLog';
 
 export interface CreditContract {
   id: string;
@@ -46,6 +47,8 @@ export const useContracts = (status?: string) => {
 
 export const useCreateContract = () => {
   const queryClient = useQueryClient();
+  const logActivity = useLogActivity();
+  
   return useMutation({
     mutationFn: async (contract: Omit<CreditContract, 'id' | 'created_at' | 'current_installment_index'>) => {
       const { data, error } = await supabase
@@ -56,15 +59,25 @@ export const useCreateContract = () => {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['credit_contracts'] });
       queryClient.invalidateQueries({ queryKey: ['invoice_details'] });
+      
+      logActivity.mutate({
+        action: 'CREATE',
+        entity_type: 'contract',
+        entity_id: data.id,
+        description: `Created contract ${data.contract_ref} with loan amount ${data.total_loan_amount}`,
+        contract_id: data.id,
+      });
     },
   });
 };
 
 export const useUpdateContract = () => {
   const queryClient = useQueryClient();
+  const logActivity = useLogActivity();
+  
   return useMutation({
     mutationFn: async ({ id, ...contract }: Partial<CreditContract> & { id: string }) => {
       const { data, error } = await supabase
@@ -76,26 +89,51 @@ export const useUpdateContract = () => {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['credit_contracts'] });
       queryClient.invalidateQueries({ queryKey: ['invoice_details'] });
+      
+      logActivity.mutate({
+        action: 'UPDATE',
+        entity_type: 'contract',
+        entity_id: data.id,
+        description: `Updated contract ${data.contract_ref}`,
+        contract_id: data.id,
+      });
     },
   });
 };
 
 export const useDeleteContract = () => {
   const queryClient = useQueryClient();
+  const logActivity = useLogActivity();
+  
   return useMutation({
     mutationFn: async (id: string) => {
+      // Get contract info before deleting
+      const { data: contractData } = await supabase
+        .from('credit_contracts')
+        .select('contract_ref')
+        .eq('id', id)
+        .single();
+      
       const { error } = await supabase
         .from('credit_contracts')
         .delete()
         .eq('id', id);
       if (error) throw error;
+      return { id, contract_ref: contractData?.contract_ref };
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['credit_contracts'] });
       queryClient.invalidateQueries({ queryKey: ['invoice_details'] });
+      
+      logActivity.mutate({
+        action: 'DELETE',
+        entity_type: 'contract',
+        entity_id: data.id,
+        description: `Deleted contract ${data.contract_ref || data.id}`,
+      });
     },
   });
 };

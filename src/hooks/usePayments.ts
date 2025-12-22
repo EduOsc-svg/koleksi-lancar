@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useLogActivity } from './useActivityLog';
 
 export interface PaymentLog {
   id: string;
@@ -64,6 +65,8 @@ export const usePaymentsByContract = (contractId: string) => {
 
 export const useCreatePayment = () => {
   const queryClient = useQueryClient();
+  const logActivity = useLogActivity();
+  
   return useMutation({
     mutationFn: async (payment: Omit<PaymentLog, 'id' | 'created_at'>) => {
       // Insert payment
@@ -81,12 +84,29 @@ export const useCreatePayment = () => {
         .eq('id', payment.contract_id);
       if (updateError) throw updateError;
 
-      return paymentData;
+      // Get contract info for logging
+      const { data: contractData } = await supabase
+        .from('credit_contracts')
+        .select('contract_ref, customers(name)')
+        .eq('id', payment.contract_id)
+        .single();
+
+      return { ...paymentData, contract_ref: contractData?.contract_ref, customer_name: (contractData?.customers as { name: string } | null)?.name };
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['payment_logs'] });
       queryClient.invalidateQueries({ queryKey: ['credit_contracts'] });
       queryClient.invalidateQueries({ queryKey: ['invoice_details'] });
+      queryClient.invalidateQueries({ queryKey: ['collection_trend'] });
+      queryClient.invalidateQueries({ queryKey: ['aggregated_payments'] });
+      
+      logActivity.mutate({
+        action: 'PAYMENT',
+        entity_type: 'payment',
+        entity_id: data.id,
+        description: `Payment received for coupon #${data.installment_index} on contract ${data.contract_ref || data.contract_id} (${data.customer_name || 'Unknown'}) - Rp ${data.amount_paid.toLocaleString()}`,
+        contract_id: data.contract_id,
+      });
     },
   });
 };
