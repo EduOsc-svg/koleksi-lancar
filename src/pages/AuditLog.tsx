@@ -23,7 +23,7 @@ import { useActivityLogs, ActivityLog } from "@/hooks/useActivityLog";
 import { usePagination } from "@/hooks/usePagination";
 import { TablePagination } from "@/components/TablePagination";
 import { formatAuditDetails } from "@/lib/formatAuditDetails";
-import { Search, Shield, Info } from "lucide-react";
+import { Search, Shield, Info, Eye } from "lucide-react";
 
 const actionColors: Record<string, string> = {
   CREATE: "bg-green-500/10 text-green-600 border-green-500/20",
@@ -42,6 +42,7 @@ export default function AuditLog() {
   const { data: logs, isLoading } = useActivityLogs(500);
   const [searchTerm, setSearchTerm] = useState("");
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [descriptionDialogOpen, setDescriptionDialogOpen] = useState(false);
   const [selectedLog, setSelectedLog] = useState<ActivityLog | null>(null);
 
   const filteredLogs = logs?.filter((log) => {
@@ -59,6 +60,11 @@ export default function AuditLog() {
   const handleViewDetails = (log: ActivityLog) => {
     setSelectedLog(log);
     setDetailDialogOpen(true);
+  };
+
+  const handleViewDescription = (log: ActivityLog) => {
+    setSelectedLog(log);
+    setDescriptionDialogOpen(true);
   };
 
   const formattedSelectedDetails = selectedLog ? formatAuditDetails(selectedLog.details) : [];
@@ -140,8 +146,20 @@ export default function AuditLog() {
                         <TableCell className="capitalize">
                           {log.entity_type}
                         </TableCell>
-                        <TableCell className="max-w-xs truncate">
-                          {log.description}
+                        <TableCell className="max-w-xs">
+                          <div className="flex items-center gap-1">
+                            <span className="truncate flex-1">{log.description}</span>
+                            {log.description.length > 40 && (
+                              <Button 
+                                variant="ghost" 
+                                size="icon"
+                                className="h-6 w-6 shrink-0"
+                                onClick={() => handleViewDescription(log)}
+                              >
+                                <Eye className="h-3.5 w-3.5" />
+                              </Button>
+                            )}
+                          </div>
                         </TableCell>
                         <TableCell>
                           {hasDetails ? (
@@ -225,6 +243,32 @@ export default function AuditLog() {
                   </div>
                 </div>
               )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Description Modal */}
+      <Dialog open={descriptionDialogOpen} onOpenChange={setDescriptionDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Eye className="h-5 w-5" />
+              {t("auditLog.fullDescription")}
+            </DialogTitle>
+          </DialogHeader>
+          {selectedLog && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Badge className={getActionColor(selectedLog.action)}>{selectedLog.action}</Badge>
+                <span>•</span>
+                <span className="capitalize">{selectedLog.entity_type}</span>
+                <span>•</span>
+                <span>{new Date(selectedLog.created_at).toLocaleString('id-ID')}</span>
+              </div>
+              <div className="bg-muted/50 rounded-lg p-4">
+                <p className="text-sm whitespace-pre-wrap">{selectedLog.description}</p>
+              </div>
             </div>
           )}
         </DialogContent>
