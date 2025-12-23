@@ -1,0 +1,219 @@
+/* Print Coupon 8x5 cm - A4 Landscape Layout */
+/* Fits approximately 3 columns x 3 rows = 9 coupons per page */
+
+/* Hide on screen */
+.print-coupon-8x5-container {
+  display: none;
+}
+
+@media print {
+  /* Hide everything except print container */
+  body * {
+    visibility: hidden;
+  }
+
+  .print-coupon-8x5-container,
+  .print-coupon-8x5-container * {
+    visibility: visible;
+  }
+
+  /* Page setup - A4 Landscape */
+  @page {
+    size: A4 landscape;
+    margin: 5mm;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    background: white !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .print-coupon-8x5-container {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: white;
+  }
+
+  /* Grid: 3 columns x 3 rows for A4 landscape (297mm x 210mm usable ~287mm x 200mm) */
+  .coupon-8x5-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 80mm);
+    grid-template-rows: repeat(3, 50mm);
+    gap: 3mm;
+    justify-content: center;
+    align-content: start;
+  }
+
+  /* Individual coupon card - 8x5 cm */
+  .coupon-8x5-card {
+    width: 80mm;
+    height: 50mm;
+    border: 1px solid #999;
+    padding: 2mm 3mm;
+    position: relative;
+    box-sizing: border-box;
+    page-break-inside: avoid;
+    break-inside: avoid;
+    overflow: hidden;
+    background-color: #fcfcfc;
+    background-image: 
+      repeating-linear-gradient(
+        -45deg,
+        transparent,
+        transparent 15mm,
+        rgba(198, 40, 40, 0.03) 15mm,
+        rgba(198, 40, 40, 0.03) 16mm
+      );
+  }
+
+  /* Watermark background text */
+  .coupon-8x5-card::before {
+    content: "CV MAHKOTA JAYA ELEKTRONIK CV MAHKOTA JAYA ELEKTRONIK CV MAHKOTA JAYA ELEKTRONIK CV MAHKOTA JAYA ELEKTRONIK CV MAHKOTA JAYA ELEKTRONIK";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-30deg);
+    font-size: 10px;
+    color: rgba(0, 51, 153, 0.06);
+    white-space: nowrap;
+    font-weight: bold;
+    letter-spacing: 3px;
+    z-index: 0;
+    pointer-events: none;
+    width: 300%;
+    text-align: center;
+  }
+
+  /* Header Section */
+  .coupon-8x5-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 2mm;
+    margin-bottom: 1mm;
+    position: relative;
+    z-index: 1;
+  }
+
+  .coupon-8x5-logo {
+    width: 10mm;
+    height: auto;
+    flex-shrink: 0;
+  }
+
+  .coupon-8x5-header-text {
+    flex: 1;
+  }
+
+  .coupon-8x5-company-name {
+    font-size: 9pt;
+    font-weight: bold;
+    color: #c62828;
+    margin: 0;
+    line-height: 1.1;
+  }
+
+  .coupon-8x5-company-name span {
+    color: #003399;
+  }
+
+  .coupon-8x5-warning {
+    font-size: 6pt;
+    color: #c62828;
+    font-style: italic;
+    margin: 0;
+    line-height: 1.2;
+  }
+
+  /* Title */
+  .coupon-8x5-title {
+    text-align: center;
+    font-size: 8pt;
+    font-weight: bold;
+    color: #8b0000;
+    text-decoration: underline;
+    margin: 1.5mm 0;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Data Section */
+  .coupon-8x5-data {
+    position: relative;
+    z-index: 1;
+    margin-bottom: 1mm;
+  }
+
+  .coupon-8x5-data-row {
+    display: flex;
+    font-size: 7pt;
+    line-height: 1.4;
+    color: #333;
+  }
+
+  .coupon-8x5-data-label {
+    width: 18mm;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+
+  .coupon-8x5-data-colon {
+    width: 3mm;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .coupon-8x5-data-value {
+    flex: 1;
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Amount Section */
+  .coupon-8x5-amount-section {
+    position: absolute;
+    bottom: 8mm;
+    right: 3mm;
+    text-align: right;
+    z-index: 1;
+  }
+
+  .coupon-8x5-amount-label {
+    font-size: 6pt;
+    font-weight: bold;
+    color: #333;
+  }
+
+  .coupon-8x5-amount-value {
+    font-size: 10pt;
+    font-weight: bold;
+    color: #c62828;
+    border-bottom: 1px dotted #c62828;
+    padding-left: 2mm;
+  }
+
+  /* Footer */
+  .coupon-8x5-footer {
+    position: absolute;
+    bottom: 2mm;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 7pt;
+    font-weight: bold;
+    color: #c62828;
+    z-index: 1;
+  }
+
+  /* Page break after every 9 coupons */
+  .coupon-8x5-card:nth-child(9n) {
+    page-break-after: always;
+  }
+}
