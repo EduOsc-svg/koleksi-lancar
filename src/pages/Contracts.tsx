@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Plus, Pencil, Trash2, Eye, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,8 +46,10 @@ import { usePagination } from "@/hooks/usePagination";
 import { TablePagination } from "@/components/TablePagination";
 import { useCouponsByContract, useGenerateCoupons, InstallmentCoupon } from "@/hooks/useInstallmentCoupons";
 import { PrintHighDensityCoupons } from "@/components/print/PrintHighDensityCoupons";
+import { CurrencyInput } from "@/components/ui/currency-input";
 
 export default function Contracts() {
+  const { t } = useTranslation();
   const { data: contracts, isLoading } = useContracts();
   const { data: invoiceDetails } = useInvoiceDetails();
   const { data: customers } = useCustomers();
@@ -64,9 +67,9 @@ export default function Contracts() {
     contract_ref: "",
     customer_id: "",
     product_type: "",
-    total_loan_amount: "",
+    total_loan_amount: 0,
     tenor_days: "100",
-    daily_installment_amount: "",
+    daily_installment_amount: 0,
     start_date: new Date().toISOString().split("T")[0],
     status: "active",
   });
@@ -81,9 +84,9 @@ export default function Contracts() {
       contract_ref: "",
       customer_id: "",
       product_type: "",
-      total_loan_amount: "",
+      total_loan_amount: 0,
       tenor_days: "100",
-      daily_installment_amount: "",
+      daily_installment_amount: 0,
       start_date: new Date().toISOString().split("T")[0],
       status: "active",
     });
@@ -96,9 +99,9 @@ export default function Contracts() {
       contract_ref: contract.contract_ref,
       customer_id: contract.customer_id,
       product_type: contract.product_type || "",
-      total_loan_amount: contract.total_loan_amount.toString(),
+      total_loan_amount: contract.total_loan_amount,
       tenor_days: contract.tenor_days.toString(),
-      daily_installment_amount: contract.daily_installment_amount.toString(),
+      daily_installment_amount: contract.daily_installment_amount,
       start_date: (contract as any).start_date || new Date().toISOString().split("T")[0],
       status: contract.status,
     });
@@ -111,22 +114,22 @@ export default function Contracts() {
   };
 
   const calculateInstallment = () => {
-    const amount = parseFloat(formData.total_loan_amount) || 0;
+    const amount = formData.total_loan_amount || 0;
     const tenor = parseInt(formData.tenor_days) || 100;
     return Math.ceil(amount / tenor);
   };
 
   const handleSubmit = async () => {
     if (!formData.customer_id) {
-      toast.error("Please select a customer");
+      toast.error(t("errors.selectCustomer"));
       return;
     }
     if (!formData.start_date) {
-      toast.error("Please select a start date");
+      toast.error(t("errors.selectStartDate"));
       return;
     }
     try {
-      const dailyAmount = parseFloat(formData.daily_installment_amount) || calculateInstallment();
+      const dailyAmount = formData.daily_installment_amount || calculateInstallment();
       const tenorDays = parseInt(formData.tenor_days) || 100;
 
       if (selectedContract) {
@@ -135,19 +138,19 @@ export default function Contracts() {
           contract_ref: formData.contract_ref,
           customer_id: formData.customer_id,
           product_type: formData.product_type || null,
-          total_loan_amount: parseFloat(formData.total_loan_amount) || 0,
+          total_loan_amount: formData.total_loan_amount || 0,
           tenor_days: tenorDays,
           daily_installment_amount: dailyAmount,
           start_date: formData.start_date,
           status: formData.status,
         } as any);
-        toast.success("Contract updated successfully");
+        toast.success(t("contracts.updatedSuccess"));
       } else {
         const { data: newContract } = await createContract.mutateAsync({
           contract_ref: formData.contract_ref,
           customer_id: formData.customer_id,
           product_type: formData.product_type || null,
-          total_loan_amount: parseFloat(formData.total_loan_amount) || 0,
+          total_loan_amount: formData.total_loan_amount || 0,
           tenor_days: tenorDays,
           daily_installment_amount: dailyAmount,
           start_date: formData.start_date,
@@ -162,15 +165,15 @@ export default function Contracts() {
             tenorDays: tenorDays,
             dailyAmount: dailyAmount,
           });
-          toast.success(`Contract created with ${tenorDays} coupons generated`);
+          toast.success(t("contracts.createdWithCoupons", { count: tenorDays }));
         } else {
-          toast.success("Contract created successfully");
+          toast.success(t("contracts.createdSuccess"));
         }
       }
       setDialogOpen(false);
     } catch (error) {
       console.error(error);
-      toast.error("Failed to save contract");
+      toast.error(t("errors.saveFailed"));
     }
   };
 
@@ -178,17 +181,17 @@ export default function Contracts() {
     if (!selectedContract) return;
     try {
       await deleteContract.mutateAsync(selectedContract.id);
-      toast.success("Contract deleted successfully");
+      toast.success(t("contracts.deletedSuccess"));
       setDeleteDialogOpen(false);
       setSelectedContract(null);
     } catch (error) {
-      toast.error("Failed to delete contract. It may have payment records.");
+      toast.error(t("contracts.deleteFailed"));
     }
   };
 
   const handlePrintAllCoupons = () => {
     if (!selectedContractCoupons?.length) {
-      toast.error("No coupons to print");
+      toast.error(t("contracts.noCoupons"));
       return;
     }
     setPrintMode(true);
@@ -443,23 +446,21 @@ export default function Contracts() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="total_loan_amount">Total Loan Amount (Rp)</Label>
-                <Input
+                <Label htmlFor="total_loan_amount">{t("contracts.totalLoanAmount")}</Label>
+                <CurrencyInput
                   id="total_loan_amount"
-                  type="number"
                   value={formData.total_loan_amount}
-                  onChange={(e) => setFormData({ ...formData, total_loan_amount: e.target.value })}
-                  placeholder="e.g., 500000"
+                  onValueChange={(val) => setFormData({ ...formData, total_loan_amount: val || 0 })}
+                  placeholder="Rp 500.000"
                 />
               </div>
               <div>
-                <Label htmlFor="daily_installment_amount">Daily Installment (Rp)</Label>
-                <Input
+                <Label htmlFor="daily_installment_amount">{t("contracts.dailyInstallment")}</Label>
+                <CurrencyInput
                   id="daily_installment_amount"
-                  type="number"
                   value={formData.daily_installment_amount || calculateInstallment()}
-                  onChange={(e) => setFormData({ ...formData, daily_installment_amount: e.target.value })}
-                  placeholder="Auto-calculated"
+                  onValueChange={(val) => setFormData({ ...formData, daily_installment_amount: val || 0 })}
+                  placeholder="Auto"
                 />
                 <p className="text-xs text-muted-foreground mt-1">
                   Auto: {formatRupiah(calculateInstallment())}

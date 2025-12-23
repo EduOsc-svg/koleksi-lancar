@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -11,11 +12,17 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
 import { useActivityLogs } from "@/hooks/useActivityLog";
 import { usePagination } from "@/hooks/usePagination";
 import { TablePagination } from "@/components/TablePagination";
-import { formatDate } from "@/lib/format";
-import { Search, Shield } from "lucide-react";
+import { formatAuditDetails } from "@/lib/formatAuditDetails";
+import { Search, Shield, Info } from "lucide-react";
 
 const actionColors: Record<string, string> = {
   CREATE: "bg-green-500/10 text-green-600 border-green-500/20",
@@ -30,6 +37,7 @@ const getActionColor = (action: string) => {
 };
 
 export default function AuditLog() {
+  const { t } = useTranslation();
   const { data: logs, isLoading } = useActivityLogs(500);
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -49,20 +57,20 @@ export default function AuditLog() {
     <div className="space-y-6">
       <div className="flex items-center gap-2">
         <Shield className="h-6 w-6 text-primary" />
-        <h2 className="text-2xl font-bold">Audit Log</h2>
+        <h2 className="text-2xl font-bold">{t("auditLog.title")}</h2>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Activity History</CardTitle>
+          <CardTitle>{t("auditLog.activityHistory")}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="mb-4">
-            <Label>Search</Label>
+            <Label>{t("common.search")}</Label>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search by user, action, entity..."
+                placeholder={t("auditLog.searchPlaceholder")}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-9"
@@ -74,54 +82,87 @@ export default function AuditLog() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Timestamp</TableHead>
-                  <TableHead>User</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Action</TableHead>
-                  <TableHead>Entity</TableHead>
-                  <TableHead>Description</TableHead>
+                  <TableHead>{t("auditLog.timestamp")}</TableHead>
+                  <TableHead>{t("auditLog.user")}</TableHead>
+                  <TableHead>{t("auditLog.role")}</TableHead>
+                  <TableHead>{t("auditLog.action")}</TableHead>
+                  <TableHead>{t("auditLog.entity")}</TableHead>
+                  <TableHead>{t("auditLog.description")}</TableHead>
+                  <TableHead>{t("auditLog.details")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center">
-                      Loading...
+                    <TableCell colSpan={7} className="text-center">
+                      {t("common.loading")}
                     </TableCell>
                   </TableRow>
                 ) : paginatedItems.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center text-muted-foreground">
-                      No activity logs found
+                    <TableCell colSpan={7} className="text-center text-muted-foreground">
+                      {t("auditLog.noLogs")}
                     </TableCell>
                   </TableRow>
                 ) : (
-                  paginatedItems.map((log) => (
-                    <TableRow key={log.id}>
-                      <TableCell className="whitespace-nowrap text-sm">
-                        {new Date(log.created_at).toLocaleString('id-ID')}
-                      </TableCell>
-                      <TableCell className="font-medium">
-                        {log.user_name || 'System'}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="capitalize">
-                          {log.user_role || 'unknown'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge className={getActionColor(log.action)}>
-                          {log.action}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="capitalize">
-                        {log.entity_type}
-                      </TableCell>
-                      <TableCell className="max-w-md truncate">
-                        {log.description}
-                      </TableCell>
-                    </TableRow>
-                  ))
+                  paginatedItems.map((log) => {
+                    const formattedDetails = formatAuditDetails(log.details);
+                    const hasDetails = formattedDetails.length > 0;
+                    
+                    return (
+                      <TableRow key={log.id}>
+                        <TableCell className="whitespace-nowrap text-sm">
+                          {new Date(log.created_at).toLocaleString('id-ID')}
+                        </TableCell>
+                        <TableCell className="font-medium">
+                          {log.user_name || t("auditLog.system")}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="capitalize">
+                            {log.user_role || t("auditLog.unknown")}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge className={getActionColor(log.action)}>
+                            {log.action}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="capitalize">
+                          {log.entity_type}
+                        </TableCell>
+                        <TableCell className="max-w-xs truncate">
+                          {log.description}
+                        </TableCell>
+                        <TableCell>
+                          {hasDetails ? (
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <Button variant="ghost" size="sm" className="gap-1">
+                                  <Info className="h-4 w-4" />
+                                  {t("auditLog.details")}
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-80">
+                                <div className="space-y-2">
+                                  <h4 className="font-medium">{t("auditLog.details")}</h4>
+                                  <div className="space-y-1 text-sm">
+                                    {formattedDetails.map(({ key, value }, idx) => (
+                                      <div key={idx} className="flex justify-between gap-2">
+                                        <span className="text-muted-foreground">{key}:</span>
+                                        <span className="font-medium text-right">{value}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              </PopoverContent>
+                            </Popover>
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
                 )}
               </TableBody>
             </Table>
