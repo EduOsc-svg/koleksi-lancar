@@ -133,7 +133,7 @@ export default function Auth() {
               <Home className="h-8 w-8 text-primary" />
             </div>
           </div>
-          <CardTitle className="text-2xl">UD Mahkota Jaya Elektronik</CardTitle>
+          <CardTitle className="text-2xl">CV Mahkota Jaya Elektronik</CardTitle>
           <CardDescription>
             Sistem Manajemen Kredit
           </CardDescription>

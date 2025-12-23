@@ -38,7 +38,7 @@ export function PrintAllCoupons({ coupons, contract }: PrintAllCouponsProps) {
 
             {/* Header */}
             <div className="a4-coupon-header">
-              <div className="a4-company-name">UD MAHKOTA JAYA ELEKTRONIK</div>
+              <div className="a4-company-name">CV MAHKOTA JAYA ELEKTRONIK</div>
               <div className="a4-company-address">Komplek Mentari - Gunung Bahagia, Balikpapan</div>
             </div>
 

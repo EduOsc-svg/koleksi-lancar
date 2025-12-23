@@ -42,7 +42,7 @@ export function PrintHighDensityCoupons({ coupons, contract }: PrintHighDensityC
           <div key={coupon.id} className="hd-coupon-card">
             {/* Header */}
             <div className="hd-header">
-              <p className="hd-company">UD MAHKOTA JAYA</p>
+              <p className="hd-company">CV MAHKOTA JAYA</p>
               <p className="hd-contract-ref">{contract.contract_ref}</p>
             </div>
 
