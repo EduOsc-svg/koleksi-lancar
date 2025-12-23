@@ -4,10 +4,14 @@ import { useLogActivity } from './useActivityLog';
 
 export interface Holiday {
   id: string;
-  holiday_date: string;
+  holiday_date: string | null;
   description: string | null;
+  holiday_type: 'specific_date' | 'recurring_weekday';
+  day_of_week: number | null;
   created_at: string;
 }
+
+export const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 export const useHolidays = () => {
   return useQuery({
@@ -28,7 +32,12 @@ export const useCreateHoliday = () => {
   const logActivity = useLogActivity();
 
   return useMutation({
-    mutationFn: async (holiday: { holiday_date: string; description?: string | null }) => {
+    mutationFn: async (holiday: { 
+      holiday_type: 'specific_date' | 'recurring_weekday';
+      holiday_date?: string | null; 
+      day_of_week?: number | null;
+      description?: string | null 
+    }) => {
       const { data, error } = await supabase
         .from('holidays')
         .insert(holiday)
@@ -39,11 +48,14 @@ export const useCreateHoliday = () => {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['holidays'] });
+      const desc = data.holiday_type === 'specific_date' 
+        ? `Added holiday: ${data.holiday_date} - ${data.description || 'No description'}`
+        : `Added recurring holiday: Every ${DAY_NAMES[data.day_of_week || 0]} - ${data.description || 'No description'}`;
       logActivity.mutate({
         action: 'CREATE',
         entity_type: 'holiday',
         entity_id: data.id,
-        description: `Added holiday: ${data.holiday_date} - ${data.description || 'No description'}`,
+        description: desc,
       });
     },
   });
