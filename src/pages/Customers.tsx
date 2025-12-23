@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Plus, Pencil, Trash2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -51,6 +52,7 @@ import { usePagination } from "@/hooks/usePagination";
 import { TablePagination } from "@/components/TablePagination";
 
 export default function Customers() {
+  const { t } = useTranslation();
   const { data: customers, isLoading } = useCustomers();
   const { data: agents } = useSalesAgents();
   const { data: routes } = useRoutes();
@@ -65,6 +67,7 @@ export default function Customers() {
   const [formData, setFormData] = useState({
     name: "",
     customer_code: "",
+    nik: "",
     address: "",
     phone: "",
     route_id: "",
@@ -73,7 +76,7 @@ export default function Customers() {
 
   const handleOpenCreate = () => {
     setSelectedCustomer(null);
-    setFormData({ name: "", customer_code: "", address: "", phone: "", route_id: "", assigned_sales_id: null });
+    setFormData({ name: "", customer_code: "", nik: "", address: "", phone: "", route_id: "", assigned_sales_id: null });
     setDialogOpen(true);
   };
 
@@ -82,6 +85,7 @@ export default function Customers() {
     setFormData({
       name: customer.name,
       customer_code: customer.customer_code || "",
+      nik: customer.nik || "",
       address: customer.address || "",
       phone: customer.phone || "",
       route_id: customer.route_id,
@@ -92,31 +96,32 @@ export default function Customers() {
 
   const handleSubmit = async () => {
     if (!formData.route_id) {
-      toast.error("Please select a route");
+      toast.error(t("customers.selectRoute"));
       return;
     }
     if (!formData.customer_code.trim()) {
-      toast.error("Please enter a customer code");
+      toast.error(t("errors.customerCodeRequired", "Masukkan kode pelanggan"));
       return;
     }
     try {
       const submitData = {
         ...formData,
         customer_code: formData.customer_code.trim() || null,
+        nik: formData.nik.trim() || null,
       };
       if (selectedCustomer) {
         await updateCustomer.mutateAsync({ id: selectedCustomer.id, ...submitData });
-        toast.success("Customer updated successfully");
+        toast.success(t("success.updated"));
       } else {
         await createCustomer.mutateAsync(submitData);
-        toast.success("Customer created successfully");
+        toast.success(t("success.created"));
       }
       setDialogOpen(false);
     } catch (error: any) {
       if (error?.message?.includes('duplicate') || error?.code === '23505') {
-        toast.error("Customer code already exists. Please use a unique code.");
+        toast.error(t("errors.duplicateCode", "Kode pelanggan sudah digunakan"));
       } else {
-        toast.error("Failed to save customer");
+        toast.error(t("errors.saveFailed"));
       }
     }
   };
@@ -125,19 +130,19 @@ export default function Customers() {
     if (!selectedCustomer) return;
     try {
       await deleteCustomer.mutateAsync(selectedCustomer.id);
-      toast.success("Customer deleted successfully");
+      toast.success(t("success.deleted"));
       setDeleteDialogOpen(false);
     } catch (error) {
-      toast.error("Failed to delete customer. They may have contracts.");
+      toast.error(t("errors.deleteFailed"));
     }
   };
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Customers</h2>
+        <h2 className="text-2xl font-bold">{t("customers.title")}</h2>
         <Button onClick={handleOpenCreate}>
-          <Plus className="mr-2 h-4 w-4" /> Add Customer
+          <Plus className="mr-2 h-4 w-4" /> {t("customers.newCustomer")}
         </Button>
       </div>
 
@@ -145,23 +150,24 @@ export default function Customers() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Code</TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead>Route</TableHead>
-              <TableHead>Sales Agent</TableHead>
-              <TableHead>Phone</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead>{t("customers.customerCode")}</TableHead>
+              <TableHead>{t("customers.name")}</TableHead>
+              <TableHead>{t("customers.nik")}</TableHead>
+              <TableHead>{t("customers.route")}</TableHead>
+              <TableHead>{t("customers.salesAgent")}</TableHead>
+              <TableHead>{t("customers.phone")}</TableHead>
+              <TableHead className="text-right">{t("common.actions")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center">Loading...</TableCell>
+                <TableCell colSpan={7} className="text-center">{t("common.loading")}</TableCell>
               </TableRow>
             ) : customers?.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-muted-foreground">
-                  No customers found
+                <TableCell colSpan={7} className="text-center text-muted-foreground">
+                  {t("common.noData")}
                 </TableCell>
               </TableRow>
             ) : (
@@ -171,6 +177,7 @@ export default function Customers() {
                     <Badge variant="secondary">{customer.customer_code || "-"}</Badge>
                   </TableCell>
                   <TableCell className="font-medium">{customer.name}</TableCell>
+                  <TableCell>{customer.nik || "-"}</TableCell>
                   <TableCell>
                     <Badge variant="outline">{customer.routes?.code}</Badge>
                   </TableCell>
@@ -209,11 +216,11 @@ export default function Customers() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{selectedCustomer ? "Edit Customer" : "Add New Customer"}</DialogTitle>
+            <DialogTitle>{selectedCustomer ? t("customers.editCustomer") : t("customers.newCustomer")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label htmlFor="customer_code">Customer Code *</Label>
+              <Label htmlFor="customer_code">{t("customers.customerCode")} *</Label>
               <Input
                 id="customer_code"
                 value={formData.customer_code}
@@ -221,25 +228,35 @@ export default function Customers() {
                 placeholder="e.g., C001"
                 maxLength={20}
               />
-              <p className="text-xs text-muted-foreground mt-1">Unique identifier for the customer</p>
             </div>
             <div>
-              <Label htmlFor="name">Name *</Label>
+              <Label htmlFor="name">{t("customers.name")} *</Label>
               <Input
                 id="name"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="Customer name"
+                placeholder={t("customers.name")}
               />
             </div>
             <div>
-              <Label htmlFor="route">Route (Jalur) *</Label>
+              <Label htmlFor="nik">{t("customers.nik")}</Label>
+              <Input
+                id="nik"
+                value={formData.nik}
+                onChange={(e) => setFormData({ ...formData, nik: e.target.value.replace(/\D/g, '') })}
+                placeholder="16 digit NIK"
+                maxLength={16}
+              />
+              <p className="text-xs text-muted-foreground mt-1">Nomor Induk Kependudukan (16 digit)</p>
+            </div>
+            <div>
+              <Label htmlFor="route">{t("customers.route")} *</Label>
               <Select
                 value={formData.route_id}
                 onValueChange={(v) => setFormData({ ...formData, route_id: v })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select route" />
+                  <SelectValue placeholder={t("customers.selectRoute")} />
                 </SelectTrigger>
                 <SelectContent>
                   {routes?.map((route) => (
@@ -251,7 +268,7 @@ export default function Customers() {
               </Select>
             </div>
             <div>
-              <Label htmlFor="agent">Sales Agent</Label>
+              <Label htmlFor="agent">{t("customers.salesAgent")}</Label>
               <Select
                 value={formData.assigned_sales_id || "none"}
                 onValueChange={(v) =>
@@ -259,10 +276,10 @@ export default function Customers() {
                 }
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select sales agent" />
+                  <SelectValue placeholder={t("customers.selectAgent")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">None</SelectItem>
+                  <SelectItem value="none">-</SelectItem>
                   {agents?.map((agent) => (
                     <SelectItem key={agent.id} value={agent.id}>
                       {agent.name} ({agent.agent_code})
@@ -272,28 +289,28 @@ export default function Customers() {
               </Select>
             </div>
             <div>
-              <Label htmlFor="phone">Phone</Label>
+              <Label htmlFor="phone">{t("customers.phone")}</Label>
               <Input
                 id="phone"
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                placeholder="Phone number"
+                placeholder={t("customers.phone")}
               />
             </div>
             <div>
-              <Label htmlFor="address">Address</Label>
+              <Label htmlFor="address">{t("customers.address")}</Label>
               <Textarea
                 id="address"
                 value={formData.address}
                 onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                placeholder="Full address"
+                placeholder={t("customers.address")}
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>{t("common.cancel")}</Button>
             <Button onClick={handleSubmit} disabled={createCustomer.isPending || updateCustomer.isPending}>
-              {selectedCustomer ? "Update" : "Create"}
+              {selectedCustomer ? t("common.save") : t("common.create")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -302,14 +319,14 @@ export default function Customers() {
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Customer?</AlertDialogTitle>
+            <AlertDialogTitle>{t("common.delete")} {t("customers.title")}?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. Make sure they have no active contracts.
+              {t("contracts.deleteWarning")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete}>{t("common.delete")}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Download, FileSpreadsheet } from "lucide-react";
-import * as XLSX from "xlsx";
+import { FileSpreadsheet } from "lucide-react";
+import ExcelJS from "exceljs";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,6 +28,7 @@ import { usePagination } from "@/hooks/usePagination";
 import { TablePagination } from "@/components/TablePagination";
 
 export default function Reports() {
+  const { t } = useTranslation();
   const { data: agents } = useSalesAgents();
   const [dateFrom, setDateFrom] = useState(
     new Date(new Date().setDate(1)).toISOString().split("T")[0]
@@ -43,63 +45,153 @@ export default function Reports() {
   const { currentPage, totalPages, paginatedItems, goToPage, totalItems } = usePagination(payments);
   const totalAmount = payments?.reduce((sum, p) => sum + p.total_amount, 0) ?? 0;
 
-  const handleExportExcel = () => {
+  const handleExportExcel = async () => {
     if (!payments?.length) return;
 
-    // Prepare data for Excel
-    const data = payments.map((p) => ({
-      "Date": p.payment_date,
-      "Customer": p.customer_name,
-      "Contract": p.contract_ref,
-      "Coupons Paid": p.coupon_count,
-      "Coupon Numbers": `#${p.coupon_indices.join(', #')}`,
-      "Total Amount (Rp)": p.total_amount,
-      "Collector": p.collector_name || "-",
-    }));
-
-    // Create worksheet
-    const ws = XLSX.utils.json_to_sheet(data);
-
-    // Add total row with formula
-    const lastRow = data.length + 1; // +1 for header
-    const totalRowIndex = lastRow + 1;
+    const workbook = new ExcelJS.Workbook();
+    workbook.creator = 'Credit Management System';
+    workbook.created = new Date();
     
-    // Add total row
-    XLSX.utils.sheet_add_aoa(ws, [
-      ["", "", "", "", "TOTAL:", { t: 'n', f: `SUM(F2:F${lastRow})` }, ""]
-    ], { origin: `A${totalRowIndex}` });
+    const worksheet = workbook.addWorksheet('Laporan Pembayaran', {
+      pageSetup: { paperSize: 9, orientation: 'landscape' }
+    });
+
+    // Title row
+    worksheet.mergeCells('A1:G1');
+    const titleCell = worksheet.getCell('A1');
+    titleCell.value = 'LAPORAN PEMBAYARAN';
+    titleCell.font = { bold: true, size: 16 };
+    titleCell.alignment = { horizontal: 'center' };
+
+    // Period row
+    worksheet.mergeCells('A2:G2');
+    const periodCell = worksheet.getCell('A2');
+    periodCell.value = `Periode: ${formatDate(dateFrom)} - ${formatDate(dateTo)}`;
+    periodCell.font = { size: 12 };
+    periodCell.alignment = { horizontal: 'center' };
+
+    // Empty row
+    worksheet.addRow([]);
+
+    // Header row
+    const headerRow = worksheet.addRow([
+      'Tanggal',
+      'Pelanggan',
+      'Kontrak',
+      'Jumlah Kupon',
+      'Nomor Kupon',
+      'Total (Rp)',
+      'Kolektor'
+    ]);
+
+    // Style header
+    headerRow.eachCell((cell) => {
+      cell.font = { bold: true, color: { argb: 'FFFFFF' } };
+      cell.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: '4472C4' }
+      };
+      cell.border = {
+        top: { style: 'thin' },
+        left: { style: 'thin' },
+        bottom: { style: 'thin' },
+        right: { style: 'thin' }
+      };
+      cell.alignment = { horizontal: 'center', vertical: 'middle' };
+    });
+
+    // Data rows
+    payments.forEach((p) => {
+      const row = worksheet.addRow([
+        p.payment_date,
+        p.customer_name,
+        p.contract_ref,
+        p.coupon_count,
+        `#${p.coupon_indices.join(', #')}`,
+        p.total_amount,
+        p.collector_name || '-'
+      ]);
+
+      row.eachCell((cell, colNumber) => {
+        cell.border = {
+          top: { style: 'thin' },
+          left: { style: 'thin' },
+          bottom: { style: 'thin' },
+          right: { style: 'thin' }
+        };
+        
+        // Format currency column
+        if (colNumber === 6) {
+          cell.numFmt = '#,##0';
+          cell.alignment = { horizontal: 'right' };
+        }
+      });
+    });
+
+    // Total row
+    const totalRow = worksheet.addRow([
+      '', '', '', '', 'TOTAL:',
+      { formula: `SUM(F5:F${4 + payments.length})` },
+      ''
+    ]);
+
+    totalRow.eachCell((cell, colNumber) => {
+      cell.font = { bold: true };
+      cell.border = {
+        top: { style: 'double' },
+        left: { style: 'thin' },
+        bottom: { style: 'double' },
+        right: { style: 'thin' }
+      };
+      if (colNumber === 5) {
+        cell.alignment = { horizontal: 'right' };
+      }
+      if (colNumber === 6) {
+        cell.numFmt = '#,##0';
+        cell.alignment = { horizontal: 'right' };
+        cell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FFFF00' }
+        };
+      }
+    });
 
     // Set column widths
-    ws['!cols'] = [
-      { wch: 12 },  // Date
-      { wch: 25 },  // Customer
-      { wch: 15 },  // Contract
-      { wch: 12 },  // Coupons Paid
-      { wch: 20 },  // Coupon Numbers
-      { wch: 18 },  // Total Amount
-      { wch: 15 },  // Collector
+    worksheet.columns = [
+      { width: 12 },  // Tanggal
+      { width: 25 },  // Pelanggan
+      { width: 15 },  // Kontrak
+      { width: 14 },  // Jumlah Kupon
+      { width: 20 },  // Nomor Kupon
+      { width: 18 },  // Total
+      { width: 15 },  // Kolektor
     ];
 
-    // Create workbook
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Payment Report");
-
-    // Generate and download file
-    XLSX.writeFile(wb, `payment-report-${dateFrom}-${dateTo}.xlsx`);
+    // Generate and download
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `laporan-pembayaran-${dateFrom}-${dateTo}.xlsx`;
+    link.click();
+    window.URL.revokeObjectURL(url);
   };
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold">Financial Reports</h2>
+      <h2 className="text-2xl font-bold">{t("reports.title")}</h2>
 
       <Card>
         <CardHeader>
-          <CardTitle>Filter</CardTitle>
+          <CardTitle>{t("reports.filter", "Filter")}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
-              <Label>From Date</Label>
+              <Label>{t("reports.fromDate", "Dari Tanggal")}</Label>
               <Input
                 type="date"
                 value={dateFrom}
@@ -107,7 +199,7 @@ export default function Reports() {
               />
             </div>
             <div>
-              <Label>To Date</Label>
+              <Label>{t("reports.toDate", "Sampai Tanggal")}</Label>
               <Input
                 type="date"
                 value={dateTo}
@@ -115,13 +207,13 @@ export default function Reports() {
               />
             </div>
             <div>
-              <Label>Collector</Label>
+              <Label>{t("collection.collector")}</Label>
               <Select value={collectorId} onValueChange={(v) => setCollectorId(v === "all" ? "" : v)}>
                 <SelectTrigger>
-                  <SelectValue placeholder="All collectors" />
+                  <SelectValue placeholder={t("collection.allCollectors")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Collectors</SelectItem>
+                  <SelectItem value="all">{t("collection.allCollectors")}</SelectItem>
                   {agents?.map((agent) => (
                     <SelectItem key={agent.id} value={agent.id}>
                       {agent.name}
@@ -133,7 +225,7 @@ export default function Reports() {
             <div className="flex items-end">
               <Button onClick={handleExportExcel} variant="outline" className="w-full">
                 <FileSpreadsheet className="mr-2 h-4 w-4" />
-                Export Excel
+                {t("reports.exportExcel", "Export Excel")}
               </Button>
             </div>
           </div>
@@ -144,23 +236,23 @@ export default function Reports() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Date</TableHead>
-              <TableHead>Customer</TableHead>
-              <TableHead>Contract</TableHead>
-              <TableHead>Coupons Paid</TableHead>
-              <TableHead className="text-right">Total Amount</TableHead>
-              <TableHead>Collector</TableHead>
+              <TableHead>{t("reports.date", "Tanggal")}</TableHead>
+              <TableHead>{t("customers.title")}</TableHead>
+              <TableHead>{t("contracts.contractRef")}</TableHead>
+              <TableHead>{t("reports.couponsPaid", "Kupon Dibayar")}</TableHead>
+              <TableHead className="text-right">{t("reports.totalAmount", "Total")}</TableHead>
+              <TableHead>{t("collection.collector")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center">Loading...</TableCell>
+                <TableCell colSpan={6} className="text-center">{t("common.loading")}</TableCell>
               </TableRow>
             ) : payments?.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="text-center text-muted-foreground">
-                  No payments found
+                  {t("common.noData")}
                 </TableCell>
               </TableRow>
             ) : (
@@ -171,7 +263,7 @@ export default function Reports() {
                     <TableCell>{payment.customer_name}</TableCell>
                     <TableCell>{payment.contract_ref}</TableCell>
                     <TableCell>
-                      <span className="font-medium">{payment.coupon_count} coupon{payment.coupon_count > 1 ? 's' : ''}</span>
+                      <span className="font-medium">{payment.coupon_count} {t("contracts.coupons").toLowerCase()}</span>
                       <span className="text-muted-foreground text-xs ml-2">
                         (#{payment.coupon_indices.join(', #')})
                       </span>

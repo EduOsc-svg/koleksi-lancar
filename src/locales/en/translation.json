@@ -30,7 +30,8 @@
     "collection": "Collection",
     "reports": "Reports",
     "customerHistory": "Customer History",
-    "auditLog": "Audit Log"
+    "auditLog": "Audit Log",
+    "appTitle": "Credit Management System"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -39,7 +40,10 @@
     "totalCustomers": "Total Customers",
     "totalCollected": "Total Collected",
     "collectionTrend": "Collection Trend",
-    "weeklyCollections": "Weekly Collections"
+    "weeklyCollections": "Weekly Collections",
+    "days": "Days",
+    "avgDaily": "Average Daily",
+    "collection": "Collection"
   },
   "contracts": {
     "title": "Credit Contracts",
@@ -111,17 +115,21 @@
     "editRoute": "Edit Route",
     "code": "Route Code",
     "name": "Route Name",
-    "defaultCollector": "Default Collector"
+    "defaultCollector": "Default Collector",
+    "deleteWarning": "Make sure no customers are assigned to this route."
   },
   "holidays": {
     "title": "Holidays",
+    "subtitle": "Manage dates that should be skipped during coupon generation",
     "newHoliday": "New Holiday",
     "editHoliday": "Edit Holiday",
     "description": "Description",
+    "descriptionPlaceholder": "e.g., Christmas, Weekend",
     "holidayType": "Holiday Type",
     "specificDate": "Specific Date",
     "recurringWeekday": "Recurring Weekday",
     "date": "Date",
+    "selectDate": "Select date",
     "dayOfWeek": "Day of Week",
     "sunday": "Sunday",
     "monday": "Monday",
@@ -132,7 +140,8 @@
     "saturday": "Saturday",
     "selectDay": "Select day",
     "recurring": "Recurring",
-    "everyWeek": "Every {{day}}"
+    "everyWeek": "Every {{day}}",
+    "deleteWarning": "This will remove the holiday from the calendar. Existing coupons will not be affected."
   },
   "collection": {
     "title": "Collection & Billing",
@@ -158,13 +167,21 @@
     "expected": "Expected",
     "latePayment": "Late Payment Detected",
     "paymentRecorded": "Payment recorded for Coupon #{{coupon}}",
-    "noContracts": "No contracts found"
+    "noContracts": "No contracts found",
+    "collected": "Collected"
   },
   "reports": {
     "title": "Reports",
     "collectionReport": "Collection Report",
     "agentPerformance": "Agent Performance",
-    "overdueReport": "Overdue Report"
+    "overdueReport": "Overdue Report",
+    "filter": "Filter",
+    "fromDate": "From Date",
+    "toDate": "To Date",
+    "exportExcel": "Export Excel",
+    "date": "Date",
+    "couponsPaid": "Coupons Paid",
+    "totalAmount": "Total Amount"
   },
   "auditLog": {
     "title": "Audit Log",
@@ -201,7 +218,11 @@
     "selectContract": "Please select a contract",
     "saveFailed": "Failed to save",
     "deleteFailed": "Failed to delete",
-    "loadFailed": "Failed to load data"
+    "loadFailed": "Failed to load data",
+    "customerCodeRequired": "Please enter a customer code",
+    "duplicateCode": "Customer code already exists",
+    "duplicateDate": "This date is already marked as a holiday",
+    "duplicateDay": "This weekday is already set as recurring holiday"
   },
   "success": {
     "saved": "Saved successfully",

@@ -30,7 +30,8 @@
     "collection": "Penagihan",
     "reports": "Laporan",
     "customerHistory": "Riwayat Pelanggan",
-    "auditLog": "Log Audit"
+    "auditLog": "Log Audit",
+    "appTitle": "Sistem Manajemen Kredit"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -39,7 +40,10 @@
     "totalCustomers": "Total Pelanggan",
     "totalCollected": "Total Terkumpul",
     "collectionTrend": "Tren Penagihan",
-    "weeklyCollections": "Penagihan Mingguan"
+    "weeklyCollections": "Penagihan Mingguan",
+    "days": "Hari",
+    "avgDaily": "Rata-rata Harian",
+    "collection": "Penagihan"
   },
   "contracts": {
     "title": "Kontrak Kredit",
@@ -111,17 +115,21 @@
     "editRoute": "Ubah Jalur",
     "code": "Kode Jalur",
     "name": "Nama Jalur",
-    "defaultCollector": "Kolektor Default"
+    "defaultCollector": "Kolektor Default",
+    "deleteWarning": "Pastikan tidak ada pelanggan yang terhubung ke jalur ini."
   },
   "holidays": {
     "title": "Hari Libur",
+    "subtitle": "Kelola tanggal yang dilewati saat pembuatan kupon",
     "newHoliday": "Libur Baru",
     "editHoliday": "Ubah Libur",
     "description": "Deskripsi",
+    "descriptionPlaceholder": "e.g., Natal, Akhir Pekan",
     "holidayType": "Jenis Libur",
     "specificDate": "Tanggal Tertentu",
     "recurringWeekday": "Hari Berulang",
     "date": "Tanggal",
+    "selectDate": "Pilih tanggal",
     "dayOfWeek": "Hari",
     "sunday": "Minggu",
     "monday": "Senin",
@@ -132,7 +140,8 @@
     "saturday": "Sabtu",
     "selectDay": "Pilih hari",
     "recurring": "Berulang",
-    "everyWeek": "Setiap {{day}}"
+    "everyWeek": "Setiap {{day}}",
+    "deleteWarning": "Ini akan menghapus libur dari kalender. Kupon yang sudah ada tidak akan terpengaruh."
   },
   "collection": {
     "title": "Penagihan & Pembayaran",
@@ -158,13 +167,21 @@
     "expected": "Diharapkan",
     "latePayment": "Keterlambatan Terdeteksi",
     "paymentRecorded": "Pembayaran tercatat untuk Kupon #{{coupon}}",
-    "noContracts": "Tidak ada kontrak"
+    "noContracts": "Tidak ada kontrak",
+    "collected": "Terkumpul"
   },
   "reports": {
     "title": "Laporan",
     "collectionReport": "Laporan Penagihan",
     "agentPerformance": "Performa Agen",
-    "overdueReport": "Laporan Keterlambatan"
+    "overdueReport": "Laporan Keterlambatan",
+    "filter": "Filter",
+    "fromDate": "Dari Tanggal",
+    "toDate": "Sampai Tanggal",
+    "exportExcel": "Export Excel",
+    "date": "Tanggal",
+    "couponsPaid": "Kupon Dibayar",
+    "totalAmount": "Total"
   },
   "auditLog": {
     "title": "Log Audit",
@@ -201,7 +218,11 @@
     "selectContract": "Silakan pilih kontrak",
     "saveFailed": "Gagal menyimpan",
     "deleteFailed": "Gagal menghapus",
-    "loadFailed": "Gagal memuat data"
+    "loadFailed": "Gagal memuat data",
+    "customerCodeRequired": "Masukkan kode pelanggan",
+    "duplicateCode": "Kode pelanggan sudah digunakan",
+    "duplicateDate": "Tanggal ini sudah ditandai sebagai libur",
+    "duplicateDay": "Hari ini sudah diatur sebagai libur berulang"
   },
   "success": {
     "saved": "Berhasil disimpan",

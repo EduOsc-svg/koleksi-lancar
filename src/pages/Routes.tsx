@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Plus, Pencil, Trash2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -48,6 +49,7 @@ import { usePagination } from "@/hooks/usePagination";
 import { TablePagination } from "@/components/TablePagination";
 
 export default function Routes() {
+  const { t } = useTranslation();
   const { data: routes, isLoading } = useRoutes();
   const { data: agents } = useSalesAgents();
   const createRoute = useCreateRoute();
@@ -84,14 +86,14 @@ export default function Routes() {
     try {
       if (selectedRoute) {
         await updateRoute.mutateAsync({ id: selectedRoute.id, ...formData });
-        toast.success("Route updated successfully");
+        toast.success(t("success.updated"));
       } else {
         await createRoute.mutateAsync(formData);
-        toast.success("Route created successfully");
+        toast.success(t("success.created"));
       }
       setDialogOpen(false);
     } catch (error) {
-      toast.error("Failed to save route");
+      toast.error(t("errors.saveFailed"));
     }
   };
 
@@ -99,19 +101,19 @@ export default function Routes() {
     if (!selectedRoute) return;
     try {
       await deleteRoute.mutateAsync(selectedRoute.id);
-      toast.success("Route deleted successfully");
+      toast.success(t("success.deleted"));
       setDeleteDialogOpen(false);
     } catch (error) {
-      toast.error("Failed to delete route. It may have associated customers.");
+      toast.error(t("errors.deleteFailed"));
     }
   };
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Routes (Jalur)</h2>
+        <h2 className="text-2xl font-bold">{t("routes.title")}</h2>
         <Button onClick={handleOpenCreate}>
-          <Plus className="mr-2 h-4 w-4" /> Add Route
+          <Plus className="mr-2 h-4 w-4" /> {t("routes.newRoute")}
         </Button>
       </div>
 
@@ -119,21 +121,21 @@ export default function Routes() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Code</TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead>Default Collector</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead>{t("routes.code")}</TableHead>
+              <TableHead>{t("routes.name")}</TableHead>
+              <TableHead>{t("routes.defaultCollector")}</TableHead>
+              <TableHead className="text-right">{t("common.actions")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={4} className="text-center">Loading...</TableCell>
+                <TableCell colSpan={4} className="text-center">{t("common.loading")}</TableCell>
               </TableRow>
             ) : routes?.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={4} className="text-center text-muted-foreground">
-                  No routes found
+                  {t("common.noData")}
                 </TableCell>
               </TableRow>
             ) : (
@@ -173,11 +175,11 @@ export default function Routes() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{selectedRoute ? "Edit Route" : "Add New Route"}</DialogTitle>
+            <DialogTitle>{selectedRoute ? t("routes.editRoute") : t("routes.newRoute")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label htmlFor="code">Route Code</Label>
+              <Label htmlFor="code">{t("routes.code")}</Label>
               <Input
                 id="code"
                 value={formData.code}
@@ -186,16 +188,16 @@ export default function Routes() {
               />
             </div>
             <div>
-              <Label htmlFor="name">Name</Label>
+              <Label htmlFor="name">{t("routes.name")}</Label>
               <Input
                 id="name"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="Route name / area"
+                placeholder={t("routes.name")}
               />
             </div>
             <div>
-              <Label htmlFor="collector">Default Collector</Label>
+              <Label htmlFor="collector">{t("routes.defaultCollector")}</Label>
               <Select
                 value={formData.default_collector_id || "none"}
                 onValueChange={(v) =>
@@ -203,10 +205,10 @@ export default function Routes() {
                 }
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select collector" />
+                  <SelectValue placeholder={t("collection.selectCollector")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">None</SelectItem>
+                  <SelectItem value="none">-</SelectItem>
                   {agents?.map((agent) => (
                     <SelectItem key={agent.id} value={agent.id}>
                       {agent.name} ({agent.agent_code})
@@ -217,9 +219,9 @@ export default function Routes() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>{t("common.cancel")}</Button>
             <Button onClick={handleSubmit} disabled={createRoute.isPending || updateRoute.isPending}>
-              {selectedRoute ? "Update" : "Create"}
+              {selectedRoute ? t("common.save") : t("common.create")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -228,14 +230,14 @@ export default function Routes() {
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Route?</AlertDialogTitle>
+            <AlertDialogTitle>{t("common.delete")} {t("routes.title")}?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. Make sure no customers are assigned to this route.
+              {t("routes.deleteWarning", "Pastikan tidak ada pelanggan yang terhubung ke jalur ini.")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete}>{t("common.delete")}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

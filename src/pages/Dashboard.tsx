@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useCollectionTrend } from "@/hooks/useCollectionTrend";
 import { formatRupiah } from "@/lib/format";
@@ -14,6 +15,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { TrendingUp } from "lucide-react";
 
 export default function Dashboard() {
+  const { t, i18n } = useTranslation();
   const { data: trendData, isLoading } = useCollectionTrend(30);
 
   // Calculate summary stats
@@ -22,18 +24,20 @@ export default function Dashboard() {
     ? totalCollection / trendData.length 
     : 0;
 
+  const locale = i18n.language === 'id' ? 'id-ID' : 'en-US';
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2">
         <TrendingUp className="h-6 w-6 text-primary" />
-        <h2 className="text-2xl font-bold">Dashboard</h2>
+        <h2 className="text-2xl font-bold">{t("dashboard.title")}</h2>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Collection Trend - Last 30 Days</CardTitle>
+          <CardTitle>{t("dashboard.collectionTrend")} - 30 {t("dashboard.days", "Hari")}</CardTitle>
           <p className="text-sm text-muted-foreground">
-            Total: {formatRupiah(totalCollection)} | Average Daily: {formatRupiah(avgDaily)}
+            Total: {formatRupiah(totalCollection)} | {t("dashboard.avgDaily", "Rata-rata Harian")}: {formatRupiah(avgDaily)}
           </p>
         </CardHeader>
         <CardContent>
@@ -59,10 +63,10 @@ export default function Dashboard() {
                     className="text-xs" 
                   />
                   <Tooltip
-                    formatter={(value: number) => [formatRupiah(value), "Collection"]}
+                    formatter={(value: number) => [formatRupiah(value), t("dashboard.collection", "Penagihan")]}
                     labelFormatter={(label) => {
                       const date = new Date(label);
-                      return date.toLocaleDateString('id-ID', { 
+                      return date.toLocaleDateString(locale, { 
                         weekday: 'long', 
                         year: 'numeric', 
                         month: 'long', 

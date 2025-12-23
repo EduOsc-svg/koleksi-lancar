@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Plus, Pencil, Trash2, Calendar, RotateCcw } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -36,7 +37,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { useHolidays, useCreateHoliday, useUpdateHoliday, useDeleteHoliday, Holiday, DAY_NAMES } from "@/hooks/useHolidays";
+import { useHolidays, useCreateHoliday, useUpdateHoliday, useDeleteHoliday, Holiday } from "@/hooks/useHolidays";
 import { usePagination } from "@/hooks/usePagination";
 import { TablePagination } from "@/components/TablePagination";
 import { Badge } from "@/components/ui/badge";
@@ -44,11 +45,22 @@ import { Badge } from "@/components/ui/badge";
 type HolidayType = 'specific_date' | 'recurring_weekday';
 
 export default function Holidays() {
+  const { t } = useTranslation();
   const { data: holidays, isLoading } = useHolidays();
   const createHoliday = useCreateHoliday();
   const updateHoliday = useUpdateHoliday();
   const deleteHoliday = useDeleteHoliday();
   const { currentPage, totalPages, paginatedItems, goToPage, totalItems } = usePagination(holidays);
+
+  const DAY_NAMES = [
+    t("holidays.sunday"),
+    t("holidays.monday"),
+    t("holidays.tuesday"),
+    t("holidays.wednesday"),
+    t("holidays.thursday"),
+    t("holidays.friday"),
+    t("holidays.saturday"),
+  ];
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -89,7 +101,7 @@ export default function Holidays() {
 
   const handleSubmit = async () => {
     if (formData.holiday_type === "specific_date" && !formData.holiday_date) {
-      toast.error("Please select a date");
+      toast.error(t("holidays.selectDate", "Pilih tanggal"));
       return;
     }
     try {
@@ -112,19 +124,19 @@ export default function Holidays() {
           id: selectedHoliday.id,
           ...payload,
         });
-        toast.success("Holiday updated successfully");
+        toast.success(t("success.updated"));
       } else {
         await createHoliday.mutateAsync(payload);
-        toast.success("Holiday added successfully");
+        toast.success(t("success.created"));
       }
       setDialogOpen(false);
     } catch (error: any) {
       if (error?.message?.includes("duplicate") || error?.message?.includes("unique")) {
         toast.error(formData.holiday_type === "specific_date" 
-          ? "This date is already marked as a holiday" 
-          : "This weekday is already set as recurring holiday");
+          ? t("errors.duplicateDate", "Tanggal ini sudah ditandai sebagai libur")
+          : t("errors.duplicateDay", "Hari ini sudah diatur sebagai libur berulang"));
       } else {
-        toast.error("Failed to save holiday");
+        toast.error(t("errors.saveFailed"));
       }
     }
   };
@@ -133,17 +145,17 @@ export default function Holidays() {
     if (!selectedHoliday) return;
     try {
       await deleteHoliday.mutateAsync(selectedHoliday.id);
-      toast.success("Holiday deleted successfully");
+      toast.success(t("success.deleted"));
       setDeleteDialogOpen(false);
       setSelectedHoliday(null);
     } catch (error) {
-      toast.error("Failed to delete holiday");
+      toast.error(t("errors.deleteFailed"));
     }
   };
 
   const getHolidayDisplayText = (holiday: Holiday) => {
     if (holiday.holiday_type === "recurring_weekday") {
-      return `Every ${DAY_NAMES[holiday.day_of_week ?? 0]}`;
+      return t("holidays.everyWeek", { day: DAY_NAMES[holiday.day_of_week ?? 0] });
     }
     return holiday.holiday_date || "-";
   };
@@ -152,13 +164,13 @@ export default function Holidays() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold">Holidays</h2>
+          <h2 className="text-2xl font-bold">{t("holidays.title")}</h2>
           <p className="text-muted-foreground">
-            Manage dates that should be skipped during coupon generation
+            {t("holidays.subtitle", "Kelola tanggal yang dilewati saat pembuatan kupon")}
           </p>
         </div>
         <Button onClick={handleOpenCreate}>
-          <Plus className="mr-2 h-4 w-4" /> Add Holiday
+          <Plus className="mr-2 h-4 w-4" /> {t("holidays.newHoliday")}
         </Button>
       </div>
 
@@ -166,21 +178,21 @@ export default function Holidays() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Type</TableHead>
-              <TableHead>Date / Day</TableHead>
-              <TableHead>Description</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead>{t("holidays.holidayType")}</TableHead>
+              <TableHead>{t("holidays.date")} / {t("holidays.dayOfWeek")}</TableHead>
+              <TableHead>{t("holidays.description")}</TableHead>
+              <TableHead className="text-right">{t("common.actions")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={4} className="text-center">Loading...</TableCell>
+                <TableCell colSpan={4} className="text-center">{t("common.loading")}</TableCell>
               </TableRow>
             ) : holidays?.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={4} className="text-center text-muted-foreground">
-                  No holidays defined. Add holidays to skip during coupon generation.
+                  {t("common.noData")}
                 </TableCell>
               </TableRow>
             ) : (
@@ -189,11 +201,11 @@ export default function Holidays() {
                   <TableCell>
                     {holiday.holiday_type === "recurring_weekday" ? (
                       <Badge variant="secondary" className="flex items-center gap-1 w-fit">
-                        <RotateCcw className="h-3 w-3" /> Recurring
+                        <RotateCcw className="h-3 w-3" /> {t("holidays.recurring")}
                       </Badge>
                     ) : (
                       <Badge variant="outline" className="flex items-center gap-1 w-fit">
-                        <Calendar className="h-3 w-3" /> Specific Date
+                        <Calendar className="h-3 w-3" /> {t("holidays.specificDate")}
                       </Badge>
                     )}
                   </TableCell>
@@ -232,11 +244,11 @@ export default function Holidays() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{selectedHoliday ? "Edit Holiday" : "Add Holiday"}</DialogTitle>
+            <DialogTitle>{selectedHoliday ? t("holidays.editHoliday") : t("holidays.newHoliday")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label>Holiday Type</Label>
+              <Label>{t("holidays.holidayType")}</Label>
               <Select
                 value={formData.holiday_type}
                 onValueChange={(v: HolidayType) => setFormData({ ...formData, holiday_type: v })}
@@ -245,15 +257,15 @@ export default function Holidays() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="specific_date">Specific Date</SelectItem>
-                  <SelectItem value="recurring_weekday">Recurring Weekday</SelectItem>
+                  <SelectItem value="specific_date">{t("holidays.specificDate")}</SelectItem>
+                  <SelectItem value="recurring_weekday">{t("holidays.recurringWeekday")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             {formData.holiday_type === "specific_date" ? (
               <div>
-                <Label htmlFor="holiday_date">Date</Label>
+                <Label htmlFor="holiday_date">{t("holidays.date")}</Label>
                 <Input
                   id="holiday_date"
                   type="date"
@@ -263,7 +275,7 @@ export default function Holidays() {
               </div>
             ) : (
               <div>
-                <Label>Day of Week</Label>
+                <Label>{t("holidays.dayOfWeek")}</Label>
                 <Select
                   value={String(formData.day_of_week)}
                   onValueChange={(v) => setFormData({ ...formData, day_of_week: parseInt(v) })}
@@ -283,19 +295,19 @@ export default function Holidays() {
             )}
 
             <div>
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="description">{t("holidays.description")}</Label>
               <Input
                 id="description"
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder="e.g., Christmas, Weekend"
+                placeholder={t("holidays.descriptionPlaceholder", "e.g., Natal, Akhir Pekan")}
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>{t("common.cancel")}</Button>
             <Button onClick={handleSubmit} disabled={createHoliday.isPending || updateHoliday.isPending}>
-              {selectedHoliday ? "Update" : "Add"}
+              {selectedHoliday ? t("common.save") : t("common.create")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -304,14 +316,14 @@ export default function Holidays() {
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Holiday?</AlertDialogTitle>
+            <AlertDialogTitle>{t("common.delete")} {t("holidays.title")}?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will remove the holiday from the calendar. Existing coupons will not be affected.
+              {t("holidays.deleteWarning", "Ini akan menghapus libur dari kalender. Kupon yang sudah ada tidak akan terpengaruh.")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete}>{t("common.delete")}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

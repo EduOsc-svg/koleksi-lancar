@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Plus, Pencil, Trash2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -40,6 +41,7 @@ import { usePagination } from "@/hooks/usePagination";
 import { TablePagination } from "@/components/TablePagination";
 
 export default function SalesAgents() {
+  const { t } = useTranslation();
   const { data: agents, isLoading } = useSalesAgents();
   const createAgent = useCreateSalesAgent();
   const updateAgent = useUpdateSalesAgent();
@@ -71,14 +73,14 @@ export default function SalesAgents() {
     try {
       if (selectedAgent) {
         await updateAgent.mutateAsync({ id: selectedAgent.id, ...formData });
-        toast.success("Sales agent updated successfully");
+        toast.success(t("success.updated"));
       } else {
         await createAgent.mutateAsync(formData);
-        toast.success("Sales agent created successfully");
+        toast.success(t("success.created"));
       }
       setDialogOpen(false);
     } catch (error) {
-      toast.error("Failed to save sales agent");
+      toast.error(t("errors.saveFailed"));
     }
   };
 
@@ -86,19 +88,19 @@ export default function SalesAgents() {
     if (!selectedAgent) return;
     try {
       await deleteAgent.mutateAsync(selectedAgent.id);
-      toast.success("Sales agent deleted successfully");
+      toast.success(t("success.deleted"));
       setDeleteDialogOpen(false);
     } catch (error) {
-      toast.error("Failed to delete sales agent");
+      toast.error(t("errors.deleteFailed"));
     }
   };
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Sales Agents</h2>
+        <h2 className="text-2xl font-bold">{t("salesAgents.title")}</h2>
         <Button onClick={handleOpenCreate}>
-          <Plus className="mr-2 h-4 w-4" /> Add Agent
+          <Plus className="mr-2 h-4 w-4" /> {t("salesAgents.newAgent")}
         </Button>
       </div>
 
@@ -106,21 +108,21 @@ export default function SalesAgents() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Code</TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead>Phone</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead>{t("salesAgents.agentCode")}</TableHead>
+              <TableHead>{t("salesAgents.name")}</TableHead>
+              <TableHead>{t("salesAgents.phone")}</TableHead>
+              <TableHead className="text-right">{t("common.actions")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={4} className="text-center">Loading...</TableCell>
+                <TableCell colSpan={4} className="text-center">{t("common.loading")}</TableCell>
               </TableRow>
             ) : agents?.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={4} className="text-center text-muted-foreground">
-                  No sales agents found
+                  {t("common.noData")}
                 </TableCell>
               </TableRow>
             ) : (
@@ -160,11 +162,11 @@ export default function SalesAgents() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{selectedAgent ? "Edit Agent" : "Add New Agent"}</DialogTitle>
+            <DialogTitle>{selectedAgent ? t("salesAgents.editAgent") : t("salesAgents.newAgent")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label htmlFor="agent_code">Agent Code</Label>
+              <Label htmlFor="agent_code">{t("salesAgents.agentCode")}</Label>
               <Input
                 id="agent_code"
                 value={formData.agent_code}
@@ -173,28 +175,28 @@ export default function SalesAgents() {
               />
             </div>
             <div>
-              <Label htmlFor="name">Name</Label>
+              <Label htmlFor="name">{t("salesAgents.name")}</Label>
               <Input
                 id="name"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="Full name"
+                placeholder={t("salesAgents.name")}
               />
             </div>
             <div>
-              <Label htmlFor="phone">Phone</Label>
+              <Label htmlFor="phone">{t("salesAgents.phone")}</Label>
               <Input
                 id="phone"
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                placeholder="Phone number"
+                placeholder={t("salesAgents.phone")}
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>{t("common.cancel")}</Button>
             <Button onClick={handleSubmit} disabled={createAgent.isPending || updateAgent.isPending}>
-              {selectedAgent ? "Update" : "Create"}
+              {selectedAgent ? t("common.save") : t("common.create")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -203,14 +205,14 @@ export default function SalesAgents() {
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Sales Agent?</AlertDialogTitle>
+            <AlertDialogTitle>{t("common.delete")} {t("salesAgents.title")}?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the agent.
+              {t("contracts.deleteWarning")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete}>{t("common.delete")}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
