@@ -1,5 +1,5 @@
-/* Print Coupon 8x5 cm - A4 Landscape Layout */
-/* Fits approximately 3 columns x 3 rows = 9 coupons per page */
+/* Print Coupon 8x5 cm - A4 Landscape Layout with Background Image */
+/* Fits 3 columns x 3 rows = 9 coupons per page */
 
 /* Hide on screen */
 .print-coupon-8x5-container {
@@ -20,15 +20,15 @@
   /* Page setup - A4 Landscape */
   @page {
     size: A4 landscape;
-    margin: 5mm;
+    margin: 15mm;
   }
 
   body {
     margin: 0;
     padding: 0;
     background: white !important;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
   .print-coupon-8x5-container {
@@ -40,176 +40,85 @@
     background: white;
   }
 
-  /* Grid: 3 columns x 3 rows for A4 landscape (297mm x 210mm usable ~287mm x 200mm) */
+  /* Grid: 3 columns x 3 rows */
   .coupon-8x5-grid {
     display: grid;
-    grid-template-columns: repeat(3, 80mm);
-    grid-template-rows: repeat(3, 50mm);
-    gap: 3mm;
-    justify-content: center;
-    align-content: start;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 10mm;
+    width: 267mm;
+    height: 179mm;
   }
 
-  /* Individual coupon card - 8x5 cm */
+  /* Individual coupon card - 8x5 cm with background image */
   .coupon-8x5-card {
     width: 80mm;
     height: 50mm;
-    border: 1px solid #999;
-    padding: 2mm 3mm;
     position: relative;
+    background-image: var(--coupon-bg);
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
     box-sizing: border-box;
     page-break-inside: avoid;
     break-inside: avoid;
     overflow: hidden;
-    background-color: #fcfcfc;
-    background-image: 
-      repeating-linear-gradient(
-        -45deg,
-        transparent,
-        transparent 15mm,
-        rgba(198, 40, 40, 0.03) 15mm,
-        rgba(198, 40, 40, 0.03) 16mm
-      );
   }
 
-  /* Watermark background text */
-  .coupon-8x5-card::before {
-    content: "CV MAHKOTA JAYA ELEKTRONIK CV MAHKOTA JAYA ELEKTRONIK CV MAHKOTA JAYA ELEKTRONIK CV MAHKOTA JAYA ELEKTRONIK CV MAHKOTA JAYA ELEKTRONIK";
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) rotate(-30deg);
-    font-size: 10px;
-    color: rgba(0, 51, 153, 0.06);
-    white-space: nowrap;
-    font-weight: bold;
-    letter-spacing: 3px;
-    z-index: 0;
-    pointer-events: none;
-    width: 300%;
-    text-align: center;
-  }
-
-  /* Header Section */
-  .coupon-8x5-header {
-    display: flex;
-    align-items: flex-start;
-    gap: 2mm;
-    margin-bottom: 1mm;
-    position: relative;
-    z-index: 1;
-  }
-
-  .coupon-8x5-logo {
-    width: 10mm;
-    height: auto;
-    flex-shrink: 0;
-  }
-
-  .coupon-8x5-header-text {
-    flex: 1;
-  }
-
-  .coupon-8x5-company-name {
-    font-size: 9pt;
-    font-weight: bold;
-    color: #c62828;
-    margin: 0;
-    line-height: 1.1;
-  }
-
-  .coupon-8x5-company-name span {
-    color: #003399;
-  }
-
-  .coupon-8x5-warning {
-    font-size: 6pt;
-    color: #c62828;
-    font-style: italic;
-    margin: 0;
-    line-height: 1.2;
-  }
-
-  /* Title */
-  .coupon-8x5-title {
-    text-align: center;
-    font-size: 8pt;
-    font-weight: bold;
-    color: #8b0000;
-    text-decoration: underline;
-    margin: 1.5mm 0;
-    position: relative;
-    z-index: 1;
-  }
-
-  /* Data Section */
+  /* Data positioning - absolute positioning relative to background */
   .coupon-8x5-data {
-    position: relative;
-    z-index: 1;
-    margin-bottom: 1mm;
-  }
-
-  .coupon-8x5-data-row {
-    display: flex;
-    font-size: 7pt;
-    line-height: 1.4;
-    color: #333;
-  }
-
-  .coupon-8x5-data-label {
-    width: 18mm;
-    font-weight: 600;
-    flex-shrink: 0;
-  }
-
-  .coupon-8x5-data-colon {
-    width: 3mm;
-    text-align: center;
-    flex-shrink: 0;
-  }
-
-  .coupon-8x5-data-value {
-    flex: 1;
-    font-weight: 500;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  /* Amount Section */
-  .coupon-8x5-amount-section {
     position: absolute;
-    bottom: 8mm;
-    right: 3mm;
-    text-align: right;
-    z-index: 1;
-  }
-
-  .coupon-8x5-amount-label {
-    font-size: 6pt;
+    font-family: "Arial Narrow", Arial, sans-serif;
     font-weight: bold;
-    color: #333;
-  }
-
-  .coupon-8x5-amount-value {
     font-size: 10pt;
-    font-weight: bold;
-    color: #c62828;
-    border-bottom: 1px dotted #c62828;
-    padding-left: 2mm;
+    color: #000;
+    line-height: 1;
+    white-space: nowrap;
+    left: 29%;
   }
 
-  /* Footer */
-  .coupon-8x5-footer {
-    position: absolute;
-    bottom: 2mm;
-    left: 0;
-    right: 0;
-    text-align: center;
-    font-size: 7pt;
-    font-weight: bold;
-    color: #c62828;
-    z-index: 1;
+  /* NO.Faktur - Red color */
+  .coupon-8x5-faktur {
+    top: 38%;
+    color: #d00000;
+    font-size: 11pt;
+  }
+
+  /* Nama */
+  .coupon-8x5-nama {
+    top: 46%;
+    text-transform: capitalize;
+  }
+
+  /* Alamat */
+  .coupon-8x5-alamat {
+    top: 54%;
+    font-size: 9pt;
+  }
+
+  /* Jatuh Tempo */
+  .coupon-8x5-jatuhtempo {
+    top: 62%;
+  }
+
+  /* Angsuran Ke */
+  .coupon-8x5-angsuran-ke {
+    top: 70%;
+  }
+
+  /* Besar Angsuran - Bottom right */
+  .coupon-8x5-nominal {
+    left: 71%;
+    top: 76%;
+    font-size: 16pt;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+  }
+
+  /* Kantor - Bottom center */
+  .coupon-8x5-kantor {
+    left: 48%;
+    top: 87%;
+    font-size: 9pt;
   }
 
   /* Page break after every 9 coupons */

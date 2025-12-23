@@ -1,5 +1,5 @@
 import { InstallmentCoupon } from "@/hooks/useInstallmentCoupons";
-import couponLogo from "@/assets/coupon-logo.png";
+import couponBg from "@/assets/coupon-logo.png";
 import "@/styles/print-coupon-8x5.css";
 
 interface ContractInfo {
@@ -22,7 +22,7 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleDateString("id-ID", {
       day: "2-digit",
-      month: "2-digit",
+      month: "long",
       year: "numeric",
     });
   };
@@ -43,61 +43,45 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
     <div className="print-coupon-8x5-container">
       <div className="coupon-8x5-grid">
         {coupons.map((coupon) => (
-          <div key={coupon.id} className="coupon-8x5-card">
-            {/* Header with Logo */}
-            <div className="coupon-8x5-header">
-              <img src={couponLogo} alt="Logo" className="coupon-8x5-logo" />
-              <div className="coupon-8x5-header-text">
-                <p className="coupon-8x5-company-name">
-                  <span>CV</span> MAHKOTA JAYA ELEKTRONIK
-                </p>
-                <p className="coupon-8x5-warning">
-                  Jangan dibayar tanpa bukti kupon<br />
-                  kami tidak bertanggung jawab
-                </p>
-              </div>
-            </div>
+          <div
+            key={coupon.id}
+            className="coupon-8x5-card"
+            style={{ "--coupon-bg": `url(${couponBg})` } as React.CSSProperties}
+          >
+            {/* NO.Faktur */}
+            <span className="coupon-8x5-data coupon-8x5-faktur">
+              {truncateText(noFaktur, 25)}
+            </span>
 
-            {/* Title */}
-            <div className="coupon-8x5-title">VOUCER ANGSURAN</div>
+            {/* Nama */}
+            <span className="coupon-8x5-data coupon-8x5-nama">
+              {truncateText(contract.customers?.name || "-", 30)}
+            </span>
 
-            {/* Data Section */}
-            <div className="coupon-8x5-data">
-              <div className="coupon-8x5-data-row">
-                <span className="coupon-8x5-data-label">NO.Faktur</span>
-                <span className="coupon-8x5-data-colon">:</span>
-                <span className="coupon-8x5-data-value">{truncateText(noFaktur, 25)}</span>
-              </div>
-              <div className="coupon-8x5-data-row">
-                <span className="coupon-8x5-data-label">Nama</span>
-                <span className="coupon-8x5-data-colon">:</span>
-                <span className="coupon-8x5-data-value">{truncateText(contract.customers?.name || "-", 30)}</span>
-              </div>
-              <div className="coupon-8x5-data-row">
-                <span className="coupon-8x5-data-label">Alamat</span>
-                <span className="coupon-8x5-data-colon">:</span>
-                <span className="coupon-8x5-data-value">{truncateText(contract.customers?.address || "-", 30)}</span>
-              </div>
-              <div className="coupon-8x5-data-row">
-                <span className="coupon-8x5-data-label">Jatuh Tempo</span>
-                <span className="coupon-8x5-data-colon">:</span>
-                <span className="coupon-8x5-data-value">{formatDate(coupon.due_date)}</span>
-              </div>
-              <div className="coupon-8x5-data-row">
-                <span className="coupon-8x5-data-label">Angsuran Ke-</span>
-                <span className="coupon-8x5-data-colon">:</span>
-                <span className="coupon-8x5-data-value">{coupon.installment_index}</span>
-              </div>
-            </div>
+            {/* Alamat */}
+            <span className="coupon-8x5-data coupon-8x5-alamat">
+              {truncateText(contract.customers?.address || "-", 30)}
+            </span>
 
-            {/* Amount Section */}
-            <div className="coupon-8x5-amount-section">
-              <div className="coupon-8x5-amount-label">Besar Angsuran</div>
-              <div className="coupon-8x5-amount-value">Rp. {formatAmount(coupon.amount)}</div>
-            </div>
+            {/* Jatuh Tempo */}
+            <span className="coupon-8x5-data coupon-8x5-jatuhtempo">
+              {formatDate(coupon.due_date)}
+            </span>
 
-            {/* Footer */}
-            <div className="coupon-8x5-footer">KANTOR / 0852 5882 5882</div>
+            {/* Angsuran Ke */}
+            <span className="coupon-8x5-data coupon-8x5-angsuran-ke">
+              {coupon.installment_index}
+            </span>
+
+            {/* Besar Angsuran */}
+            <span className="coupon-8x5-data coupon-8x5-nominal">
+              {formatAmount(coupon.amount)}
+            </span>
+
+            {/* Kantor */}
+            <span className="coupon-8x5-data coupon-8x5-kantor">
+              0852 5882 5882
+            </span>
           </div>
         ))}
       </div>
