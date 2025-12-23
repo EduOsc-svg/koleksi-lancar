@@ -1,4 +1,5 @@
 import { useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   LayoutDashboard,
   Users,
@@ -26,31 +27,33 @@ import {
   SidebarMenuItem,
   SidebarFooter,
 } from "@/components/ui/sidebar";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 const mainItems = [
-  { title: "Dashboard", url: "/", icon: LayoutDashboard },
+  { titleKey: "nav.dashboard", url: "/", icon: LayoutDashboard },
 ];
 
 const masterItems = [
-  { title: "Sales Agents", url: "/sales-agents", icon: Users },
-  { title: "Routes (Jalur)", url: "/routes", icon: MapPin },
-  { title: "Customers", url: "/customers", icon: UserCircle },
-  { title: "Contracts", url: "/contracts", icon: FileText },
-  { title: "Holidays", url: "/holidays", icon: Calendar },
+  { titleKey: "nav.salesAgents", url: "/sales-agents", icon: Users },
+  { titleKey: "nav.routes", url: "/routes", icon: MapPin },
+  { titleKey: "nav.customers", url: "/customers", icon: UserCircle },
+  { titleKey: "nav.contracts", url: "/contracts", icon: FileText },
+  { titleKey: "nav.holidays", url: "/holidays", icon: Calendar },
 ];
 
 const operationItems = [
-  { title: "Collection", url: "/collection", icon: Wallet },
-  { title: "Reports", url: "/reports", icon: BarChart3 },
-  { title: "Customer History", url: "/history", icon: History },
+  { titleKey: "nav.collection", url: "/collection", icon: Wallet },
+  { titleKey: "nav.reports", url: "/reports", icon: BarChart3 },
+  { titleKey: "nav.customerHistory", url: "/history", icon: History },
 ];
 
 const systemItems = [
-  { title: "Audit Log", url: "/audit-log", icon: Shield },
+  { titleKey: "nav.auditLog", url: "/audit-log", icon: Shield },
 ];
 
 export function AppSidebar() {
   const location = useLocation();
+  const { t } = useTranslation();
   const { user, signOut } = useAuth();
   const isActive = (path: string) => location.pathname === path;
 
@@ -59,16 +62,16 @@ export function AppSidebar() {
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Main
+            {t("nav.main")}
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {mainItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
+                <SidebarMenuItem key={item.titleKey}>
                   <SidebarMenuButton asChild isActive={isActive(item.url)}>
                     <NavLink to={item.url}>
                       <item.icon className="mr-2 h-4 w-4" />
-                      <span>{item.title}</span>
+                      <span>{t(item.titleKey)}</span>
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -79,16 +82,16 @@ export function AppSidebar() {
 
         <SidebarGroup>
           <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Master Data
+            {t("nav.masterData")}
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {masterItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
+                <SidebarMenuItem key={item.titleKey}>
                   <SidebarMenuButton asChild isActive={isActive(item.url)}>
                     <NavLink to={item.url}>
                       <item.icon className="mr-2 h-4 w-4" />
-                      <span>{item.title}</span>
+                      <span>{t(item.titleKey)}</span>
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -99,16 +102,16 @@ export function AppSidebar() {
 
         <SidebarGroup>
           <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Operations
+            {t("nav.operations")}
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {operationItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
+                <SidebarMenuItem key={item.titleKey}>
                   <SidebarMenuButton asChild isActive={isActive(item.url)}>
                     <NavLink to={item.url}>
                       <item.icon className="mr-2 h-4 w-4" />
-                      <span>{item.title}</span>
+                      <span>{t(item.titleKey)}</span>
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -119,16 +122,16 @@ export function AppSidebar() {
 
         <SidebarGroup>
           <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            System
+            {t("nav.system")}
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {systemItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
+                <SidebarMenuItem key={item.titleKey}>
                   <SidebarMenuButton asChild isActive={isActive(item.url)}>
                     <NavLink to={item.url}>
                       <item.icon className="mr-2 h-4 w-4" />
-                      <span>{item.title}</span>
+                      <span>{t(item.titleKey)}</span>
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -139,7 +142,8 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter className="border-t p-4">
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-3">
+          <LanguageSwitcher />
           <p className="text-xs text-muted-foreground truncate">
             {user?.email}
           </p>
@@ -150,7 +154,7 @@ export function AppSidebar() {
             className="w-full"
           >
             <LogOut className="mr-2 h-4 w-4" />
-            Logout
+            {t("common.logout")}
           </Button>
         </div>
       </SidebarFooter>
