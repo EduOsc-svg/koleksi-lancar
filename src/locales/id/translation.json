@@ -1,4 +1,21 @@
 {
+  "auditLog": {
+    "title": "Log Audit",
+    "activityHistory": "Riwayat Aktivitas",
+    "searchPlaceholder": "Cari berdasarkan pengguna, aksi, entitas...",
+    "timestamp": "Waktu",
+    "user": "Pengguna",
+    "role": "Role",
+    "action": "Aksi",
+    "entity": "Entitas",
+    "description": "Deskripsi",
+    "details": "Detail",
+    "viewDetails": "Lihat Detail",
+    "detailTitle": "Detail Log Audit",
+    "noLogs": "Tidak ada log aktivitas",
+    "system": "Sistem",
+    "unknown": "Tidak diketahui"
+  },
   "common": {
     "loading": "Memuat...",
     "save": "Simpan",

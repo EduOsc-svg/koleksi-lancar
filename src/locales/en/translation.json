@@ -1,4 +1,21 @@
 {
+  "auditLog": {
+    "title": "Audit Log",
+    "activityHistory": "Activity History",
+    "searchPlaceholder": "Search by user, action, entity...",
+    "timestamp": "Timestamp",
+    "user": "User",
+    "role": "Role",
+    "action": "Action",
+    "entity": "Entity",
+    "description": "Description",
+    "details": "Details",
+    "viewDetails": "View Details",
+    "detailTitle": "Audit Log Detail",
+    "noLogs": "No activity logs",
+    "system": "System",
+    "unknown": "Unknown"
+  },
   "common": {
     "loading": "Loading...",
     "save": "Save",
