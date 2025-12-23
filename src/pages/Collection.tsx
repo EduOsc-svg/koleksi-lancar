@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { CreditCard, FileText, AlertTriangle } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import "@/styles/print-coupon.css";
 import { PrintableCoupons } from "@/components/print/PrintableCoupon";
 import { Button } from "@/components/ui/button";
@@ -33,6 +34,7 @@ import { useLastPaymentDate, calculateLateNote } from "@/hooks/useLastPaymentDat
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function Collection() {
+  const { t } = useTranslation();
   const { data: routes } = useRoutes();
   const { data: agents } = useSalesAgents();
   const { data: contracts } = useContracts("active");
@@ -74,14 +76,13 @@ export default function Collection() {
 
   const filteredContracts = contracts?.filter((c) => {
     if (selectedRoute && c.customers?.routes?.code) {
-      return true; // Filter by route if needed
+      return true;
     }
     return true;
   });
 
   const manifestContracts = contracts?.filter((c) => {
     if (selectedRoute) {
-      // Filter by customer's route
       return c.customers?.routes && routes?.find(r => r.id === selectedRoute)?.code === c.customers.routes.code;
     }
     if (selectedCollector) {
@@ -90,7 +91,6 @@ export default function Collection() {
     return true;
   });
 
-  // Get filter labels for print header
   const selectedRouteName = selectedRoute 
     ? routes?.find(r => r.id === selectedRoute)?.name || routes?.find(r => r.id === selectedRoute)?.code
     : null;
@@ -102,7 +102,7 @@ export default function Collection() {
 
   const handlePrintCoupons = () => {
     if (!manifestContracts?.length) {
-      toast.error("No contracts to print");
+      toast.error(t("collection.noContracts"));
       return;
     }
     setPrintMode("coupons");
@@ -112,7 +112,6 @@ export default function Collection() {
     }, 100);
   };
 
-  // Format number as currency
   const formatCurrencyInput = (value: string) => {
     const numericValue = value.replace(/\D/g, "");
     if (!numericValue) return "";
@@ -130,7 +129,7 @@ export default function Collection() {
 
   const handleSubmitPayment = async () => {
     if (!selectedContract) {
-      toast.error("Please select a contract");
+      toast.error(t("errors.selectContract"));
       return;
     }
     
@@ -148,57 +147,54 @@ export default function Collection() {
         notes: finalNotes,
       });
       
-      toast.success(`Payment recorded for Coupon #${nextCoupon}`);
+      toast.success(t("collection.paymentRecorded", { coupon: nextCoupon }));
       
-      // Reset form
       setSelectedContract("");
       setPaymentAmount("");
       setPaymentNotes("");
     } catch (error) {
-      toast.error("Failed to record payment");
+      toast.error(t("errors.saveFailed"));
     }
   };
 
   return (
     <div className="space-y-6 print:space-y-0" ref={printRef}>
-      {/* Coupon Print Mode - Hidden on screen, visible only when printing coupons */}
       {printMode === "coupons" && manifestContracts && (
         <PrintableCoupons contracts={manifestContracts} />
       )}
 
-
-      <h2 className="text-2xl font-bold print:hidden">Collection & Billing</h2>
+      <h2 className="text-2xl font-bold print:hidden">{t("collection.title")}</h2>
 
       <Tabs defaultValue="manifest" className="w-full print:block">
         <TabsList className="grid w-full grid-cols-2 max-w-md print:hidden">
           <TabsTrigger value="manifest">
             <FileText className="mr-2 h-4 w-4" />
-            Generate Manifest
+            {t("collection.generateManifest")}
           </TabsTrigger>
           <TabsTrigger value="payment">
             <CreditCard className="mr-2 h-4 w-4" />
-            Input Payment
+            {t("collection.inputPayment")}
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="manifest" className="space-y-4 print:space-y-0 print:block">
           <Card className="print:hidden">
             <CardHeader>
-              <CardTitle>Filter Manifest</CardTitle>
+              <CardTitle>{t("collection.filterManifest")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <Label>Filter by Route</Label>
+                  <Label>{t("collection.filterByRoute")}</Label>
                   <Select value={selectedRoute} onValueChange={(v) => {
                     setSelectedRoute(v === "all" ? "" : v);
                     setSelectedCollector("");
                   }}>
                     <SelectTrigger>
-                      <SelectValue placeholder="All routes" />
+                      <SelectValue placeholder={t("collection.allRoutes")} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All Routes</SelectItem>
+                      <SelectItem value="all">{t("collection.allRoutes")}</SelectItem>
                       {routes?.map((route) => (
                         <SelectItem key={route.id} value={route.id}>
                           {route.code} - {route.name}
@@ -208,16 +204,16 @@ export default function Collection() {
                   </Select>
                 </div>
                 <div>
-                  <Label>Filter by Collector</Label>
+                  <Label>{t("collection.filterByCollector")}</Label>
                   <Select value={selectedCollector} onValueChange={(v) => {
                     setSelectedCollector(v === "all" ? "" : v);
                     setSelectedRoute("");
                   }}>
                     <SelectTrigger>
-                      <SelectValue placeholder="All collectors" />
+                      <SelectValue placeholder={t("collection.allCollectors")} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All Collectors</SelectItem>
+                      <SelectItem value="all">{t("collection.allCollectors")}</SelectItem>
                       {agents?.map((agent) => (
                         <SelectItem key={agent.id} value={agent.id}>
                           {agent.name} ({agent.agent_code})
@@ -229,33 +225,32 @@ export default function Collection() {
                 <div className="flex items-end">
                   <Button onClick={handlePrintCoupons} className="flex-1 print:hidden">
                     <FileText className="mr-2 h-4 w-4" />
-                    Print Coupons
+                    {t("collection.printCoupons")}
                   </Button>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* Printable Table - Only show in manifest mode */}
           <div className={`border rounded-lg ${printMode === "coupons" ? "print:hidden" : "print:border-0 print:rounded-none print:w-full print:m-0"}`}>
             <Table className="print:w-full">
               <TableHeader>
                 <TableRow className="print:break-inside-avoid">
                   <TableHead className="print:text-black print:border print:border-black print:bg-gray-100">#</TableHead>
-                  <TableHead className="print:text-black print:border print:border-black print:bg-gray-100">Customer</TableHead>
-                  <TableHead className="print:text-black print:border print:border-black print:bg-gray-100">Route</TableHead>
-                  <TableHead className="print:text-black print:border print:border-black print:bg-gray-100">Contract</TableHead>
-                  <TableHead className="print:text-black print:border print:border-black print:bg-gray-100">Coupon #</TableHead>
-                  <TableHead className="print:text-black print:border print:border-black print:bg-gray-100">Amount</TableHead>
-                  <TableHead className="hidden print:table-cell print:text-black print:border print:border-black print:bg-gray-100">Collected</TableHead>
-                  <TableHead className="hidden print:table-cell print:text-black print:border print:border-black print:bg-gray-100">Notes</TableHead>
+                  <TableHead className="print:text-black print:border print:border-black print:bg-gray-100">{t("collection.customer")}</TableHead>
+                  <TableHead className="print:text-black print:border print:border-black print:bg-gray-100">{t("routes.title")}</TableHead>
+                  <TableHead className="print:text-black print:border print:border-black print:bg-gray-100">{t("contracts.contractRef")}</TableHead>
+                  <TableHead className="print:text-black print:border print:border-black print:bg-gray-100">{t("contracts.couponIndex")}</TableHead>
+                  <TableHead className="print:text-black print:border print:border-black print:bg-gray-100">{t("contracts.amount")}</TableHead>
+                  <TableHead className="hidden print:table-cell print:text-black print:border print:border-black print:bg-gray-100">{t("collection.collected", "Terkumpul")}</TableHead>
+                  <TableHead className="hidden print:table-cell print:text-black print:border print:border-black print:bg-gray-100">{t("collection.notes")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {manifestContracts?.length === 0 ? (
                   <TableRow className="print:hidden">
                     <TableCell colSpan={6} className="text-center text-muted-foreground">
-                      No contracts found
+                      {t("collection.noContracts")}
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -284,15 +279,15 @@ export default function Collection() {
         <TabsContent value="payment" className="space-y-4 print:hidden">
           <Card>
             <CardHeader>
-              <CardTitle>Record Payment</CardTitle>
+              <CardTitle>{t("collection.recordPayment")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label>Select Contract</Label>
+                  <Label>{t("collection.selectContract")}</Label>
                   <Select value={selectedContract} onValueChange={setSelectedContract}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Choose contract" />
+                      <SelectValue placeholder={t("collection.chooseContract")} />
                     </SelectTrigger>
                     <SelectContent>
                       {contracts?.map((contract) => (
@@ -304,7 +299,7 @@ export default function Collection() {
                   </Select>
                 </div>
                 <div>
-                  <Label>Payment Date</Label>
+                  <Label>{t("collection.paymentDate")}</Label>
                   <Input
                     type="date"
                     value={paymentDate}
@@ -316,22 +311,22 @@ export default function Collection() {
               {selectedContractData && (
                 <div className="p-4 bg-muted rounded-lg space-y-2">
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Customer:</span>
+                    <span className="text-muted-foreground">{t("collection.customer")}:</span>
                     <span className="font-medium">{selectedContractData.customers?.name}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Progress:</span>
+                    <span className="text-muted-foreground">{t("contracts.progress")}:</span>
                     <span className="font-medium">
-                      {selectedContractData.current_installment_index}/{selectedContractData.tenor_days} paid
+                      {selectedContractData.current_installment_index}/{selectedContractData.tenor_days} {t("contracts.paid")}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Next Coupon #:</span>
+                    <span className="text-muted-foreground">{t("collection.nextCoupon")}:</span>
                     <Badge className="text-lg">{nextCoupon}</Badge>
                   </div>
                   {lastPaymentDate && (
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Last Payment:</span>
+                      <span className="text-muted-foreground">{t("collection.lastPayment")}:</span>
                       <span className="font-medium">{lastPaymentDate}</span>
                     </div>
                   )}
@@ -342,7 +337,7 @@ export default function Collection() {
                 <Alert variant="destructive">
                   <AlertTriangle className="h-4 w-4" />
                   <AlertDescription>
-                    <span className="font-medium">Late Payment Detected: </span>
+                    <span className="font-medium">{t("collection.latePayment")}: </span>
                     {autoLateNote}
                   </AlertDescription>
                 </Alert>
@@ -350,7 +345,7 @@ export default function Collection() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label>Amount (Rp)</Label>
+                  <Label>{t("collection.amount")} (Rp)</Label>
                   <Input
                     type="text"
                     inputMode="numeric"
@@ -360,15 +355,15 @@ export default function Collection() {
                   />
                   {selectedContractData && (
                     <p className="text-xs text-muted-foreground mt-1">
-                      Expected: {formatRupiah(selectedContractData.daily_installment_amount)}
+                      {t("collection.expected")}: {formatRupiah(selectedContractData.daily_installment_amount)}
                     </p>
                   )}
                 </div>
                 <div>
-                  <Label>Collector</Label>
+                  <Label>{t("collection.collector")}</Label>
                   <Select value={paymentCollector} onValueChange={setPaymentCollector}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select collector" />
+                      <SelectValue placeholder={t("collection.selectCollector")} />
                     </SelectTrigger>
                     <SelectContent>
                       {agents?.map((agent) => (
@@ -382,7 +377,7 @@ export default function Collection() {
               </div>
 
               <div>
-                <Label>Notes</Label>
+                <Label>{t("collection.notes")}</Label>
                 <Input
                   value={paymentNotes}
                   onChange={(e) => setPaymentNotes(e.target.value)}
@@ -396,7 +391,7 @@ export default function Collection() {
                 className="w-full"
               >
                 <CreditCard className="mr-2 h-4 w-4" />
-                Record Payment
+                {t("collection.recordPayment")}
               </Button>
             </CardContent>
           </Card>
