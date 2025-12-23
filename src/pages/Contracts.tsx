@@ -45,7 +45,7 @@ import { formatRupiah } from "@/lib/format";
 import { usePagination } from "@/hooks/usePagination";
 import { TablePagination } from "@/components/TablePagination";
 import { useCouponsByContract, useGenerateCoupons, InstallmentCoupon } from "@/hooks/useInstallmentCoupons";
-import { PrintHighDensityCoupons } from "@/components/print/PrintHighDensityCoupons";
+import { PrintCoupon8x5 } from "@/components/print/PrintCoupon8x5";
 import { CurrencyInput } from "@/components/ui/currency-input";
 
 export default function Contracts() {
@@ -216,9 +216,9 @@ export default function Contracts() {
 
   return (
     <div className="space-y-6">
-      {/* Print Mode: High-Density Coupons (24 per A4 page) */}
+      {/* Print Mode: 8x5cm Coupons on A4 Landscape (9 per page) */}
       {printMode && selectedContract && selectedContractCoupons && (
-        <PrintHighDensityCoupons 
+        <PrintCoupon8x5 
           coupons={selectedContractCoupons} 
           contract={{
             contract_ref: selectedContract.contract_ref,
