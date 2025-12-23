@@ -239,20 +239,26 @@ export type Database = {
       holidays: {
         Row: {
           created_at: string
+          day_of_week: number | null
           description: string | null
-          holiday_date: string
+          holiday_date: string | null
+          holiday_type: string
           id: string
         }
         Insert: {
           created_at?: string
+          day_of_week?: number | null
           description?: string | null
-          holiday_date: string
+          holiday_date?: string | null
+          holiday_type?: string
           id?: string
         }
         Update: {
           created_at?: string
+          day_of_week?: number | null
           description?: string | null
-          holiday_date?: string
+          holiday_date?: string | null
+          holiday_type?: string
           id?: string
         }
         Relationships: []

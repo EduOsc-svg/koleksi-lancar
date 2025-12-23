@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Pencil, Trash2, Calendar } from "lucide-react";
+import { Plus, Pencil, Trash2, Calendar, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -28,10 +28,20 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
-import { useHolidays, useCreateHoliday, useUpdateHoliday, useDeleteHoliday, Holiday } from "@/hooks/useHolidays";
+import { useHolidays, useCreateHoliday, useUpdateHoliday, useDeleteHoliday, Holiday, DAY_NAMES } from "@/hooks/useHolidays";
 import { usePagination } from "@/hooks/usePagination";
 import { TablePagination } from "@/components/TablePagination";
+import { Badge } from "@/components/ui/badge";
+
+type HolidayType = 'specific_date' | 'recurring_weekday';
 
 export default function Holidays() {
   const { data: holidays, isLoading } = useHolidays();
@@ -43,50 +53,76 @@ export default function Holidays() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedHoliday, setSelectedHoliday] = useState<Holiday | null>(null);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    holiday_type: HolidayType;
+    holiday_date: string;
+    day_of_week: number;
+    description: string;
+  }>({
+    holiday_type: "specific_date",
     holiday_date: "",
+    day_of_week: 0,
     description: "",
   });
 
   const handleOpenCreate = () => {
     setSelectedHoliday(null);
-    setFormData({ holiday_date: "", description: "" });
+    setFormData({ 
+      holiday_type: "specific_date", 
+      holiday_date: "", 
+      day_of_week: 0,
+      description: "" 
+    });
     setDialogOpen(true);
   };
 
   const handleOpenEdit = (holiday: Holiday) => {
     setSelectedHoliday(holiday);
     setFormData({
-      holiday_date: holiday.holiday_date,
+      holiday_type: holiday.holiday_type,
+      holiday_date: holiday.holiday_date || "",
+      day_of_week: holiday.day_of_week ?? 0,
       description: holiday.description || "",
     });
     setDialogOpen(true);
   };
 
   const handleSubmit = async () => {
-    if (!formData.holiday_date) {
+    if (formData.holiday_type === "specific_date" && !formData.holiday_date) {
       toast.error("Please select a date");
       return;
     }
     try {
+      const payload = formData.holiday_type === "specific_date" 
+        ? {
+            holiday_type: formData.holiday_type,
+            holiday_date: formData.holiday_date,
+            day_of_week: null,
+            description: formData.description || null,
+          }
+        : {
+            holiday_type: formData.holiday_type,
+            holiday_date: null,
+            day_of_week: formData.day_of_week,
+            description: formData.description || null,
+          };
+
       if (selectedHoliday) {
         await updateHoliday.mutateAsync({
           id: selectedHoliday.id,
-          holiday_date: formData.holiday_date,
-          description: formData.description || null,
+          ...payload,
         });
         toast.success("Holiday updated successfully");
       } else {
-        await createHoliday.mutateAsync({
-          holiday_date: formData.holiday_date,
-          description: formData.description || null,
-        });
+        await createHoliday.mutateAsync(payload);
         toast.success("Holiday added successfully");
       }
       setDialogOpen(false);
     } catch (error: any) {
-      if (error?.message?.includes("duplicate")) {
-        toast.error("This date is already marked as a holiday");
+      if (error?.message?.includes("duplicate") || error?.message?.includes("unique")) {
+        toast.error(formData.holiday_type === "specific_date" 
+          ? "This date is already marked as a holiday" 
+          : "This weekday is already set as recurring holiday");
       } else {
         toast.error("Failed to save holiday");
       }
@@ -105,13 +141,11 @@ export default function Holidays() {
     }
   };
 
-  const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString("id-ID", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
+  const getHolidayDisplayText = (holiday: Holiday) => {
+    if (holiday.holiday_type === "recurring_weekday") {
+      return `Every ${DAY_NAMES[holiday.day_of_week ?? 0]}`;
+    }
+    return holiday.holiday_date || "-";
   };
 
   return (
@@ -132,8 +166,8 @@ export default function Holidays() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Date</TableHead>
-              <TableHead>Day</TableHead>
+              <TableHead>Type</TableHead>
+              <TableHead>Date / Day</TableHead>
               <TableHead>Description</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
@@ -152,14 +186,19 @@ export default function Holidays() {
             ) : (
               paginatedItems.map((holiday) => (
                 <TableRow key={holiday.id}>
-                  <TableCell className="font-medium">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4 text-muted-foreground" />
-                      {holiday.holiday_date}
-                    </div>
-                  </TableCell>
                   <TableCell>
-                    {new Date(holiday.holiday_date).toLocaleDateString("id-ID", { weekday: "long" })}
+                    {holiday.holiday_type === "recurring_weekday" ? (
+                      <Badge variant="secondary" className="flex items-center gap-1 w-fit">
+                        <RotateCcw className="h-3 w-3" /> Recurring
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="flex items-center gap-1 w-fit">
+                        <Calendar className="h-3 w-3" /> Specific Date
+                      </Badge>
+                    )}
+                  </TableCell>
+                  <TableCell className="font-medium">
+                    {getHolidayDisplayText(holiday)}
                   </TableCell>
                   <TableCell>{holiday.description || "-"}</TableCell>
                   <TableCell className="text-right">
@@ -197,21 +236,59 @@ export default function Holidays() {
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label htmlFor="holiday_date">Date</Label>
-              <Input
-                id="holiday_date"
-                type="date"
-                value={formData.holiday_date}
-                onChange={(e) => setFormData({ ...formData, holiday_date: e.target.value })}
-              />
+              <Label>Holiday Type</Label>
+              <Select
+                value={formData.holiday_type}
+                onValueChange={(v: HolidayType) => setFormData({ ...formData, holiday_type: v })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="specific_date">Specific Date</SelectItem>
+                  <SelectItem value="recurring_weekday">Recurring Weekday</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
+
+            {formData.holiday_type === "specific_date" ? (
+              <div>
+                <Label htmlFor="holiday_date">Date</Label>
+                <Input
+                  id="holiday_date"
+                  type="date"
+                  value={formData.holiday_date}
+                  onChange={(e) => setFormData({ ...formData, holiday_date: e.target.value })}
+                />
+              </div>
+            ) : (
+              <div>
+                <Label>Day of Week</Label>
+                <Select
+                  value={String(formData.day_of_week)}
+                  onValueChange={(v) => setFormData({ ...formData, day_of_week: parseInt(v) })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {DAY_NAMES.map((day, index) => (
+                      <SelectItem key={index} value={String(index)}>
+                        {day}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
             <div>
               <Label htmlFor="description">Description</Label>
               <Input
                 id="description"
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder="e.g., Christmas, New Year"
+                placeholder="e.g., Christmas, Weekend"
               />
             </div>
           </div>
