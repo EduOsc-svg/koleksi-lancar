@@ -10,6 +10,7 @@ import {
   History,
   LogOut,
   Shield,
+  Calendar,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/hooks/useAuth";
@@ -35,6 +36,7 @@ const masterItems = [
   { title: "Routes (Jalur)", url: "/routes", icon: MapPin },
   { title: "Customers", url: "/customers", icon: UserCircle },
   { title: "Contracts", url: "/contracts", icon: FileText },
+  { title: "Holidays", url: "/holidays", icon: Calendar },
 ];
 
 const operationItems = [
