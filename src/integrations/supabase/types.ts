@@ -130,6 +130,7 @@ export type Database = {
           daily_installment_amount: number
           id: string
           product_type: string | null
+          start_date: string
           status: string
           tenor_days: number
           total_loan_amount: number
@@ -142,6 +143,7 @@ export type Database = {
           daily_installment_amount?: number
           id?: string
           product_type?: string | null
+          start_date?: string
           status?: string
           tenor_days?: number
           total_loan_amount?: number
@@ -154,6 +156,7 @@ export type Database = {
           daily_installment_amount?: number
           id?: string
           product_type?: string | null
+          start_date?: string
           status?: string
           tenor_days?: number
           total_loan_amount?: number
@@ -233,11 +236,78 @@ export type Database = {
           },
         ]
       }
+      holidays: {
+        Row: {
+          created_at: string
+          description: string | null
+          holiday_date: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          holiday_date: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          holiday_date?: string
+          id?: string
+        }
+        Relationships: []
+      }
+      installment_coupons: {
+        Row: {
+          amount: number
+          contract_id: string
+          created_at: string
+          due_date: string
+          id: string
+          installment_index: number
+          status: string
+        }
+        Insert: {
+          amount: number
+          contract_id: string
+          created_at?: string
+          due_date: string
+          id?: string
+          installment_index: number
+          status?: string
+        }
+        Update: {
+          amount?: number
+          contract_id?: string
+          created_at?: string
+          due_date?: string
+          id?: string
+          installment_index?: number
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "installment_coupons_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "credit_contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "installment_coupons_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "invoice_details"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payment_logs: {
         Row: {
           amount_paid: number
           collector_id: string | null
           contract_id: string
+          coupon_id: string | null
           created_at: string
           id: string
           installment_index: number
@@ -248,6 +318,7 @@ export type Database = {
           amount_paid: number
           collector_id?: string | null
           contract_id: string
+          coupon_id?: string | null
           created_at?: string
           id?: string
           installment_index: number
@@ -258,6 +329,7 @@ export type Database = {
           amount_paid?: number
           collector_id?: string | null
           contract_id?: string
+          coupon_id?: string | null
           created_at?: string
           id?: string
           installment_index?: number
@@ -291,6 +363,13 @@ export type Database = {
             columns: ["contract_id"]
             isOneToOne: false
             referencedRelation: "invoice_details"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_logs_coupon_id_fkey"
+            columns: ["coupon_id"]
+            isOneToOne: false
+            referencedRelation: "installment_coupons"
             referencedColumns: ["id"]
           },
         ]
@@ -416,6 +495,15 @@ export type Database = {
       }
     }
     Functions: {
+      generate_installment_coupons: {
+        Args: {
+          p_contract_id: string
+          p_daily_amount: number
+          p_start_date: string
+          p_tenor_days: number
+        }
+        Returns: undefined
+      }
       get_next_coupon: { Args: { contract_id: string }; Returns: number }
       has_role: {
         Args: {

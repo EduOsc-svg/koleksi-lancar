@@ -12,6 +12,7 @@ export interface CreditContract {
   daily_installment_amount: number;
   current_installment_index: number;
   status: string;
+  start_date: string;
   created_at: string;
 }
 
@@ -57,18 +58,18 @@ export const useCreateContract = () => {
         .select()
         .single();
       if (error) throw error;
-      return data;
+      return { data };
     },
-    onSuccess: (data) => {
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['credit_contracts'] });
       queryClient.invalidateQueries({ queryKey: ['invoice_details'] });
       
       logActivity.mutate({
         action: 'CREATE',
         entity_type: 'contract',
-        entity_id: data.id,
-        description: `Created contract ${data.contract_ref} with loan amount ${data.total_loan_amount}`,
-        contract_id: data.id,
+        entity_id: result.data.id,
+        description: `Created contract ${result.data.contract_ref} with loan amount ${result.data.total_loan_amount}`,
+        contract_id: result.data.id,
       });
     },
   });

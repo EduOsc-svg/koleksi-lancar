@@ -15,6 +15,7 @@ import Collection from "./pages/Collection";
 import Reports from "./pages/Reports";
 import CustomerHistory from "./pages/CustomerHistory";
 import AuditLog from "./pages/AuditLog";
+import Holidays from "./pages/Holidays";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -65,6 +66,7 @@ const AppRoutes = () => {
                 <Route path="/routes" element={<RoutesPage />} />
                 <Route path="/customers" element={<Customers />} />
                 <Route path="/contracts" element={<Contracts />} />
+                <Route path="/holidays" element={<Holidays />} />
                 <Route path="/collection" element={<Collection />} />
                 <Route path="/reports" element={<Reports />} />
                 <Route path="/history" element={<CustomerHistory />} />
