@@ -31,8 +31,9 @@ import { useContracts } from "@/hooks/useContracts";
 import { useCreatePayment } from "@/hooks/usePayments";
 import { formatRupiah } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
-import { useLastPaymentDate, calculateLateNote } from "@/hooks/useLastPaymentDate";
+import { useLastPaymentDate, useNextCouponDueDate, calculateLateNoteFromDueDate } from "@/hooks/useLastPaymentDate";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Textarea } from "@/components/ui/textarea";
 
 export default function Collection() {
   const { t } = useTranslation();
@@ -60,22 +61,28 @@ export default function Collection() {
     ? selectedContractData.current_installment_index + 1
     : 1;
 
-  // Fetch last payment date for late notes calculation
+  // Fetch last payment date for display
   const { data: lastPaymentDate } = useLastPaymentDate(selectedContract || null);
-  const [autoLateNote, setAutoLateNote] = useState<string | null>(null);
+  
+  // Fetch next coupon due date for late calculation
+  const { data: nextCouponDueDate } = useNextCouponDueDate(selectedContract || null, nextCoupon);
+  
+  const [lateInfo, setLateInfo] = useState<{ isLate: boolean; lateDays: number; note: string | null; dueDate: string | null }>({ 
+    isLate: false, lateDays: 0, note: null, dueDate: null 
+  });
 
   // Calculate late note when payment date or contract changes
   useEffect(() => {
-    if (selectedContract && lastPaymentDate && paymentDate) {
-      const lateNote = calculateLateNote(lastPaymentDate, paymentDate);
-      setAutoLateNote(lateNote);
-      if (lateNote && !paymentNotes) {
-        setPaymentNotes(lateNote);
+    if (selectedContract && nextCouponDueDate && paymentDate) {
+      const info = calculateLateNoteFromDueDate(nextCouponDueDate, paymentDate);
+      setLateInfo(info);
+      if (info.isLate && info.note && !paymentNotes) {
+        setPaymentNotes(info.note);
       }
     } else {
-      setAutoLateNote(null);
+      setLateInfo({ isLate: false, lateDays: 0, note: null, dueDate: null });
     }
-  }, [selectedContract, lastPaymentDate, paymentDate]);
+  }, [selectedContract, nextCouponDueDate, paymentDate]);
 
   const manifestContracts = contracts?.filter((c) => {
     // Filter by route
@@ -348,18 +355,30 @@ export default function Collection() {
                   {lastPaymentDate && (
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">{t("collection.lastPayment")}:</span>
-                      <span className="font-medium">{lastPaymentDate}</span>
+                      <span className="font-medium">{new Date(lastPaymentDate).toLocaleDateString('id-ID')}</span>
+                    </div>
+                  )}
+                  {nextCouponDueDate && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">{t("collection.dueDate")}:</span>
+                      <span className={`font-medium ${lateInfo.isLate ? 'text-destructive' : ''}`}>
+                        {new Date(nextCouponDueDate).toLocaleDateString('id-ID', {
+                          day: 'numeric',
+                          month: 'long',
+                          year: 'numeric'
+                        })}
+                      </span>
                     </div>
                   )}
                 </div>
               )}
 
-              {autoLateNote && (
+              {lateInfo.isLate && lateInfo.note && (
                 <Alert variant="destructive">
                   <AlertTriangle className="h-4 w-4" />
                   <AlertDescription>
                     <span className="font-medium">{t("collection.latePayment")}: </span>
-                    {autoLateNote}
+                    {lateInfo.note}
                   </AlertDescription>
                 </Alert>
               )}
@@ -399,11 +418,18 @@ export default function Collection() {
 
               <div>
                 <Label>{t("collection.notes")}</Label>
-                <Input
+                <Textarea
                   value={paymentNotes}
                   onChange={(e) => setPaymentNotes(e.target.value)}
-                  placeholder={`Default: Pembayaran ke-${nextCoupon}`}
+                  placeholder={lateInfo.isLate ? t("collection.lateNotePlaceholder") : `Default: Pembayaran ke-${nextCoupon}`}
+                  rows={lateInfo.isLate ? 3 : 1}
+                  className={lateInfo.isLate ? "border-destructive" : ""}
                 />
+                {lateInfo.isLate && (
+                  <p className="text-xs text-destructive mt-1">
+                    {t("collection.lateNoteRequired")}
+                  </p>
+                )}
               </div>
 
               <Button

@@ -170,6 +170,9 @@
     "lastPayment": "Last Payment",
     "expected": "Expected",
     "latePayment": "Late Payment Detected",
+    "lateNotePlaceholder": "Explain the reason for late payment...",
+    "lateNoteRequired": "Note is required for late payments",
+    "dueDate": "Due Date",
     "paymentRecorded": "Payment recorded for Coupon #{{coupon}}",
     "noContracts": "No contracts found",
     "collected": "Collected"

@@ -189,6 +189,9 @@
     "lastPayment": "Pembayaran Terakhir",
     "expected": "Diharapkan",
     "latePayment": "Keterlambatan Terdeteksi",
+    "lateNotePlaceholder": "Jelaskan alasan keterlambatan pembayaran...",
+    "lateNoteRequired": "Catatan wajib diisi untuk pembayaran terlambat",
+    "dueDate": "Tanggal Jatuh Tempo",
     "paymentRecorded": "Pembayaran tercatat untuk Kupon #{{coupon}}",
     "noContracts": "Tidak ada kontrak",
     "collected": "Terkumpul"
