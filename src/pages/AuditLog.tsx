@@ -23,6 +23,7 @@ import { useActivityLogs, ActivityLog } from "@/hooks/useActivityLog";
 import { usePagination } from "@/hooks/usePagination";
 import { TablePagination } from "@/components/TablePagination";
 import { formatAuditDetails } from "@/lib/formatAuditDetails";
+import { translateAuditDescription } from "@/lib/translateAuditDescription";
 import { Search, Shield, Info, Eye } from "lucide-react";
 
 // Format currency values in description text
@@ -55,7 +56,7 @@ const getActionColor = (action: string) => {
 };
 
 export default function AuditLog() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { data: logs, isLoading } = useActivityLogs(500);
   const [searchTerm, setSearchTerm] = useState("");
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
@@ -138,7 +139,8 @@ export default function AuditLog() {
                   </TableRow>
                 ) : (
                   paginatedItems.map((log) => {
-                    const formattedDescription = formatDescriptionWithCurrency(log.description);
+                    const translatedDescription = translateAuditDescription(log.description, i18n.language);
+                    const formattedDescription = formatDescriptionWithCurrency(translatedDescription);
                     
                     return (
                       <TableRow key={log.id}>
@@ -228,7 +230,7 @@ export default function AuditLog() {
               {/* Description */}
               <div>
                 <span className="text-sm text-muted-foreground">{t("auditLog.description")}:</span>
-                <p className="font-medium">{formatDescriptionWithCurrency(selectedLog.description)}</p>
+                <p className="font-medium">{formatDescriptionWithCurrency(translateAuditDescription(selectedLog.description, i18n.language))}</p>
               </div>
 
               {/* Details */}
@@ -269,7 +271,7 @@ export default function AuditLog() {
                 <span>{new Date(selectedLog.created_at).toLocaleString('id-ID')}</span>
               </div>
               <div className="bg-muted/50 rounded-lg p-4">
-                <p className="text-sm whitespace-pre-wrap">{formatDescriptionWithCurrency(selectedLog.description)}</p>
+                <p className="text-sm whitespace-pre-wrap">{formatDescriptionWithCurrency(translateAuditDescription(selectedLog.description, i18n.language))}</p>
               </div>
             </div>
           )}
