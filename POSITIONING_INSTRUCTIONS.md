@@ -1,74 +1,78 @@
-# Instruksi Mengembalikan ke Mode 9 Coupon (8x5cm)
+# Instruksi Konfigurasi Print Coupon
 
-## File yang Diubah untuk Mode Single Coupon:
+## Mode Saat Ini: 100 COUPON GRID LAYOUT
 
-### 1. `/src/components/print/PrintA4LandscapeCoupons.tsx`
-**Perubahan:**
-- Line ~70: `const couponsPerPage = 1;` → Ubah kembali ke `const couponsPerPage = 9;`
-- Line ~72: `Math.min(contracts.length, 1)` → Ubah kembali ke `contracts.length`
-- Line ~90-100: Uncomment kode fill empty slots
+### 📋 **Spesifikasi Aktual:**
+- **Total Coupon**: 100 coupon
+- **Ukuran per Coupon**: 8cm x 5cm
+- **Grid Layout**: 3 kolom × 4 baris = 12 coupon per halaman A4 landscape
+- **Total Halaman**: 9 halaman (8 halaman penuh + 1 halaman 4 coupon)
+- **Background Image**: Voucher template pada setiap coupon
+- **Auto-loop**: Jika contract < 100, akan mengulang contract dengan installment number yang berbeda
 
-**Kode yang harus dikembalikan:**
+### 🔧 **File Konfigurasi:**
+1. **Component**: `/src/components/print/PrintA4LandscapeCoupons.tsx`
+   - `couponsPerPage = 12` (3x4 grid)
+   - `totalCoupons = 100`
+   - Auto-loop contracts untuk mencapai 100 coupon
+
+2. **CSS**: `/src/styles/print-100-coupons.css`
+   - CSS Grid: `grid-template-columns: repeat(3, 8cm)`
+   - CSS Grid: `grid-template-rows: repeat(4, 5cm)`
+   - Gap: `1mm` antar coupon
+
+3. **Import**: `/src/pages/Collection.tsx`
+   - `import "@/styles/print-100-coupons.css"`
+
+## Mode yang Tersedia:
+
+### 🎯 **Mode 1: Single Coupon (Positioning)**
+Untuk mengatur posisi field:
+- File: `print-single-coupon.css`
+- Coupon: 1 buah di tengah halaman
+- Purpose: Testing positioning
+
+### 📄 **Mode 2: Standard Grid (Original)**
+Mode standar 9 coupon:
+- File: `print-a4-landscape.css`
+- Coupon: 9 buah per halaman (3x3)
+- Grid: Mengikuti jumlah contract aktual
+
+### 🎯 **Mode 3: 100 Coupon Grid (AKTIF)**
+Mode produksi 100 coupon:
+- File: `print-100-coupons.css`
+- Coupon: 100 buah total (12 per halaman)
+- Grid: 3x4 layout optimal untuk A4 landscape
+
+## Cara Ganti Mode:
+
+### ➡️ **Ke Mode Single Coupon:**
 ```tsx
-// Group contracts into pages of 9
-const pages: Array<Array<CouponData>> = [];
-const couponsPerPage = 9;
-
-for (let i = 0; i < contracts.length; i += couponsPerPage) {
-  const pageContracts = contracts.slice(i, i + couponsPerPage);
-  const pageCoupons: Array<CouponData> = pageContracts.map((contract) => {
-    // ... existing code ...
-  });
-
-  // Fill remaining slots with empty coupons if needed
-  while (pageCoupons.length < couponsPerPage) {
-    pageCoupons.push({
-      contractRef: "",
-      noFaktur: "",
-      customerName: "",
-      customerAddress: "",
-      dueDate: "",
-      installmentNumber: 0,
-      installmentAmount: 0,
-    });
-  }
-
-  pages.push(pageCoupons);
-}
+// PrintA4LandscapeCoupons.tsx
+const couponsPerPage = 1;
+// Collection.tsx
+import "@/styles/print-single-coupon.css";
 ```
 
-### 2. `/src/pages/Collection.tsx`
-**Perubahan:**
-- Line ~4: `import "@/styles/print-single-coupon.css";` → Ubah kembali ke `import "@/styles/print-a4-landscape.css";`
+### ➡️ **Ke Mode Standard 9 Coupon:**
+```tsx
+// PrintA4LandscapeCoupons.tsx
+const couponsPerPage = 9;
+// Collection.tsx  
+import "@/styles/print-a4-landscape.css";
+```
 
-### 3. File CSS yang dibuat:
-- `/src/styles/print-single-coupon.css` → File ini bisa dihapus setelah positioning selesai
-
-## Langkah Cepat Mengembalikan:
-
-1. **Edit PrintA4LandscapeCoupons.tsx:**
-   ```bash
-   # Ubah couponsPerPage dari 1 ke 9
-   # Ubah Math.min(contracts.length, 1) ke contracts.length
-   # Uncomment kode fill empty slots
-   ```
-
-2. **Edit Collection.tsx:**
-   ```bash
-   # Ubah import CSS dari print-single-coupon.css ke print-a4-landscape.css
-   ```
-
-3. **Hapus file temporary:**
-   ```bash
-   rm src/styles/print-single-coupon.css
-   ```
+### ➡️ **Ke Mode 100 Coupon (Current):**
+```tsx
+// PrintA4LandscapeCoupons.tsx
+const couponsPerPage = 12;
+const totalCoupons = 100;
+// Collection.tsx
+import "@/styles/print-100-coupons.css";
+```
 
 ## Status Saat Ini:
-✅ Mode Single Coupon - Untuk positioning adjustment
-❌ Mode 9 Coupon (8x5cm) - Akan dikembalikan setelah positioning
-
-## Catatan Positioning:
-- Coupon saat ini diposisikan di tengah halaman A4 landscape
-- Memiliki border merah tipis untuk membantu positioning
-- Ukuran tetap 8x5cm sesuai permintaan
-- Data fields sudah diposisikan dalam coupon sesuai layout asli
+✅ Mode 100 Coupon Grid - Produksi ready
+✅ Background image di setiap coupon
+✅ Auto-loop contracts jika kurang dari 100
+✅ Font size dioptimasi untuk grid kecil

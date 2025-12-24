@@ -45,7 +45,8 @@ import { formatRupiah } from "@/lib/format";
 import { usePagination } from "@/hooks/usePagination";
 import { TablePagination } from "@/components/TablePagination";
 import { useCouponsByContract, useGenerateCoupons, InstallmentCoupon } from "@/hooks/useInstallmentCoupons";
-import { PrintCoupon8x5 } from "@/components/print/PrintCoupon8x5";
+import VoucherPage from "@/components/print/VoucherPage";
+import "@/styles/Voucher.css";
 import { CurrencyInput } from "@/components/ui/currency-input";
 
 export default function Contracts() {
@@ -216,20 +217,22 @@ export default function Contracts() {
 
   return (
     <div className="space-y-6">
-      {/* Print Mode: 8x5cm Coupons on A4 Landscape (9 per page) */}
+      {/* Print Mode: Voucher Print System */}
       {printMode && selectedContract && selectedContractCoupons && (
-        <PrintCoupon8x5 
-          coupons={selectedContractCoupons} 
-          contract={{
+        <VoucherPage 
+          contracts={[{
+            id: selectedContract.id,
             contract_ref: selectedContract.contract_ref,
-            tenor_days: selectedContract.tenor_days,
+            current_installment_index: selectedContract.current_installment_index,
             daily_installment_amount: selectedContract.daily_installment_amount,
+            tenor_days: selectedContract.tenor_days,
             customers: selectedContract.customers ? {
               name: selectedContract.customers.name,
-              address: selectedContract.customers.address,
-              sales_agents: selectedContract.customers.sales_agents,
+              address: selectedContract.customers.address || null,
+              routes: selectedContract.customers.routes || null,
+              sales_agents: selectedContract.customers.sales_agents || null,
             } : null,
-          }}
+          }]}
         />
       )}
 

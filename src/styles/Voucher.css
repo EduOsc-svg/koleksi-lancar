@@ -1,0 +1,281 @@
+/* ========================================
+   VOUCHER PRINT STYLES - PIXEL PERFECT
+   ======================================== */
+
+/* Reset and base styles for print */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Print Media Queries - CRITICAL for window.print() */
+@media print {
+  body {
+    margin: 0;
+    padding: 0;
+    background: white;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Hide everything except voucher container */
+  body * {
+    visibility: hidden;
+  }
+
+  .voucher-print-container,
+  .voucher-print-container * {
+    visibility: visible;
+  }
+
+  /* A4 Page Setup */
+  .voucher-page {
+    width: 297mm;
+    height: 210mm;
+    margin: 0;
+    padding: 0;
+    page-break-after: always;
+    position: relative;
+    background: white;
+  }
+
+  /* Remove page break from last page */
+  .voucher-page:last-child {
+    page-break-after: avoid;
+  }
+
+  /* Grid Layout - 3 columns x 4 rows = 12 vouchers per page */
+  .voucher-grid {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    grid-template-columns: repeat(3, 8cm);
+    grid-template-rows: repeat(4, 5cm);
+    gap: 1mm;
+    justify-content: center;
+    align-content: center;
+    padding: 8mm;
+  }
+
+  /* Individual Voucher Card - 8cm x 5cm */
+  .voucher-card {
+    width: 8cm;
+    height: 5cm;
+    position: relative;
+    background-image: url('/voucher background.png');
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+    background-position: center;
+    border: 0.5px solid #ddd; /* Cutting guide */
+  }
+
+  /* Empty voucher cards */
+  .voucher-empty {
+    background: none !important;
+    border: none !important;
+    visibility: hidden;
+  }
+
+  /* Data Fields Positioning - PIXEL PERFECT */
+  .voucher-field {
+    position: absolute;
+    font-family: Times New Roman;
+    font-weight: normal;
+    color: #CC0000;
+    line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* NO.Faktur */
+  .no-faktur {
+    left: 87px;
+    top: 71px;
+    font-size: 10px;
+    max-width: 65%;
+  }
+
+  /* Customer Name */
+  .customer-name {
+    left: 87px;
+    top: 82px;
+    font-size: 10px;
+    max-width: 65%;
+  }
+
+  /* Customer Address */
+  .customer-address {
+    left: 87px;
+    top: 93px;
+    font-size: 10px;
+    max-width: 65%;
+  }
+
+  /* Due Date */
+  .due-date {
+    left: 87px;
+    top: 103px;
+    font-size: 10px;
+    max-width: 65%;
+  }
+
+  /* Installment Number */
+  .installment-number {
+    left: 87px;
+    top: 115px;
+    font-size: 10px;
+    max-width: 20%;
+  }
+
+  /* Installment Amount */
+  .installment-amount {
+    right: 8%;
+    top: 139px;
+    font-weight: bold;
+    font-size: 11px;
+    text-align: right;
+    max-width: 35%;
+  }
+
+  /* Company Info */
+  .company-info {
+    left: 147px;
+    bottom: 17px;
+    font-size: 10px;
+    color: #CC0000;
+    max-width: 90%;
+  }
+}
+
+/* Screen Preview Styles */
+@media screen {
+  .voucher-print-container {
+    background: #f5f5f5;
+    padding: 20px;
+    min-height: 100vh;
+  }
+
+  /* A4 Page Preview */
+  .voucher-page {
+    width: 297mm;
+    height: 210mm;
+    background: white;
+    margin: 0 auto 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    position: relative;
+    border: 1px solid #ccc;
+  }
+
+  /* Grid Layout for Preview */
+  .voucher-grid {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    grid-template-columns: repeat(3, 8cm);
+    grid-template-rows: repeat(4, 5cm);
+    gap: 1mm;
+    justify-content: center;
+    align-content: center;
+    padding: 8mm;
+  }
+
+  /* Individual Voucher Card Preview */
+  .voucher-card {
+    width: 8cm;
+    height: 5cm;
+    position: relative;
+    background-image: url('/voucher background.png');
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+    background-position: center;
+    border: 1px solid #ddd;
+  }
+
+  /* Empty voucher preview */
+  .voucher-empty {
+    background: none !important;
+    border: 1px dashed #ccc !important;
+    opacity: 0.3;
+  }
+
+  /* Data Fields Preview - Same positioning as print */
+  .voucher-field {
+    position: absolute;
+    font-family: Times New Roman;
+    font-weight: normal;
+    color: #CC0000;
+    line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .no-faktur {
+    left: 87px;
+    top: 71px;
+    font-size: 10px;
+    max-width: 65%;
+  }
+
+  .customer-name {
+    left: 87px;
+    top: 82px;
+    font-size: 10px;
+    max-width: 65%;
+  }
+
+  .customer-address {
+    left: 87px;
+    top: 93px;
+    font-size: 10px;
+    max-width: 65%;
+  }
+
+  .due-date {
+    left: 87px;
+    top: 103px;
+    font-size: 10px;
+    max-width: 65%;
+  }
+
+  .installment-number {
+    left: 87px;
+    top: 115px;
+    font-size: 10px;
+    max-width: 20%;
+  }
+
+  .installment-amount {
+    right: 8%;
+    top: 139px;
+    font-weight: bold;
+    font-size: 11px;
+    text-align: right;
+    max-width: 35%;
+  }
+
+  .company-info {
+    left: 147px;
+    bottom: 17px;
+    font-size: 10px;
+    color: #CC0000;
+    max-width: 90%;
+  }
+}
+
+/* Utility classes */
+.print-only {
+  display: none;
+}
+
+@media print {
+  .print-only {
+    display: block;
+  }
+  
+  .screen-only {
+    display: none;
+  }
+}

@@ -1,0 +1,230 @@
+/* ===== CSS MODULE UNTUK VOUCHER PRINT SYSTEM ===== */
+/* PENTING: Jangan mengubah nilai top, left, width, height, atau font-size */
+/* Layout ini sudah pixel-perfect dan final */
+
+/* Print Media Styles */
+@media print {
+  body {
+    margin: 0;
+    padding: 0;
+  }
+
+  /* A4 Landscape Page Container */
+  .print-a4-landscape-container .page {
+    width: 297mm;
+    height: 210mm;
+    margin: 0;
+    padding: 8mm;
+    page-break-after: always;
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(3, 8cm);
+    grid-template-rows: repeat(4, 5cm);
+    gap: 1mm;
+    justify-content: center;
+    align-content: center;
+  }
+
+  /* Hide everything except print container */
+  body * {
+    visibility: hidden;
+  }
+
+  .print-a4-landscape-container,
+  .print-a4-landscape-container * {
+    visibility: visible;
+  }
+
+  /* Individual voucher - 8x5cm dengan background */
+  .voucher {
+    width: 8cm;
+    height: 5cm;
+    position: relative;
+    background-image: url('/voucher background.png');
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+    background-position: center;
+    border: 0.5px solid #ccc; /* Subtle border untuk cutting guide */
+  }
+
+  /* Data positioning dalam setiap 8x5cm voucher */
+  .voucher span {
+    position: absolute;
+    font-family: Arial, sans-serif;
+    font-weight: normal;
+    color: #000;
+    line-height: 0;
+  }
+
+  /* NO.Faktur - diposisikan setelah colon */
+  .data-faktur {
+    left: 27%;
+    top: 32%;
+    font-size: 7px;
+  }
+
+  /* Nama - diposisikan setelah colon */
+  .data-nama {
+    left: 27%;
+    top: 42%;
+    font-size: 7px;
+    max-width: 65%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Alamat - diposisikan setelah colon */
+  .data-alamat {
+    left: 27%;
+    top: 52%;
+    font-size: 6px;
+    max-width: 65%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Jatuh Tempo - diposisikan setelah colon */
+  .data-jatuh-tempo {
+    left: 27%;
+    top: 62%;
+    font-size: 7px;
+  }
+
+  /* Angsuran Ke- diposisikan setelah colon */
+  .data-angsuran-ke {
+    left: 27%;
+    top: 72%;
+    font-size: 7px;
+  }
+
+  /* Besar Angsuran - diposisikan setelah "Rp." di area kanan */
+  .data-besar-angsuran {
+    right: 8%;
+    top: 79%;
+    font-weight: bold;
+    font-size: 8px;
+    text-align: right;
+  }
+
+  /* Company name - diposisikan di bottom */
+  .data-kantor {
+    left: 5%;
+    bottom: 8%;
+    font-size: 5px;
+    color: #333;
+    font-weight: normal;
+  }
+
+  /* Empty vouchers tidak terlihat */
+  .voucher-empty {
+    background: none !important;
+    border: none !important;
+    visibility: hidden;
+  }
+}
+
+/* Screen Preview Styles */
+@media screen {
+  .print-a4-landscape-container {
+    background: #f5f5f5;
+    padding: 20px;
+  }
+
+  .print-a4-landscape-container .page {
+    width: 297mm;
+    height: 210mm;
+    background: white;
+    margin: 0 auto 20px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    padding: 8mm;
+    display: grid;
+    grid-template-columns: repeat(3, 8cm);
+    grid-template-rows: repeat(4, 5cm);
+    gap: 1mm;
+    justify-content: center;
+    align-content: center;
+  }
+
+  .voucher {
+    width: 8cm;
+    height: 5cm;
+    position: relative;
+    background-image: url('/voucher background.png');
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+    background-position: center;
+    border: 1px solid #ddd;
+  }
+
+  .voucher span {
+    position: absolute;
+    font-family: Arial, sans-serif;
+    font-weight: normal;
+    color: #000;
+    line-height: 0;
+  }
+
+  /* Screen positioning sama dengan print */
+  .data-faktur {
+    left: 27%;
+    top: 32%;
+    font-size: 7px;
+  }
+
+  .data-nama {
+    left: 27%;
+    top: 42%;
+    font-size: 7px;
+    max-width: 65%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .data-alamat {
+    left: 27%;
+    top: 52%;
+    font-size: 6px;
+    max-width: 65%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .data-jatuh-tempo {
+    left: 27%;
+    top: 62%;
+    font-size: 7px;
+  }
+
+  .data-angsuran-ke {
+    left: 27%;
+    top: 72%;
+    font-size: 7px;
+  }
+
+  .data-besar-angsuran {
+    right: 8%;
+    top: 79%;
+    font-weight: bold;
+    font-size: 8px;
+    text-align: right;
+  }
+
+  .data-kantor {
+    left: 5%;
+    bottom: 8%;
+    font-size: 5px;
+    color: #333;
+    font-weight: normal;
+  }
+
+  /* Empty vouchers untuk screen preview */
+  .voucher-empty {
+    background: none !important;
+    border: 1px dashed #ccc !important;
+    opacity: 0.3;
+  }
+}

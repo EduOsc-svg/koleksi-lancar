@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import { CreditCard, FileText, AlertTriangle } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import "@/styles/print-single-coupon.css"; // Changed to single coupon for positioning
-import { PrintA4LandscapeCoupons } from "@/components/print/PrintA4LandscapeCoupons";
+import "@/styles/Voucher.css"; // New pixel-perfect voucher styles
+import VoucherPage from "@/components/print/VoucherPage";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -165,7 +165,7 @@ export default function Collection() {
   return (
     <div className="space-y-6 print:space-y-0" ref={printRef}>
       {printMode === "a4-landscape" && manifestContracts && (
-        <PrintA4LandscapeCoupons contracts={manifestContracts} />
+        <VoucherPage contracts={manifestContracts} />
       )}
 
       <h2 className="text-2xl font-bold print:hidden">{t("collection.title")}</h2>
