@@ -1,0 +1,128 @@
+/* Print Coupon 8x5 cm - A4 Landscape Layout with Background Image */
+/* Fits 3 columns x 3 rows = 9 coupons per page */
+
+/* Hide on screen */
+.print-coupon-8x5-container {
+  display: none;
+}
+
+@media print {
+  /* Hide everything except print container */
+  body * {
+    visibility: hidden;
+  }
+
+  .print-coupon-8x5-container,
+  .print-coupon-8x5-container * {
+    visibility: visible;
+  }
+
+  /* Page setup - A4 Landscape */
+  @page {
+    size: A4 landscape;
+    margin: 15mm;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    background: white !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .print-coupon-8x5-container {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: white;
+  }
+
+  /* Grid: 3 columns x 3 rows */
+  .coupon-8x5-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 10mm;
+    width: 267mm;
+    height: 179mm;
+  }
+
+  /* Individual coupon card - 8x5 cm with background image */
+  .coupon-8x5-card {
+    width: 80mm;
+    height: 50mm;
+    position: relative;
+    background-image: var(--coupon-bg);
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+    box-sizing: border-box;
+    page-break-inside: avoid;
+    break-inside: avoid;
+    overflow: hidden;
+  }
+
+  /* Data positioning - absolute positioning relative to background */
+  .coupon-8x5-data {
+    position: absolute;
+    font-family: "Arial Narrow", Arial, sans-serif;
+    font-weight: bold;
+    font-size: 10pt;
+    color: #000;
+    line-height: 1;
+    white-space: nowrap;
+    left: 29%;
+  }
+
+  /* NO.Faktur - Red color */
+  .coupon-8x5-faktur {
+    top: 38%;
+    color: #d00000;
+    font-size: 11pt;
+  }
+
+  /* Nama */
+  .coupon-8x5-nama {
+    top: 46%;
+    text-transform: capitalize;
+  }
+
+  /* Alamat */
+  .coupon-8x5-alamat {
+    top: 54%;
+    font-size: 9pt;
+  }
+
+  /* Jatuh Tempo */
+  .coupon-8x5-jatuhtempo {
+    top: 62%;
+  }
+
+  /* Angsuran Ke */
+  .coupon-8x5-angsuran-ke {
+    top: 70%;
+  }
+
+  /* Besar Angsuran - Bottom right */
+  .coupon-8x5-nominal {
+    left: 71%;
+    top: 76%;
+    font-size: 16pt;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+  }
+
+  /* Kantor - Bottom center */
+  .coupon-8x5-kantor {
+    left: 48%;
+    top: 87%;
+    font-size: 9pt;
+  }
+
+  /* Page break after every 9 coupons */
+  .coupon-8x5-card:nth-child(9n) {
+    page-break-after: always;
+  }
+}

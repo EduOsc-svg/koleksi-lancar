@@ -214,11 +214,11 @@ export default function Customers() {
       </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-3xl">
           <DialogHeader>
             <DialogTitle>{selectedCustomer ? t("customers.editCustomer") : t("customers.newCustomer")}</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="customer_code">{t("customers.customerCode")} *</Label>
               <Input
@@ -248,6 +248,15 @@ export default function Customers() {
                 maxLength={16}
               />
               <p className="text-xs text-muted-foreground mt-1">Nomor Induk Kependudukan (16 digit)</p>
+            </div>
+            <div>
+              <Label htmlFor="phone">{t("customers.phone")}</Label>
+              <Input
+                id="phone"
+                value={formData.phone}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                placeholder={t("customers.phone")}
+              />
             </div>
             <div>
               <Label htmlFor="route">{t("customers.route")} *</Label>
@@ -288,16 +297,7 @@ export default function Customers() {
                 </SelectContent>
               </Select>
             </div>
-            <div>
-              <Label htmlFor="phone">{t("customers.phone")}</Label>
-              <Input
-                id="phone"
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                placeholder={t("customers.phone")}
-              />
-            </div>
-            <div>
+            <div className="col-span-2">
               <Label htmlFor="address">{t("customers.address")}</Label>
               <Textarea
                 id="address"

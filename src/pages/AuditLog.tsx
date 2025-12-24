@@ -13,16 +13,17 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { useActivityLogs } from "@/hooks/useActivityLog";
+import { useActivityLogs, ActivityLog } from "@/hooks/useActivityLog";
 import { usePagination } from "@/hooks/usePagination";
 import { TablePagination } from "@/components/TablePagination";
 import { formatAuditDetails } from "@/lib/formatAuditDetails";
-import { Search, Shield, Info } from "lucide-react";
+import { Search, Shield, Info, Eye } from "lucide-react";
 
 const actionColors: Record<string, string> = {
   CREATE: "bg-green-500/10 text-green-600 border-green-500/20",
@@ -40,6 +41,9 @@ export default function AuditLog() {
   const { t } = useTranslation();
   const { data: logs, isLoading } = useActivityLogs(500);
   const [searchTerm, setSearchTerm] = useState("");
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [descriptionDialogOpen, setDescriptionDialogOpen] = useState(false);
+  const [selectedLog, setSelectedLog] = useState<ActivityLog | null>(null);
 
   const filteredLogs = logs?.filter((log) => {
     const search = searchTerm.toLowerCase();
@@ -52,6 +56,18 @@ export default function AuditLog() {
   });
 
   const { currentPage, totalPages, paginatedItems, goToPage, totalItems } = usePagination(filteredLogs);
+
+  const handleViewDetails = (log: ActivityLog) => {
+    setSelectedLog(log);
+    setDetailDialogOpen(true);
+  };
+
+  const handleViewDescription = (log: ActivityLog) => {
+    setSelectedLog(log);
+    setDescriptionDialogOpen(true);
+  };
+
+  const formattedSelectedDetails = selectedLog ? formatAuditDetails(selectedLog.details) : [];
 
   return (
     <div className="space-y-6">
@@ -130,32 +146,32 @@ export default function AuditLog() {
                         <TableCell className="capitalize">
                           {log.entity_type}
                         </TableCell>
-                        <TableCell className="max-w-xs truncate">
-                          {log.description}
+                        <TableCell className="max-w-xs">
+                          <div className="flex items-center gap-1">
+                            <span className="truncate flex-1">{log.description}</span>
+                            {log.description.length > 40 && (
+                              <Button 
+                                variant="ghost" 
+                                size="icon"
+                                className="h-6 w-6 shrink-0"
+                                onClick={() => handleViewDescription(log)}
+                              >
+                                <Eye className="h-3.5 w-3.5" />
+                              </Button>
+                            )}
+                          </div>
                         </TableCell>
                         <TableCell>
                           {hasDetails ? (
-                            <Popover>
-                              <PopoverTrigger asChild>
-                                <Button variant="ghost" size="sm" className="gap-1">
-                                  <Info className="h-4 w-4" />
-                                  {t("auditLog.details")}
-                                </Button>
-                              </PopoverTrigger>
-                              <PopoverContent className="w-80">
-                                <div className="space-y-2">
-                                  <h4 className="font-medium">{t("auditLog.details")}</h4>
-                                  <div className="space-y-1 text-sm">
-                                    {formattedDetails.map(({ key, value }, idx) => (
-                                      <div key={idx} className="flex justify-between gap-2">
-                                        <span className="text-muted-foreground">{key}:</span>
-                                        <span className="font-medium text-right">{value}</span>
-                                      </div>
-                                    ))}
-                                  </div>
-                                </div>
-                              </PopoverContent>
-                            </Popover>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="gap-1"
+                              onClick={() => handleViewDetails(log)}
+                            >
+                              <Info className="h-4 w-4" />
+                              {t("auditLog.viewDetails")}
+                            </Button>
                           ) : (
                             <span className="text-muted-foreground">-</span>
                           )}
@@ -175,6 +191,88 @@ export default function AuditLog() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Detail Modal */}
+      <Dialog open={detailDialogOpen} onOpenChange={setDetailDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Info className="h-5 w-5" />
+              {t("auditLog.detailTitle")}
+            </DialogTitle>
+          </DialogHeader>
+          {selectedLog && (
+            <div className="space-y-4">
+              {/* Log Summary */}
+              <div className="grid grid-cols-2 gap-3 text-sm border-b pb-4">
+                <div>
+                  <span className="text-muted-foreground">{t("auditLog.timestamp")}:</span>
+                  <p className="font-medium">{new Date(selectedLog.created_at).toLocaleString('id-ID')}</p>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">{t("auditLog.user")}:</span>
+                  <p className="font-medium">{selectedLog.user_name || t("auditLog.system")}</p>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">{t("auditLog.action")}:</span>
+                  <Badge className={getActionColor(selectedLog.action)}>{selectedLog.action}</Badge>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">{t("auditLog.entity")}:</span>
+                  <p className="font-medium capitalize">{selectedLog.entity_type}</p>
+                </div>
+              </div>
+              
+              {/* Description */}
+              <div>
+                <span className="text-sm text-muted-foreground">{t("auditLog.description")}:</span>
+                <p className="font-medium">{selectedLog.description}</p>
+              </div>
+
+              {/* Details */}
+              {formattedSelectedDetails.length > 0 && (
+                <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+                  <h4 className="font-semibold text-sm">{t("auditLog.details")}</h4>
+                  <div className="space-y-2">
+                    {formattedSelectedDetails.map(({ key, value }, idx) => (
+                      <div key={idx} className="flex justify-between gap-4 text-sm">
+                        <span className="text-muted-foreground">{key}:</span>
+                        <span className="font-medium text-right">{value}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Description Modal */}
+      <Dialog open={descriptionDialogOpen} onOpenChange={setDescriptionDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Eye className="h-5 w-5" />
+              {t("auditLog.fullDescription")}
+            </DialogTitle>
+          </DialogHeader>
+          {selectedLog && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Badge className={getActionColor(selectedLog.action)}>{selectedLog.action}</Badge>
+                <span>•</span>
+                <span className="capitalize">{selectedLog.entity_type}</span>
+                <span>•</span>
+                <span>{new Date(selectedLog.created_at).toLocaleString('id-ID')}</span>
+              </div>
+              <div className="bg-muted/50 rounded-lg p-4">
+                <p className="text-sm whitespace-pre-wrap">{selectedLog.description}</p>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
