@@ -233,13 +233,13 @@ export default function Reports() {
               />
             </div>
             <div>
-              <Label>{t("collection.collector")}</Label>
+              <Label>{t("Filter Berdasarkan Sales")}</Label>
               <Select value={collectorId} onValueChange={(v) => setSalesId(v === "all" ? "" : v)}>
                 <SelectTrigger>
-                  <SelectValue placeholder={t("Semua ")} />
+                  <SelectValue placeholder={t("Semua Sales")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">{t("Semua ")}</SelectItem>
+                  <SelectItem value="all">{t("Semua Sales")}</SelectItem>
                   {agents?.map((agent) => (
                     <SelectItem key={agent.id} value={agent.id}>
                       {agent.name}
