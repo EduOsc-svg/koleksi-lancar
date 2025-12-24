@@ -77,10 +77,10 @@ export default function Reports() {
     const headerRow = worksheet.addRow([
       'Tanggal',
       'Pelanggan',
-      'Kontrak',
-      'Jumlah Kupon',
-      'Nomor Kupon',
-      'Total (Rp)',
+      'Code Coupon',
+      'Jumlah Coupon',
+      'Nominal Pembayaran',
+      'Total',
       'Sales'
     ]);
 
@@ -101,15 +101,23 @@ export default function Reports() {
       cell.alignment = { horizontal: 'center', vertical: 'middle' };
     });
 
-    // Data rows
-    payments.forEach((p) => {
+    // Data rows with formulas
+    payments.forEach((p, index) => {
+      const rowNumber = index + 5; // Starting from row 5 (after headers)
+      
+      // Generate code coupon (A001, A002, etc.)
+      const codeCoupon = `A${String(index + 1).padStart(3, '0')}`;
+      
+      // Calculate nominal per coupon (total amount divided by coupon count)
+      const nominalPerCoupon = Math.round(p.total_amount / p.coupon_count);
+      
       const row = worksheet.addRow([
         p.payment_date,
         p.customer_name,
-        p.contract_ref,
+        codeCoupon,
         p.coupon_count,
-        `#${p.coupon_indices.join(', #')}`,
-        p.total_amount,
+        nominalPerCoupon,
+        { formula: `D${rowNumber}*E${rowNumber}` }, // Jumlah Coupon × Nominal Pembayaran
         p.collector_name || '-'
       ]);
 
@@ -121,18 +129,25 @@ export default function Reports() {
           right: { style: 'thin' }
         };
         
-        // Format currency column
-        if (colNumber === 6) {
+        // Format currency columns (Nominal Pembayaran & Total)
+        if (colNumber === 5 || colNumber === 6) {
           cell.numFmt = '#,##0';
           cell.alignment = { horizontal: 'right' };
+        }
+        
+        // Center align for Jumlah Coupon and Code Coupon
+        if (colNumber === 3 || colNumber === 4) {
+          cell.alignment = { horizontal: 'center' };
         }
       });
     });
 
-    // Total row
+    // Total row with SUM formula
     const totalRow = worksheet.addRow([
-      '', '', '', '', 'TOTAL:',
-      { formula: `SUM(F5:F${4 + payments.length})` },
+      '', '', '', 
+      { formula: `SUM(D5:D${4 + payments.length})` }, // Total Jumlah Coupon
+      'TOTAL:',
+      { formula: `SUM(F5:F${4 + payments.length})` }, // Total Amount
       ''
     ]);
 
@@ -144,9 +159,20 @@ export default function Reports() {
         bottom: { style: 'double' },
         right: { style: 'thin' }
       };
+      
+      if (colNumber === 4) {
+        cell.alignment = { horizontal: 'center' };
+        cell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'E7E6E6' }
+        };
+      }
+      
       if (colNumber === 5) {
         cell.alignment = { horizontal: 'right' };
       }
+      
       if (colNumber === 6) {
         cell.numFmt = '#,##0';
         cell.alignment = { horizontal: 'right' };
@@ -162,11 +188,11 @@ export default function Reports() {
     worksheet.columns = [
       { width: 12 },  // Tanggal
       { width: 25 },  // Pelanggan
-      { width: 15 },  // Kontrak
-      { width: 14 },  // Jumlah Kupon
-      { width: 20 },  // Nomor Kupon
+      { width: 15 },  // Code Coupon
+      { width: 16 },  // Jumlah Coupon
+      { width: 18 },  // Nominal Pembayaran
       { width: 18 },  // Total
-      { width: 15 },  // Kolektor
+      { width: 15 },  // Sales
     ];
 
     // Generate and download
@@ -207,13 +233,13 @@ export default function Reports() {
               />
             </div>
             <div>
-              <Label>{t("Filter Berdasarkan Sales")}</Label>
+              <Label>{t("collection.collector")}</Label>
               <Select value={collectorId} onValueChange={(v) => setSalesId(v === "all" ? "" : v)}>
                 <SelectTrigger>
-                  <SelectValue placeholder={t("Semua Sales")} />
+                  <SelectValue placeholder={t("Semua ")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">{t("Semua Sales")}</SelectItem>
+                  <SelectItem value="all">{t("Semua ")}</SelectItem>
                   {agents?.map((agent) => (
                     <SelectItem key={agent.id} value={agent.id}>
                       {agent.name}
@@ -238,51 +264,62 @@ export default function Reports() {
             <TableRow>
               <TableHead>{t("reports.date", "Tanggal")}</TableHead>
               <TableHead>{t("customers.title")}</TableHead>
-              <TableHead>{t("contracts.contractRef")}</TableHead>
-              <TableHead>{t("reports.couponsPaid", "Kupon Dibayar")}</TableHead>
-              <TableHead className="text-right">{t("reports.totalAmount", "Total")}</TableHead>
-              <TableHead>{t("collection.collector")}</TableHead>
+              <TableHead>Code Coupon</TableHead>
+              <TableHead className="text-center">Jumlah Coupon</TableHead>
+              <TableHead className="text-right">Nominal Pembayaran</TableHead>
+              <TableHead className="text-right">Total</TableHead>
+              <TableHead>Sales</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center">{t("common.loading")}</TableCell>
+                <TableCell colSpan={7} className="text-center">{t("common.loading")}</TableCell>
               </TableRow>
             ) : payments?.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-muted-foreground">
+                <TableCell colSpan={7} className="text-center text-muted-foreground">
                   {t("common.noData")}
                 </TableCell>
               </TableRow>
             ) : (
               <>
-                {paginatedItems.map((payment, idx) => (
-                  <TableRow key={`${payment.customer_id}-${payment.payment_date}-${idx}`}>
-                    <TableCell>{formatDate(payment.payment_date)}</TableCell>
-                    <TableCell>{payment.customer_name}</TableCell>
-                    <TableCell>{payment.contract_ref}</TableCell>
-                    <TableCell>
-                      <span className="font-medium">{payment.coupon_count} {t("contracts.coupons").toLowerCase()}</span>
-                      <span className="text-muted-foreground text-xs ml-2">
-                        (#{payment.coupon_indices.join(', #')})
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-right font-medium">
-                      {formatRupiah(payment.total_amount)}
-                    </TableCell>
-                    <TableCell>{payment.collector_name || "-"}</TableCell>
-                  </TableRow>
-                ))}
-                <TableRow className="bg-muted/50 font-bold">
-                  <TableCell colSpan={4}>Total</TableCell>
-                  <TableCell className="text-right">{formatRupiah(totalAmount)}</TableCell>
-                  <TableCell></TableCell>
-                </TableRow>
+                {paginatedItems.map((payment, idx) => {
+                  const globalIndex = (currentPage - 1) * 10 + idx;
+                  const codeCoupon = `A${String(globalIndex + 1).padStart(3, '0')}`;
+                  const nominalPerCoupon = Math.round(payment.total_amount / payment.coupon_count);
+                  
+                  return (
+                    <TableRow key={`${payment.customer_id}-${payment.payment_date}-${idx}`}>
+                      <TableCell>{formatDate(payment.payment_date)}</TableCell>
+                      <TableCell>{payment.customer_name}</TableCell>
+                      <TableCell className="font-mono text-center">{codeCoupon}</TableCell>
+                      <TableCell className="text-center">
+                        <span className="font-medium">{payment.coupon_count}</span>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <span className="text-muted-foreground">{formatRupiah(nominalPerCoupon)}</span>
+                      </TableCell>
+                      <TableCell className="text-right font-medium">
+                        {formatRupiah(payment.total_amount)}
+                      </TableCell>
+                      <TableCell>{payment.collector_name || '-'}</TableCell>
+                    </TableRow>
+                  );
+                })}
               </>
             )}
           </TableBody>
         </Table>
+        
+        {/* Total Summary Row */}
+        <div className="p-4 bg-muted/50 border-t font-bold">
+          <div className="flex justify-between">
+            <span>Total Keseluruhan:</span>
+            <span>{formatRupiah(totalAmount)}</span>
+          </div>
+        </div>
+        
         <TablePagination
           currentPage={currentPage}
           totalPages={totalPages}
