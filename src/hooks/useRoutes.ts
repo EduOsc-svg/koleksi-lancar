@@ -10,7 +10,7 @@ export interface Route {
   created_at: string;
 }
 
-export interface RouteWithCollector extends Route {
+export interface RouteWithSales extends Route {
   sales_agents: { name: string } | null;
 }
 
@@ -23,7 +23,7 @@ export const useRoutes = () => {
         .select('*, sales_agents(name)')
         .order('code');
       if (error) throw error;
-      return data as RouteWithCollector[];
+      return data as RouteWithSales[];
     },
   });
 };

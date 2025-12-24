@@ -1,4 +1,4 @@
--- Create sales_agents table (Collectors)
+-- Create sales_agents table (Saless)
 CREATE TABLE public.sales_agents (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   agent_code TEXT NOT NULL UNIQUE,

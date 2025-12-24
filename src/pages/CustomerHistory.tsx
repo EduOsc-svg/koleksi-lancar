@@ -176,7 +176,7 @@ export default function CustomerHistory() {
                       <TableHead>Coupon #</TableHead>
                       <TableHead>Date</TableHead>
                       <TableHead className="text-right">Amount</TableHead>
-                      <TableHead>Collector</TableHead>
+                      <TableHead>Sales</TableHead>
                       <TableHead>Notes</TableHead>
                     </TableRow>
                   </TableHeader>

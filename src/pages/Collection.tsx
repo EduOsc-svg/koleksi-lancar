@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import { CreditCard, FileText, AlertTriangle } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import "@/styles/print-coupon.css";
-import { PrintableCoupons } from "@/components/print/PrintableCoupon";
+import "@/styles/print-a4-landscape.css";
+import { PrintA4LandscapeCoupons } from "@/components/print/PrintA4LandscapeCoupons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -43,13 +43,13 @@ export default function Collection() {
 
   // Manifest state
   const [selectedRoute, setSelectedRoute] = useState<string>("");
-  const [selectedCollector, setSelectedCollector] = useState<string>("");
+  const [selectedSales, setSelectedSales] = useState<string>("");
 
   // Payment state
   const [selectedContract, setSelectedContract] = useState<string>("");
   const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split("T")[0]);
   const [paymentAmount, setPaymentAmount] = useState("");
-  const [paymentCollector, setPaymentCollector] = useState<string>("");
+  const [paymentSales, setPaymentSales] = useState<string>("");
   const [paymentNotes, setPaymentNotes] = useState("");
 
   const selectedContractData = contracts?.find((c) => c.id === selectedContract);
@@ -85,8 +85,8 @@ export default function Collection() {
     if (selectedRoute) {
       return c.customers?.routes && routes?.find(r => r.id === selectedRoute)?.code === c.customers.routes.code;
     }
-    if (selectedCollector) {
-      return c.customers?.sales_agents && agents?.find(a => a.id === selectedCollector)?.agent_code === c.customers.sales_agents.agent_code;
+    if (selectedSales) {
+      return c.customers?.sales_agents && agents?.find(a => a.id === selectedSales)?.agent_code === c.customers.sales_agents.agent_code;
     }
     return true;
   });
@@ -94,18 +94,18 @@ export default function Collection() {
   const selectedRouteName = selectedRoute 
     ? routes?.find(r => r.id === selectedRoute)?.name || routes?.find(r => r.id === selectedRoute)?.code
     : null;
-  const selectedCollectorName = selectedCollector
-    ? agents?.find(a => a.id === selectedCollector)?.name
+  const selectedSalesName = selectedSales
+    ? agents?.find(a => a.id === selectedSales)?.name
     : null;
 
-  const [printMode, setPrintMode] = useState<"coupons" | null>(null);
+  const [printMode, setPrintMode] = useState<"a4-landscape" | null>(null);
 
   const handlePrintCoupons = () => {
     if (!manifestContracts?.length) {
       toast.error(t("collection.noContracts"));
       return;
     }
-    setPrintMode("coupons");
+    setPrintMode("a4-landscape");
     setTimeout(() => {
       window.print();
       setPrintMode(null);
@@ -143,7 +143,7 @@ export default function Collection() {
         payment_date: paymentDate,
         installment_index: nextCoupon,
         amount_paid: amount,
-        collector_id: paymentCollector || null,
+        collector_id: paymentSales || null,
         notes: finalNotes,
       });
       
@@ -159,8 +159,8 @@ export default function Collection() {
 
   return (
     <div className="space-y-6 print:space-y-0" ref={printRef}>
-      {printMode === "coupons" && manifestContracts && (
-        <PrintableCoupons contracts={manifestContracts} />
+      {printMode === "a4-landscape" && manifestContracts && (
+        <PrintA4LandscapeCoupons contracts={manifestContracts} />
       )}
 
       <h2 className="text-2xl font-bold print:hidden">{t("collection.title")}</h2>
@@ -188,7 +188,7 @@ export default function Collection() {
                   <Label>{t("collection.filterByRoute")}</Label>
                   <Select value={selectedRoute} onValueChange={(v) => {
                     setSelectedRoute(v === "all" ? "" : v);
-                    setSelectedCollector("");
+                    setSelectedSales("");
                   }}>
                     <SelectTrigger>
                       <SelectValue placeholder={t("collection.allRoutes")} />
@@ -204,16 +204,16 @@ export default function Collection() {
                   </Select>
                 </div>
                 <div>
-                  <Label>{t("collection.filterByCollector")}</Label>
-                  <Select value={selectedCollector} onValueChange={(v) => {
-                    setSelectedCollector(v === "all" ? "" : v);
+                  <Label>{t("collection.filterBySales")}</Label>
+                  <Select value={selectedSales} onValueChange={(v) => {
+                    setSelectedSales(v === "all" ? "" : v);
                     setSelectedRoute("");
                   }}>
                     <SelectTrigger>
-                      <SelectValue placeholder={t("collection.allCollectors")} />
+                      <SelectValue placeholder={t("collection.allSaless")} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">{t("collection.allCollectors")}</SelectItem>
+                      <SelectItem value="all">{t("collection.allSaless")}</SelectItem>
                       {agents?.map((agent) => (
                         <SelectItem key={agent.id} value={agent.id}>
                           {agent.name} ({agent.agent_code})
@@ -232,7 +232,7 @@ export default function Collection() {
             </CardContent>
           </Card>
 
-          <div className={`border rounded-lg ${printMode === "coupons" ? "print:hidden" : "print:border-0 print:rounded-none print:w-full print:m-0"}`}>
+          <div className={`border rounded-lg ${printMode === "a4-landscape" ? "print:hidden" : "print:border-0 print:rounded-none print:w-full print:m-0"}`}>
             <Table className="print:w-full">
               <TableHeader>
                 <TableRow className="print:break-inside-avoid">
@@ -361,9 +361,9 @@ export default function Collection() {
                 </div>
                 <div>
                   <Label>{t("collection.collector")}</Label>
-                  <Select value={paymentCollector} onValueChange={setPaymentCollector}>
+                  <Select value={paymentSales} onValueChange={setPaymentSales}>
                     <SelectTrigger>
-                      <SelectValue placeholder={t("collection.selectCollector")} />
+                      <SelectValue placeholder={t("collection.selectSales")} />
                     </SelectTrigger>
                     <SelectContent>
                       {agents?.map((agent) => (

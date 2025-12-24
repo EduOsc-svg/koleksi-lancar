@@ -42,7 +42,7 @@ import {
   useCreateRoute,
   useUpdateRoute,
   useDeleteRoute,
-  RouteWithCollector,
+  RouteWithSales,
 } from "@/hooks/useRoutes";
 import { useSalesAgents } from "@/hooks/useSalesAgents";
 import { usePagination } from "@/hooks/usePagination";
@@ -59,7 +59,7 @@ export default function Routes() {
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [selectedRoute, setSelectedRoute] = useState<RouteWithCollector | null>(null);
+  const [selectedRoute, setSelectedRoute] = useState<RouteWithSales | null>(null);
   const [formData, setFormData] = useState({
     code: "",
     name: "",
@@ -72,7 +72,7 @@ export default function Routes() {
     setDialogOpen(true);
   };
 
-  const handleOpenEdit = (route: RouteWithCollector) => {
+  const handleOpenEdit = (route: RouteWithSales) => {
     setSelectedRoute(route);
     setFormData({
       code: route.code,
@@ -123,7 +123,7 @@ export default function Routes() {
             <TableRow>
               <TableHead>{t("routes.code")}</TableHead>
               <TableHead>{t("routes.name")}</TableHead>
-              <TableHead>{t("routes.defaultCollector")}</TableHead>
+              <TableHead>{t("routes.defaultSales")}</TableHead>
               <TableHead className="text-right">{t("common.actions")}</TableHead>
             </TableRow>
           </TableHeader>
@@ -197,7 +197,7 @@ export default function Routes() {
               />
             </div>
             <div>
-              <Label htmlFor="collector">{t("routes.defaultCollector")}</Label>
+              <Label htmlFor="collector">{t("routes.defaultSales")}</Label>
               <Select
                 value={formData.default_collector_id || "none"}
                 onValueChange={(v) =>
@@ -205,7 +205,7 @@ export default function Routes() {
                 }
               >
                 <SelectTrigger>
-                  <SelectValue placeholder={t("collection.selectCollector")} />
+                  <SelectValue placeholder={t("collection.selectSales")} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">-</SelectItem>

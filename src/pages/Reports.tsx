@@ -34,7 +34,7 @@ export default function Reports() {
     new Date(new Date().setDate(1)).toISOString().split("T")[0]
   );
   const [dateTo, setDateTo] = useState(new Date().toISOString().split("T")[0]);
-  const [collectorId, setCollectorId] = useState<string>("");
+  const [collectorId, setSalesId] = useState<string>("");
 
   const { data: payments, isLoading } = useAggregatedPayments(
     dateFrom,
@@ -81,7 +81,7 @@ export default function Reports() {
       'Jumlah Kupon',
       'Nomor Kupon',
       'Total (Rp)',
-      'Kolektor'
+      'Sales'
     ]);
 
     // Style header
@@ -208,12 +208,12 @@ export default function Reports() {
             </div>
             <div>
               <Label>{t("collection.collector")}</Label>
-              <Select value={collectorId} onValueChange={(v) => setCollectorId(v === "all" ? "" : v)}>
+              <Select value={collectorId} onValueChange={(v) => setSalesId(v === "all" ? "" : v)}>
                 <SelectTrigger>
-                  <SelectValue placeholder={t("collection.allCollectors")} />
+                  <SelectValue placeholder={t("collection.allSaless")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">{t("collection.allCollectors")}</SelectItem>
+                  <SelectItem value="all">{t("collection.allSaless")}</SelectItem>
                   {agents?.map((agent) => (
                     <SelectItem key={agent.id} value={agent.id}>
                       {agent.name}
