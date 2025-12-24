@@ -24,8 +24,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { useRoutes } from "@/hooks/useRoutes";
 import { useSalesAgents } from "@/hooks/useSalesAgents";
+import { useCustomers } from "@/hooks/useCustomers";
 import { useContracts } from "@/hooks/useContracts";
 import { useCreatePayment } from "@/hooks/usePayments";
 import { formatRupiah } from "@/lib/format";
@@ -35,15 +35,15 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function Collection() {
   const { t } = useTranslation();
-  const { data: routes } = useRoutes();
   const { data: agents } = useSalesAgents();
+  const { data: customers } = useCustomers();
   const { data: contracts } = useContracts("active");
   const createPayment = useCreatePayment();
   const printRef = useRef<HTMLDivElement>(null);
 
   // Manifest state
-  const [selectedRoute, setSelectedRoute] = useState<string>("");
-  const [selectedCollector, setSelectedCollector] = useState<string>("");
+  const [selectedCustomer, setSelectedCustomer] = useState<string>("");
+  const [selectedSales, setSelectedSales] = useState<string>("");
 
   // Payment state
   const [selectedContract, setSelectedContract] = useState<string>("");
@@ -74,28 +74,17 @@ export default function Collection() {
     }
   }, [selectedContract, lastPaymentDate, paymentDate]);
 
-  const filteredContracts = contracts?.filter((c) => {
-    if (selectedRoute && c.customers?.routes?.code) {
-      return true;
-    }
-    return true;
-  });
-
   const manifestContracts = contracts?.filter((c) => {
-    if (selectedRoute) {
-      return c.customers?.routes && routes?.find(r => r.id === selectedRoute)?.code === c.customers.routes.code;
-    }
-    if (selectedCollector) {
-      return c.customers?.sales_agents && agents?.find(a => a.id === selectedCollector)?.agent_code === c.customers.sales_agents.agent_code;
-    }
-    return true;
+    const matchesCustomer = !selectedCustomer || c.customer_id === selectedCustomer;
+    const matchesSales = !selectedSales || c.customers?.assigned_sales_id === selectedSales;
+    return matchesCustomer && matchesSales;
   });
 
-  const selectedRouteName = selectedRoute 
-    ? routes?.find(r => r.id === selectedRoute)?.name || routes?.find(r => r.id === selectedRoute)?.code
+  const selectedCustomerName = selectedCustomer 
+    ? customers?.find(c => c.id === selectedCustomer)?.name
     : null;
-  const selectedCollectorName = selectedCollector
-    ? agents?.find(a => a.id === selectedCollector)?.name
+  const selectedSalesName = selectedSales
+    ? agents?.find(a => a.id === selectedSales)?.name
     : null;
 
   const [printMode, setPrintMode] = useState<"coupons" | null>(null);
@@ -185,35 +174,33 @@ export default function Collection() {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <Label>{t("collection.filterByRoute")}</Label>
-                  <Select value={selectedRoute} onValueChange={(v) => {
-                    setSelectedRoute(v === "all" ? "" : v);
-                    setSelectedCollector("");
+                  <Label>{t("collection.filterByCustomer")}</Label>
+                  <Select value={selectedCustomer} onValueChange={(v) => {
+                    setSelectedCustomer(v === "all" ? "" : v);
                   }}>
                     <SelectTrigger>
-                      <SelectValue placeholder={t("collection.allRoutes")} />
+                      <SelectValue placeholder={t("collection.allCustomers")} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">{t("collection.allRoutes")}</SelectItem>
-                      {routes?.map((route) => (
-                        <SelectItem key={route.id} value={route.id}>
-                          {route.code} - {route.name}
+                      <SelectItem value="all">{t("collection.allCustomers")}</SelectItem>
+                      {customers?.map((customer) => (
+                        <SelectItem key={customer.id} value={customer.id}>
+                          {customer.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
                 <div>
-                  <Label>{t("collection.filterByCollector")}</Label>
-                  <Select value={selectedCollector} onValueChange={(v) => {
-                    setSelectedCollector(v === "all" ? "" : v);
-                    setSelectedRoute("");
+                  <Label>{t("collection.filterBySales")}</Label>
+                  <Select value={selectedSales} onValueChange={(v) => {
+                    setSelectedSales(v === "all" ? "" : v);
                   }}>
                     <SelectTrigger>
-                      <SelectValue placeholder={t("collection.allCollectors")} />
+                      <SelectValue placeholder={t("collection.allSales")} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">{t("collection.allCollectors")}</SelectItem>
+                      <SelectItem value="all">{t("collection.allSales")}</SelectItem>
                       {agents?.map((agent) => (
                         <SelectItem key={agent.id} value={agent.id}>
                           {agent.name} ({agent.agent_code})
