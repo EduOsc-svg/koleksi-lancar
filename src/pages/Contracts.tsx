@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Plus, Pencil, Trash2, Eye } from "lucide-react";
+import { Plus, Pencil, Trash2, Eye, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -45,6 +45,7 @@ import { formatRupiah } from "@/lib/format";
 import { usePagination } from "@/hooks/usePagination";
 import { TablePagination } from "@/components/TablePagination";
 import { useCouponsByContract, useGenerateCoupons, InstallmentCoupon } from "@/hooks/useInstallmentCoupons";
+import { PrintCoupon8x5 } from "@/components/print/PrintCoupon8x5";
 import { CurrencyInput } from "@/components/ui/currency-input";
 
 export default function Contracts() {
@@ -73,8 +74,9 @@ export default function Contracts() {
     status: "active",
   });
 
-  // Fetch coupons for selected contract (for detail view)
+  // Fetch coupons for selected contract (for detail view and printing)
   const { data: selectedContractCoupons } = useCouponsByContract(selectedContract?.id || null);
+  const [printMode, setPrintMode] = useState(false);
 
   const handleOpenCreate = () => {
     setSelectedContract(null);
@@ -187,6 +189,18 @@ export default function Contracts() {
     }
   };
 
+  const handlePrintAllCoupons = () => {
+    if (!selectedContractCoupons?.length) {
+      toast.error(t("contracts.noCoupons"));
+      return;
+    }
+    setPrintMode(true);
+    setTimeout(() => {
+      window.print();
+      setPrintMode(false);
+    }, 100);
+  };
+
   const getNoFaktur = (contractId: string) => {
     const invoice = invoiceDetails?.find((i) => i.id === contractId);
     return invoice?.no_faktur || "-";
@@ -202,6 +216,23 @@ export default function Contracts() {
 
   return (
     <div className="space-y-6">
+      {/* Print Mode: 8x5cm Coupons on A4 Landscape (9 per page) */}
+      {printMode && selectedContract && selectedContractCoupons && (
+        <PrintCoupon8x5 
+          coupons={selectedContractCoupons} 
+          contract={{
+            contract_ref: selectedContract.contract_ref,
+            tenor_days: selectedContract.tenor_days,
+            daily_installment_amount: selectedContract.daily_installment_amount,
+            customers: selectedContract.customers ? {
+              name: selectedContract.customers.name,
+              address: selectedContract.customers.address,
+              sales_agents: selectedContract.customers.sales_agents,
+            } : null,
+          }}
+        />
+      )}
+
       <div className="flex justify-between items-center print:hidden">
         <h2 className="text-2xl font-bold">Credit Contracts</h2>
         <Button onClick={handleOpenCreate}>
@@ -475,6 +506,10 @@ export default function Contracts() {
 
               <div className="flex justify-between items-center">
                 <h4 className="font-semibold">Generated Coupons ({selectedContractCoupons?.length || 0})</h4>
+                <Button onClick={handlePrintAllCoupons} disabled={!selectedContractCoupons?.length}>
+                  <Printer className="mr-2 h-4 w-4" />
+                  Print All Coupons (A4)
+                </Button>
               </div>
 
               <div className="border rounded-lg max-h-64 overflow-y-auto">

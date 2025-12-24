@@ -40,7 +40,7 @@
     "operations": "Operasi",
     "system": "Sistem",
     "dashboard": "Dashboard",
-    "salesAgents": "Agen Penjualan",
+    "salesAgents": "Agen Sales",
     "routes": "Jalur",
     "customers": "Pelanggan",
     "contracts": "Kontrak",
@@ -115,12 +115,12 @@
     "address": "Alamat",
     "nik": "NIK",
     "route": "Jalur",
-    "salesAgent": "Agen Penjualan",
+    "salesAgent": "Agen Sales",
     "selectRoute": "Pilih jalur",
     "selectAgent": "Pilih agen"
   },
   "salesAgents": {
-    "title": "Agen Penjualan",
+    "title": "Agen Sales",
     "newAgent": "Agen Baru",
     "editAgent": "Ubah Agen",
     "agentCode": "Kode Agen",

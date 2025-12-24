@@ -208,15 +208,15 @@ export default function Collection() {
                   </Select>
                 </div>
                 <div>
-                  <Label>{t("collection.filterByCustomer")}</Label>
+                  <Label>{t("Filter Berdasarkan Pelanggan")}</Label>
                   <Select value={selectedCustomer} onValueChange={(v) => {
                     setSelectedCustomer(v === "all" ? "" : v);
                   }}>
                     <SelectTrigger>
-                      <SelectValue placeholder={t("collection.allCustomers")} />
+                      <SelectValue placeholder={t("Semua Pelanggan")} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">{t("collection.allCustomers")}</SelectItem>
+                      <SelectItem value="all">{t("Semua Pelanggan")}</SelectItem>
                       {customers?.map((customer) => (
                         <SelectItem key={customer.id} value={customer.id}>
                           {customer.name}
@@ -226,15 +226,15 @@ export default function Collection() {
                   </Select>
                 </div>
                 <div>
-                  <Label>{t("collection.filterBySales")}</Label>
+                  <Label>{t("Filter Berdasarkan Sales")}</Label>
                   <Select value={selectedSales} onValueChange={(v) => {
                     setSelectedSales(v === "all" ? "" : v);
                   }}>
                     <SelectTrigger>
-                      <SelectValue placeholder={t("collection.allSales")} />
+                      <SelectValue placeholder={t("Semua Sales")} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">{t("collection.allSales")}</SelectItem>
+                      <SelectItem value="all">{t("Semua Sales")}</SelectItem>
                       {agents?.map((agent) => (
                         <SelectItem key={agent.id} value={agent.id}>
                           {agent.name} ({agent.agent_code})
