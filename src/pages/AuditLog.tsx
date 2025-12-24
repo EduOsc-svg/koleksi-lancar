@@ -164,8 +164,8 @@ export default function AuditLog() {
                         <TableCell className="max-w-[200px]">
                           <div className="flex items-center gap-1">
                             <span className="truncate flex-1 text-sm">
-                              {formattedDescription.length > 40 
-                                ? `${formattedDescription.slice(0, 40)}...` 
+                              {formattedDescription.length > 20 
+                                ? `${formattedDescription.slice(0, 20)}...`
                                 : formattedDescription}
                             </span>
                             <Button 
