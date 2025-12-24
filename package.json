@@ -3,6 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "_optimization_todo": "Bundle size >500KB - Consider: 1) Dynamic imports for code splitting, 2) Manual chunks in vite.config.ts, 3) Increase chunkSizeWarningLimit. See: https://rollupjs.org/configuration-options/#output-manualchunks",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
