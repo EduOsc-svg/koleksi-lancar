@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { CreditCard, FileText, AlertTriangle } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import "@/styles/print-a4-landscape.css";
+import "@/styles/print-single-coupon.css"; // Changed to single coupon for positioning
 import { PrintA4LandscapeCoupons } from "@/components/print/PrintA4LandscapeCoupons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

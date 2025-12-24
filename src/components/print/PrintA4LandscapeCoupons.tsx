@@ -29,7 +29,7 @@ function PrintableCouponMini({ data }: PrintableCouponMiniProps) {
       <span className="data-jatuh-tempo">{data.dueDate}</span>
       <span className="data-angsuran-ke">{data.installmentNumber}</span>
       <span className="data-besar-angsuran">{data.installmentAmount.toLocaleString("id-ID")}</span>
-      <span className="data-kantor">KANTOR / 0852 5882 5882</span>
+      <span className="data-kantor">CV MAHKOTA JAYA ELEKTRONIK</span>
     </div>
   );
 }
@@ -55,6 +55,13 @@ interface PrintA4LandscapeCouponsProps {
   }>;
 }
 
+// TODO: TEMPORARY SINGLE COUPON MODE FOR POSITIONING
+// When positioning is done, change back to:
+// - couponsPerPage = 9
+// - Remove Math.min(contracts.length, 1) limit
+// - Uncomment the fill empty slots code
+// - Change CSS import back to print-a4-landscape.css
+
 export function PrintA4LandscapeCoupons({ contracts }: PrintA4LandscapeCouponsProps) {
   const today = new Date();
   const dueDate = today.toLocaleDateString("id-ID", {
@@ -63,11 +70,11 @@ export function PrintA4LandscapeCoupons({ contracts }: PrintA4LandscapeCouponsPr
     year: "numeric",
   });
 
-  // Group contracts into pages of 9
+  // Group contracts into pages of 1 (TEMPORARY FOR POSITIONING)
   const pages: Array<Array<CouponData>> = [];
-  const couponsPerPage = 9;
+  const couponsPerPage = 1; // Changed from 9 to 1 for positioning adjustment
   
-  for (let i = 0; i < contracts.length; i += couponsPerPage) {
+  for (let i = 0; i < Math.min(contracts.length, 1); i += couponsPerPage) { // Only take first contract
     const pageContracts = contracts.slice(i, i + couponsPerPage);
     const pageCoupons: Array<CouponData> = pageContracts.map((contract) => {
       // Generate No. Faktur: [Tenor][Kode Sales][Nama Sales]
@@ -88,18 +95,18 @@ export function PrintA4LandscapeCoupons({ contracts }: PrintA4LandscapeCouponsPr
       };
     });
 
-    // Fill remaining slots with empty coupons if needed
-    while (pageCoupons.length < couponsPerPage) {
-      pageCoupons.push({
-        contractRef: "",
-        noFaktur: "",
-        customerName: "",
-        customerAddress: "",
-        dueDate: "",
-        installmentNumber: 0,
-        installmentAmount: 0,
-      });
-    }
+    // No need to fill remaining slots for single coupon mode
+    // while (pageCoupons.length < couponsPerPage) {
+    //   pageCoupons.push({
+    //     contractRef: "",
+    //     noFaktur: "",
+    //     customerName: "",
+    //     customerAddress: "",
+    //     dueDate: "",
+    //     installmentNumber: 0,
+    //     installmentAmount: 0,
+    //   });
+    // }
 
     pages.push(pageCoupons);
   }
