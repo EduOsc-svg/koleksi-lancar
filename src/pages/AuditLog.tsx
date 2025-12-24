@@ -25,6 +25,23 @@ import { TablePagination } from "@/components/TablePagination";
 import { formatAuditDetails } from "@/lib/formatAuditDetails";
 import { Search, Shield, Info, Eye } from "lucide-react";
 
+// Format currency values in description text
+const formatDescriptionWithCurrency = (description: string): string => {
+  // Match numbers that are likely currency (6+ digits or specific patterns)
+  return description.replace(/\b(\d{6,})\b/g, (match) => {
+    const num = parseInt(match, 10);
+    if (!isNaN(num) && num >= 100000) {
+      return new Intl.NumberFormat('id-ID', {
+        style: 'currency',
+        currency: 'IDR',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      }).format(num);
+    }
+    return match;
+  });
+};
+
 const actionColors: Record<string, string> = {
   CREATE: "bg-green-500/10 text-green-600 border-green-500/20",
   UPDATE: "bg-blue-500/10 text-blue-600 border-blue-500/20",
@@ -104,26 +121,24 @@ export default function AuditLog() {
                   <TableHead>{t("auditLog.action")}</TableHead>
                   <TableHead>{t("auditLog.entity")}</TableHead>
                   <TableHead>{t("auditLog.description")}</TableHead>
-                  <TableHead>{t("auditLog.details")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center">
+                    <TableCell colSpan={6} className="text-center">
                       {t("common.loading")}
                     </TableCell>
                   </TableRow>
                 ) : paginatedItems.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center text-muted-foreground">
+                    <TableCell colSpan={6} className="text-center text-muted-foreground">
                       {t("auditLog.noLogs")}
                     </TableCell>
                   </TableRow>
                 ) : (
                   paginatedItems.map((log) => {
-                    const formattedDetails = formatAuditDetails(log.details);
-                    const hasDetails = formattedDetails.length > 0;
+                    const formattedDescription = formatDescriptionWithCurrency(log.description);
                     
                     return (
                       <TableRow key={log.id}>
@@ -148,8 +163,8 @@ export default function AuditLog() {
                         </TableCell>
                         <TableCell className="max-w-xs">
                           <div className="flex items-center gap-1">
-                            <span className="truncate flex-1">{log.description}</span>
-                            {log.description.length > 40 && (
+                            <span className="truncate flex-1">{formattedDescription}</span>
+                            {formattedDescription.length > 50 && (
                               <Button 
                                 variant="ghost" 
                                 size="icon"
@@ -160,21 +175,6 @@ export default function AuditLog() {
                               </Button>
                             )}
                           </div>
-                        </TableCell>
-                        <TableCell>
-                          {hasDetails ? (
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              className="gap-1"
-                              onClick={() => handleViewDetails(log)}
-                            >
-                              <Info className="h-4 w-4" />
-                              {t("auditLog.viewDetails")}
-                            </Button>
-                          ) : (
-                            <span className="text-muted-foreground">-</span>
-                          )}
                         </TableCell>
                       </TableRow>
                     );
@@ -226,7 +226,7 @@ export default function AuditLog() {
               {/* Description */}
               <div>
                 <span className="text-sm text-muted-foreground">{t("auditLog.description")}:</span>
-                <p className="font-medium">{selectedLog.description}</p>
+                <p className="font-medium">{formatDescriptionWithCurrency(selectedLog.description)}</p>
               </div>
 
               {/* Details */}
@@ -267,7 +267,7 @@ export default function AuditLog() {
                 <span>{new Date(selectedLog.created_at).toLocaleString('id-ID')}</span>
               </div>
               <div className="bg-muted/50 rounded-lg p-4">
-                <p className="text-sm whitespace-pre-wrap">{selectedLog.description}</p>
+                <p className="text-sm whitespace-pre-wrap">{formatDescriptionWithCurrency(selectedLog.description)}</p>
               </div>
             </div>
           )}
