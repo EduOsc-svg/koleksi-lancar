@@ -161,19 +161,21 @@ export default function AuditLog() {
                         <TableCell className="capitalize">
                           {log.entity_type}
                         </TableCell>
-                        <TableCell className="max-w-xs">
+                        <TableCell className="max-w-[200px]">
                           <div className="flex items-center gap-1">
-                            <span className="truncate flex-1">{formattedDescription}</span>
-                            {formattedDescription.length > 50 && (
-                              <Button 
-                                variant="ghost" 
-                                size="icon"
-                                className="h-6 w-6 shrink-0"
-                                onClick={() => handleViewDescription(log)}
-                              >
-                                <Eye className="h-3.5 w-3.5" />
-                              </Button>
-                            )}
+                            <span className="truncate flex-1 text-sm">
+                              {formattedDescription.length > 40 
+                                ? `${formattedDescription.slice(0, 40)}...` 
+                                : formattedDescription}
+                            </span>
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              className="h-6 w-6 shrink-0"
+                              onClick={() => handleViewDescription(log)}
+                            >
+                              <Eye className="h-3.5 w-3.5" />
+                            </Button>
                           </div>
                         </TableCell>
                       </TableRow>
