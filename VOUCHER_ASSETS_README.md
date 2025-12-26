@@ -5,12 +5,12 @@
 Untuk sistem voucher yang dinamis berdasarkan jatuh tempo, diperlukan 2 file gambar background:
 
 ### 1. **Normal Voucher (Background Hitam)**
-- **File:** `/public/voucher background.png`
+- **File:** `/public/Voucher background Hitam.png`
 - **Penggunaan:** Untuk voucher dengan jatuh tempo > 10 hari
 - **Warna:** Background hitam/gelap
 
 ### 2. **Urgent Voucher (Background Merah)**  
-- **File:** `/public/voucher background red.png`
+- **File:** `/public/Voucher backround Merah.png`
 - **Penggunaan:** Untuk voucher dengan jatuh tempo ≤ 10 hari
 - **Warna:** Background merah/warning
 
@@ -40,9 +40,11 @@ const isUrgent = diffDays <= 10;
 ## File Structure
 ```
 /public/
-├── voucher background.png     ← Background normal (hitam)
-└── voucher background red.png ← Background urgent (merah)
+├── Voucher background Hitam.png  ← Background normal (hitam) ✅
+└── Voucher backround Merah.png   ← Background urgent (merah) ✅
 ```
+
+**Status:** ✅ **Assets sudah tersedia dan URL sudah disesuaikan di CSS**
 
 ---
 *Last updated: 27 Desember 2025*

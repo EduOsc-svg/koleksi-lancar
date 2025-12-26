@@ -76,7 +76,7 @@
 
   /* Background untuk voucher urgent - 10 hari terakhir (merah) */
   .voucher-urgent {
-    background-image: url('/Voucher background Merah.png');
+    background-image: url('/Voucher backround Merah.png');
   }
 
   /* Empty voucher cards */
@@ -203,12 +203,12 @@
 
   /* Background untuk voucher normal (hitam) - Screen */
   .voucher-normal {
-    background-image: url('/voucher background.png');
+    background-image: url('/Voucher background Hitam.png');
   }
 
   /* Background untuk voucher urgent - 10 hari terakhir (merah) - Screen */
   .voucher-urgent {
-    background-image: url('/voucher background red.png');
+    background-image: url('/Voucher backround Merah.png');
   }
 
   /* Empty voucher preview */
