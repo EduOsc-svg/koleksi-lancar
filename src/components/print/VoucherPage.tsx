@@ -30,7 +30,7 @@ interface VoucherPageProps {
 
 const VoucherPage: React.FC<VoucherPageProps> = ({ 
   contracts, 
-  couponsPerPage = 12, 
+  couponsPerPage = 9, 
   totalCoupons = 100 
 }) => {
   const { data: holidays } = useHolidays();

@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { FileSpreadsheet } from "lucide-react";
-import ExcelJS from "exceljs";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -48,7 +47,11 @@ export default function Reports() {
   const handleExportExcel = async () => {
     if (!payments?.length) return;
 
-    const workbook = new ExcelJS.Workbook();
+    try {
+      // Dynamic import ExcelJS untuk mengurangi bundle size awal
+      const ExcelJS = (await import('exceljs')).default;
+      
+      const workbook = new ExcelJS.Workbook();
     workbook.creator = 'Credit Management System';
     workbook.created = new Date();
     
@@ -204,6 +207,10 @@ export default function Reports() {
     link.download = `laporan-pembayaran-${dateFrom}-${dateTo}.xlsx`;
     link.click();
     window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error exporting Excel:', error);
+      // You could add toast notification here
+    }
   };
 
   return (

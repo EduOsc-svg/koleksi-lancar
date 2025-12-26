@@ -92,11 +92,13 @@
     font-size: 7px;
   }
 
-  /* Angsuran Ke- diposisikan setelah colon */
+  /* Angsuran Ke- diposisikan di tengah voucher */
   .data-angsuran-ke {
-    left: 27%;
+    left: 50%;
     top: 72%;
     font-size: 7px;
+    text-align: center;
+    transform: translateX(-50%);
   }
 
   /* Besar Angsuran - diposisikan setelah "Rp." di area kanan */
@@ -200,9 +202,11 @@
   }
 
   .data-angsuran-ke {
-    left: 27%;
+    left: 50%;
     top: 72%;
     font-size: 7px;
+    text-align: center;
+    transform: translateX(-50%);
   }
 
   .data-besar-angsuran {
