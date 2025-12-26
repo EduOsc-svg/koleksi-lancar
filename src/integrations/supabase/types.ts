@@ -129,6 +129,7 @@ export type Database = {
           customer_id: string
           daily_installment_amount: number
           id: string
+          omset: number | null
           product_type: string | null
           start_date: string
           status: string
@@ -142,6 +143,7 @@ export type Database = {
           customer_id: string
           daily_installment_amount?: number
           id?: string
+          omset?: number | null
           product_type?: string | null
           start_date?: string
           status?: string
@@ -155,6 +157,7 @@ export type Database = {
           customer_id?: string
           daily_installment_amount?: number
           id?: string
+          omset?: number | null
           product_type?: string | null
           start_date?: string
           status?: string
@@ -422,6 +425,7 @@ export type Database = {
       sales_agents: {
         Row: {
           agent_code: string
+          commission_percentage: number | null
           created_at: string
           id: string
           name: string
@@ -429,6 +433,7 @@ export type Database = {
         }
         Insert: {
           agent_code: string
+          commission_percentage?: number | null
           created_at?: string
           id?: string
           name: string
@@ -436,6 +441,7 @@ export type Database = {
         }
         Update: {
           agent_code?: string
+          commission_percentage?: number | null
           created_at?: string
           id?: string
           name?: string
