@@ -31,9 +31,31 @@ interface VoucherPageProps {
 const VoucherPage: React.FC<VoucherPageProps> = ({ 
   contracts, 
   couponsPerPage = 9, 
-  totalCoupons = 100 
+  totalCoupons 
 }) => {
   const { data: holidays } = useHolidays();
+
+  // Calculate total coupons based on tenor if not provided
+  const calculateTotalCoupons = (): number => {
+    if (totalCoupons !== undefined) {
+      return totalCoupons; // Use provided value
+    }
+
+    if (contracts.length === 0) {
+      return 100; // Default fallback
+    }
+
+    if (contracts.length === 1) {
+      // Single customer: use their tenor
+      return contracts[0].tenor_days || 100;
+    } else {
+      // Multiple customers: use the maximum tenor among them
+      const maxTenor = Math.max(...contracts.map(contract => contract.tenor_days || 100));
+      return maxTenor;
+    }
+  };
+
+  const actualTotalCoupons = calculateTotalCoupons();
 
   // Function to check if a date is a holiday
   const isHoliday = (date: Date): boolean => {
@@ -88,16 +110,25 @@ const VoucherPage: React.FC<VoucherPageProps> = ({
     const allVouchers: VoucherData[] = [];
     const today = new Date();
     
-    for (let i = 0; i < totalCoupons; i++) {
-      const contractIndex = i % contracts.length; // Loop through available contracts
-      const contract = contracts[contractIndex];
+    // Sort contracts by customer code alphabetically/numerically
+    const sortedContracts = [...contracts].sort((a, b) => {
+      const codeA = a.customers?.customer_code || "ZZZ";
+      const codeB = b.customers?.customer_code || "ZZZ";
+      return codeA.localeCompare(codeB, undefined, { numeric: true });
+    });
+    
+    // Generate vouchers for each contract up to their individual tenor
+    sortedContracts.forEach(contract => {
+      const contractTenor = contract.tenor_days || 100;
+      const currentInstallment = contract.current_installment_index || 0;
       
-      if (contract) {
+      // Generate coupons for remaining installments in this contract
+      for (let i = currentInstallment + 1; i <= contractTenor; i++) {
         // Generate No. Faktur: [Tenor]/[Kode Sales]/[Kode Konsumen]
         const tenor = contract.tenor_days || 0;
         const agentCode = contract.customers?.sales_agents?.agent_code || "XXX";
         const customerCode = contract.customers?.customer_code || "XXX";
-        const installmentNumber = (contract.current_installment_index + 1) + Math.floor(i / contracts.length);
+        const installmentNumber = i;
         const noFaktur = `${tenor}/${agentCode}/${customerCode}`;
 
         // Calculate due date for this specific coupon
@@ -105,6 +136,9 @@ const VoucherPage: React.FC<VoucherPageProps> = ({
         const daysFromStart = installmentNumber - 1; // 0-based for calculation
         const dueDate = addBusinessDays(today, daysFromStart);
         const dueDateFormatted = formatIndonesianDate(dueDate);
+
+        // Calculate remaining tenor days
+        const remainingTenorDays = tenor - (installmentNumber - 1);
 
         allVouchers.push({
           contractRef: contract.contract_ref,
@@ -115,9 +149,10 @@ const VoucherPage: React.FC<VoucherPageProps> = ({
           dueDate: dueDateFormatted,
           installmentNumber,
           installmentAmount: contract.daily_installment_amount,
+          remainingTenorDays, // Add remaining tenor days
         });
       }
-    }
+    });
     
     return allVouchers;
   };
@@ -140,6 +175,7 @@ const VoucherPage: React.FC<VoucherPageProps> = ({
           dueDate: "",
           installmentNumber: 0,
           installmentAmount: 0,
+          remainingTenorDays: 0,
         });
       }
 
@@ -167,7 +203,7 @@ const VoucherPage: React.FC<VoucherPageProps> = ({
                   data={voucher}
                   isEmpty={!voucher.contractRef && !voucher.noFaktur && !voucher.customerName}
                   voucherIndex={globalVoucherIndex}
-                  totalVouchers={totalCoupons}
+                  totalVouchers={voucherData.length}
                 />
               );
             })}

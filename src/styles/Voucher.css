@@ -50,7 +50,7 @@
     width: 100%;
     height: 100%;
     display: grid;
-    grid-template-columns: repeat(3, 10cm);
+    grid-template-columns: repeat(3, 9.5cm);
     grid-template-rows: repeat(3, 6.5cm);
     gap: 2mm;
     justify-content: center;
@@ -58,9 +58,9 @@
     padding: 10mm;
   }
 
-  /* Individual Voucher Card - 10cm x 6.5cm */
+  /* Individual Voucher Card - 9.5cm x 6.5cm */
   .voucher-card {
-    width: 10cm;
+    width: 9.5cm;
     height: 6.5cm;
     position: relative;
     background-size: 100% 100%;
@@ -120,7 +120,7 @@
   /* NO.Faktur */
   .no-faktur {
     left: 109px;
-    top: 89px;
+    top: 90px;
     font-size: 12px;
     max-width: 65%;
   }
@@ -128,7 +128,7 @@
   /* Customer Name */
   .customer-name {
     left: 109px;
-    top: 103px;
+    top: 105px;
     font-size: 12px;
     max-width: 65%;
   }
@@ -136,7 +136,7 @@
   /* Customer Address */
   .customer-address {
     left: 109px;
-    top: 117px;
+    top: 120px;
     font-size: 12px;
     max-width: 65%;
   }
@@ -144,15 +144,15 @@
   /* Due Date */
   .due-date {
     left: 109px;
-    top: 129px;
+    top: 134px;
     font-size: 12px;
     max-width: 65%;
   }
 
   /* Installment Number */
   .installment-number {
-    left: 109px;
-    top: 144px;
+    left: 190px;
+    top: 150px;
     font-size: 12px;
     max-width: 20%;
   }
@@ -160,18 +160,18 @@
   /* Installment Amount */
   .installment-amount {
     right: 12%;
-    top: 174px;
+    top: 180px;
     font-weight: bold;
-    font-size: 13px;
+    font-size: 14px;
     text-align: right;
     max-width: 35%;
   }
 
   /* Company Info */
   .company-info {
-    left: 184px;
+    left: 179px;
     bottom: 21px;
-    font-size: 12px;
+    font-size: 15px;
     color: #CC0000;
     max-width: 90%;
   }
@@ -201,7 +201,7 @@
     width: 100%;
     height: 100%;
     display: grid;
-    grid-template-columns: repeat(3, 10cm);
+    grid-template-columns: repeat(3, 9.5cm);
     grid-template-rows: repeat(3, 6.5cm);
     gap: 2mm;
     justify-content: center;
@@ -211,7 +211,7 @@
 
   /* Individual Voucher Card Preview */
   .voucher-card {
-    width: 10cm;
+    width: 9.5cm;
     height: 6.5cm;
     position: relative;
     background-size: 100% 100%;
@@ -270,52 +270,52 @@
 
   .no-faktur {
     left: 109px;
-    top: 89px;
+    top: 90px;
     font-size: 12px;
     max-width: 65%;
   }
 
   .customer-name {
     left: 109px;
-    top: 103px;
+    top: 105px;
     font-size: 12px;
     max-width: 65%;
   }
 
   .customer-address {
     left: 109px;
-    top: 117px;
+    top: 120px;
     font-size: 12px;
     max-width: 65%;
   }
 
   .due-date {
     left: 109px;
-    top: 129px;
+    top: 134px;
     font-size: 12px;
     max-width: 65%;
   }
 
   .installment-number {
-    left: 109px;
-    top: 144px;
+    left: 190px;
+    top: 150px;
     font-size: 12px;
     max-width: 20%;
   }
 
   .installment-amount {
     right: 12%;
-    top: 174px;
+    top: 180px;
     font-weight: bold;
-    font-size: 13px;
+    font-size: 14px;
     text-align: right;
     max-width: 35%;
   }
 
   .company-info {
-    left: 184px;
+    left: 179px;
     bottom: 21px;
-    font-size: 12px;
+    font-size: 15px;
     color: #CC0000;
     max-width: 90%;
   }

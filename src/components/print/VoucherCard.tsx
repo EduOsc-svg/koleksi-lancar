@@ -9,6 +9,7 @@ interface VoucherData {
   dueDate: string;
   installmentNumber: number;
   installmentAmount: number;
+  remainingTenorDays?: number; // Add remaining tenor days
 }
 
 interface VoucherCardProps {
@@ -29,14 +30,14 @@ const VoucherCard: React.FC<VoucherCardProps> = ({
     return <div className="voucher-card voucher-empty"></div>;
   }
 
-  // Logika: 10 voucher terakhir dari total voucher menggunakan background merah
-  const isLastTenVouchers = voucherIndex >= (totalVouchers - 10);
-  const voucherClass = isLastTenVouchers ? "voucher-card voucher-urgent" : "voucher-card voucher-normal";
+  // Logika baru: Background merah jika sisa tenor <= 10 hari
+  const isUrgentTenor = data.remainingTenorDays !== undefined && data.remainingTenorDays <= 10;
+  const voucherClass = isUrgentTenor ? "voucher-card voucher-urgent" : "voucher-card voucher-normal";
 
   return (
     <div className={voucherClass}>
       <div className="voucher-field no-faktur">{data.noFaktur}</div>
-      <div className="voucher-field customer-name">{data.customerName}/{data.customerCode}</div>
+      <div className="voucher-field customer-name">{data.customerName}</div>
       <div className="voucher-field customer-address">{data.customerAddress}</div>
       <div className="voucher-field due-date">{data.dueDate}</div>
       <div className="voucher-field installment-number">{data.installmentNumber}</div>
