@@ -91,11 +91,30 @@
     position: absolute;
     font-family: Times New Roman;
     font-weight: normal;
-    color: #CC0000;
     line-height: 1.2;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  /* Font colors untuk voucher normal (90 pertama) */
+  .voucher-normal .voucher-field {
+    color: #000000; /* Hitam */
+  }
+
+  /* Font colors untuk voucher urgent (10 terakhir) */
+  .voucher-urgent .voucher-field {
+    color: #CC0000; /* Merah */
+  }
+
+  /* Exception: Field yang tetap menggunakan warna sesuai spesifikasi */
+  .voucher-normal .installment-amount,
+  .voucher-urgent .installment-amount,
+  .voucher-normal .installment-number, 
+  .voucher-urgent .installment-number,
+  .voucher-normal .company-info,
+  .voucher-urgent .company-info {
+    color: #CC0000; /* Tetap merah untuk field khusus */
   }
 
   /* NO.Faktur */
@@ -223,11 +242,30 @@
     position: absolute;
     font-family: Times New Roman;
     font-weight: normal;
-    color: #CC0000;
     line-height: 1.2;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  /* Font colors untuk voucher normal (90 pertama) - Screen */
+  .voucher-normal .voucher-field {
+    color: #000000; /* Hitam */
+  }
+
+  /* Font colors untuk voucher urgent (10 terakhir) - Screen */
+  .voucher-urgent .voucher-field {
+    color: #CC0000; /* Merah */
+  }
+
+  /* Exception: Field yang tetap menggunakan warna sesuai spesifikasi - Screen */
+  .voucher-normal .installment-amount,
+  .voucher-urgent .installment-amount,
+  .voucher-normal .installment-number, 
+  .voucher-urgent .installment-number,
+  .voucher-normal .company-info,
+  .voucher-urgent .company-info {
+    color: #CC0000; /* Tetap merah untuk field khusus */
   }
 
   .no-faktur {

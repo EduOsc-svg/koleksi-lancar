@@ -93,12 +93,12 @@ const VoucherPage: React.FC<VoucherPageProps> = ({
       const contract = contracts[contractIndex];
       
       if (contract) {
-        // Generate No. Faktur: [Tenor]/[Kode Sales]/[Nama Sales]
+        // Generate No. Faktur: [Tenor]/[Kode Sales]/[Kode Konsumen]
         const tenor = contract.tenor_days || 0;
-        const agentCode = contract.customers?.sales_agents?.agent_code || "X";
-        const agentName = contract.customers?.sales_agents?.name || "X";
+        const agentCode = contract.customers?.sales_agents?.agent_code || "XXX";
+        const customerCode = contract.customers?.customer_code || "XXX";
         const installmentNumber = (contract.current_installment_index + 1) + Math.floor(i / contracts.length);
-        const noFaktur = `${tenor}/${agentCode}/${agentName}`;
+        const noFaktur = `${tenor}/${agentCode}/${customerCode}`;
 
         // Calculate due date for this specific coupon
         // Each coupon should be due on the next business day after the previous one
@@ -157,13 +157,20 @@ const VoucherPage: React.FC<VoucherPageProps> = ({
       {pages.map((pageVouchers, pageIndex) => (
         <div key={`page-${pageIndex}`} className="voucher-page">
           <div className="voucher-grid">
-            {pageVouchers.map((voucher, voucherIndex) => (
-              <VoucherCard
-                key={`${pageIndex}-${voucherIndex}`}
-                data={voucher}
-                isEmpty={!voucher.contractRef && !voucher.noFaktur && !voucher.customerName}
-              />
-            ))}
+            {pageVouchers.map((voucher, voucherIndex) => {
+              // Hitung index global voucher (0-99 untuk 100 voucher)
+              const globalVoucherIndex = pageIndex * couponsPerPage + voucherIndex;
+              
+              return (
+                <VoucherCard
+                  key={`${pageIndex}-${voucherIndex}`}
+                  data={voucher}
+                  isEmpty={!voucher.contractRef && !voucher.noFaktur && !voucher.customerName}
+                  voucherIndex={globalVoucherIndex}
+                  totalVouchers={totalCoupons}
+                />
+              );
+            })}
           </div>
         </div>
       ))}

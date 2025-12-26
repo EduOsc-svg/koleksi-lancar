@@ -14,25 +14,24 @@ interface VoucherData {
 interface VoucherCardProps {
   data?: VoucherData;
   isEmpty?: boolean;
+  voucherIndex?: number;  // Urutan voucher (0-99 untuk 100 voucher)
+  totalVouchers?: number; // Total voucher yang dicetak
 }
 
-const VoucherCard: React.FC<VoucherCardProps> = ({ data, isEmpty = false }) => {
+const VoucherCard: React.FC<VoucherCardProps> = ({ 
+  data, 
+  isEmpty = false, 
+  voucherIndex = 0, 
+  totalVouchers = 100 
+}) => {
   // Render empty card if no data or isEmpty flag is true
   if (isEmpty || !data) {
     return <div className="voucher-card voucher-empty"></div>;
   }
 
-  // Cek apakah voucher jatuh tempo dalam 10 hari ke depan
-  const checkDueDateUrgency = (dueDate: string): boolean => {
-    const today = new Date();
-    const due = new Date(dueDate);
-    const diffTime = due.getTime() - today.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays <= 10;
-  };
-
-  const isUrgent = checkDueDateUrgency(data.dueDate);
-  const voucherClass = isUrgent ? "voucher-card voucher-urgent" : "voucher-card voucher-normal";
+  // Logika: 10 voucher terakhir dari total voucher menggunakan background merah
+  const isLastTenVouchers = voucherIndex >= (totalVouchers - 10);
+  const voucherClass = isLastTenVouchers ? "voucher-card voucher-urgent" : "voucher-card voucher-normal";
 
   return (
     <div className={voucherClass}>

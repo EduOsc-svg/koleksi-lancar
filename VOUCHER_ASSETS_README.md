@@ -2,17 +2,17 @@
 
 ## Required Assets
 
-Untuk sistem voucher yang dinamis berdasarkan jatuh tempo, diperlukan 2 file gambar background:
+Untuk sistem voucher yang dinamis berdasarkan urutan cicilan, diperlukan 2 file gambar background:
 
 ### 1. **Normal Voucher (Background Hitam)**
 - **File:** `/public/Voucher background Hitam.png`
-- **Penggunaan:** Untuk voucher dengan jatuh tempo > 10 hari
+- **Penggunaan:** Untuk 90 voucher pertama (voucher 1-90)
 - **Warna:** Background hitam/gelap
 
-### 2. **Urgent Voucher (Background Merah)**  
+### 2. **Final Voucher (Background Merah)**  
 - **File:** `/public/Voucher backround Merah.png`
-- **Penggunaan:** Untuk voucher dengan jatuh tempo ≤ 10 hari
-- **Warna:** Background merah/warning
+- **Penggunaan:** Untuk 10 voucher terakhir (voucher 91-100)
+- **Warna:** Background merah/warning (menandakan cicilan hampir selesai)
 
 ## Spesifikasi Asset
 
@@ -30,12 +30,59 @@ Untuk sistem voucher yang dinamis berdasarkan jatuh tempo, diperlukan 2 file gam
 ## Logika Sistem
 
 ```javascript
-// Jika jatuh tempo ≤ 10 hari → background merah
-// Jika jatuh tempo > 10 hari → background hitam
+// Untuk 100 voucher:
+// Voucher 1-90 (index 0-89) → background hitam + font hitam
+// Voucher 91-100 (index 90-99) → background merah + font merah
 
-const diffDays = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
-const isUrgent = diffDays <= 10;
+const isLastTenVouchers = voucherIndex >= (totalVouchers - 10);
+const backgroundType = isLastTenVouchers ? "urgent" : "normal";
 ```
+
+## Contoh Visual
+
+### Voucher 1-90 (Normal):
+```
+🖤 Background: Hitam
+📝 Font: Hitam (#000000)
+🎟️ No.Faktur: 100/S001/KO2 (tenor/sales/konsumen)
+💰 Besar Angsuran: Merah (#CC0000) ← Exception
+📊 Angsuran Ke-: Merah (#CC0000) ← Exception  
+📞 Nomor Kantor: Merah (#CC0000) ← Exception
+```
+
+### Voucher 91-100 (Urgent):
+```
+❤️ Background: Merah
+📝 Font: Merah (#CC0000)
+🎟️ No.Faktur: 100/S001/KO2 (tenor/sales/konsumen)
+💰 Besar Angsuran: Merah (#CC0000) ← Konsisten
+📊 Angsuran Ke-: Merah (#CC0000) ← Konsisten
+📞 Nomor Kantor: Merah (#CC0000) ← Konsisten
+```
+
+## Konsep Bisnis
+
+**Tujuan:** Memberikan indikasi visual kepada nasabah bahwa cicilan hampir selesai
+
+### Background:
+- **90 voucher pertama** → Background hitam
+- **10 voucher terakhir** → Background merah
+
+### Font Color:
+- **90 voucher pertama** → Font hitam (#000000)
+- **10 voucher terakhir** → Font merah (#CC0000)
+
+### Field Khusus (Selalu Merah):
+Beberapa field tetap menggunakan warna merah untuk semua voucher:
+- ✅ **Besar Angsuran** (nominal pembayaran)
+- ✅ **Angsuran Ke-** (nomor urutan)
+- ✅ **Nomor Kantor** (company info)
+
+### Field dengan Warna Dinamis:
+- **NO.Faktur** → Hitam/Merah berdasarkan urutan
+- **Nama Pelanggan** → Hitam/Merah berdasarkan urutan  
+- **Alamat** → Hitam/Merah berdasarkan urutan
+- **Jatuh Tempo** → Hitam/Merah berdasarkan urutan
 
 ## File Structure
 ```
