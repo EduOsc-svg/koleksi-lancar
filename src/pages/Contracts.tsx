@@ -73,6 +73,7 @@ export default function Contracts() {
     daily_installment_amount: 0,
     start_date: new Date().toISOString().split("T")[0],
     status: "active",
+    omset: 0,
   });
 
   // Fetch coupons for selected contract (for detail view and printing)
@@ -90,6 +91,7 @@ export default function Contracts() {
       daily_installment_amount: 0,
       start_date: new Date().toISOString().split("T")[0],
       status: "active",
+      omset: 0,
     });
     setDialogOpen(true);
   };
@@ -105,6 +107,7 @@ export default function Contracts() {
       daily_installment_amount: contract.daily_installment_amount,
       start_date: (contract as any).start_date || new Date().toISOString().split("T")[0],
       status: contract.status,
+      omset: (contract as any).omset || 0,
     });
     setDialogOpen(true);
   };
@@ -144,6 +147,7 @@ export default function Contracts() {
           daily_installment_amount: dailyAmount,
           start_date: formData.start_date,
           status: formData.status,
+          omset: formData.omset || 0,
         } as any);
         toast.success(t("contracts.updatedSuccess"));
       } else {
@@ -156,6 +160,7 @@ export default function Contracts() {
           daily_installment_amount: dailyAmount,
           start_date: formData.start_date,
           status: formData.status,
+          omset: formData.omset || 0,
         } as any);
         
         // Generate installment coupons for new active contracts
@@ -252,6 +257,7 @@ export default function Contracts() {
               <TableHead>Customer</TableHead>
               <TableHead>Start Date</TableHead>
               <TableHead>Loan Amount</TableHead>
+              <TableHead>Omset</TableHead>
               <TableHead>Progress</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Actions</TableHead>
@@ -260,11 +266,11 @@ export default function Contracts() {
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center">Loading...</TableCell>
+                <TableCell colSpan={9} className="text-center">Loading...</TableCell>
               </TableRow>
             ) : contracts?.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center text-muted-foreground">
+                <TableCell colSpan={9} className="text-center text-muted-foreground">
                   No contracts found
                 </TableCell>
               </TableRow>
@@ -305,6 +311,7 @@ export default function Contracts() {
                     <TableCell>{contract.customers?.name}</TableCell>
                     <TableCell>{(contract as any).start_date ? formatDate((contract as any).start_date) : "-"}</TableCell>
                     <TableCell>{formatRupiah(contract.total_loan_amount)}</TableCell>
+                    <TableCell>{formatRupiah((contract as any).omset || 0)}</TableCell>
                     <TableCell>
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
@@ -469,6 +476,18 @@ export default function Contracts() {
                   Auto: {formatRupiah(calculateInstallment())}
                 </p>
               </div>
+            </div>
+            <div>
+              <Label htmlFor="omset">{t("contracts.omset", "Omset")}</Label>
+              <CurrencyInput
+                id="omset"
+                value={formData.omset}
+                onValueChange={(val) => setFormData({ ...formData, omset: val || 0 })}
+                placeholder="Rp 0"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                {t("contracts.omsetHint", "Keuntungan/margin dari kontrak ini")}
+              </p>
             </div>
           </div>
           <DialogFooter>

@@ -37,12 +37,15 @@ import {
   useDeleteSalesAgent,
   SalesAgent,
 } from "@/hooks/useSalesAgents";
+import { useAgentOmset } from "@/hooks/useAgentOmset";
 import { usePagination } from "@/hooks/usePagination";
 import { TablePagination } from "@/components/TablePagination";
+import { formatRupiah } from "@/lib/format";
 
 export default function SalesAgents() {
   const { t } = useTranslation();
   const { data: agents, isLoading } = useSalesAgents();
+  const { data: agentOmsetData } = useAgentOmset();
   const createAgent = useCreateSalesAgent();
   const updateAgent = useUpdateSalesAgent();
   const deleteAgent = useDeleteSalesAgent();
@@ -51,11 +54,11 @@ export default function SalesAgents() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState<SalesAgent | null>(null);
-  const [formData, setFormData] = useState({ agent_code: "", name: "", phone: "" });
+  const [formData, setFormData] = useState({ agent_code: "", name: "", phone: "", commission_percentage: 0 });
 
   const handleOpenCreate = () => {
     setSelectedAgent(null);
-    setFormData({ agent_code: "", name: "", phone: "" });
+    setFormData({ agent_code: "", name: "", phone: "", commission_percentage: 0 });
     setDialogOpen(true);
   };
 
@@ -65,8 +68,13 @@ export default function SalesAgents() {
       agent_code: agent.agent_code,
       name: agent.name,
       phone: agent.phone || "",
+      commission_percentage: agent.commission_percentage || 0,
     });
     setDialogOpen(true);
+  };
+
+  const getAgentOmset = (agentId: string) => {
+    return agentOmsetData?.find((d) => d.agent_id === agentId);
   };
 
   const handleSubmit = async () => {
@@ -111,43 +119,54 @@ export default function SalesAgents() {
               <TableHead>{t("salesAgents.agentCode")}</TableHead>
               <TableHead>{t("salesAgents.name")}</TableHead>
               <TableHead>{t("salesAgents.phone")}</TableHead>
+              <TableHead>{t("salesAgents.commissionPct", "Komisi %")}</TableHead>
+              <TableHead>{t("salesAgents.totalOmset", "Total Omset")}</TableHead>
+              <TableHead>{t("salesAgents.earnings", "Pendapatan")}</TableHead>
               <TableHead className="text-right">{t("common.actions")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={4} className="text-center">{t("common.loading")}</TableCell>
+                <TableCell colSpan={7} className="text-center">{t("common.loading")}</TableCell>
               </TableRow>
             ) : agents?.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} className="text-center text-muted-foreground">
+                <TableCell colSpan={7} className="text-center text-muted-foreground">
                   {t("common.noData")}
                 </TableCell>
               </TableRow>
             ) : (
-              paginatedItems.map((agent) => (
-                <TableRow key={agent.id}>
-                  <TableCell className="font-medium">{agent.agent_code}</TableCell>
-                  <TableCell>{agent.name}</TableCell>
-                  <TableCell>{agent.phone || "-"}</TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="ghost" size="icon" onClick={() => handleOpenEdit(agent)}>
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => {
-                        setSelectedAgent(agent);
-                        setDeleteDialogOpen(true);
-                      }}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))
+              paginatedItems.map((agent) => {
+                const omsetData = getAgentOmset(agent.id);
+                return (
+                  <TableRow key={agent.id}>
+                    <TableCell className="font-medium">{agent.agent_code}</TableCell>
+                    <TableCell>{agent.name}</TableCell>
+                    <TableCell>{agent.phone || "-"}</TableCell>
+                    <TableCell>{agent.commission_percentage || 0}%</TableCell>
+                    <TableCell>{formatRupiah(omsetData?.total_omset || 0)}</TableCell>
+                    <TableCell className="font-medium text-primary">
+                      {formatRupiah(omsetData?.total_commission || 0)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button variant="ghost" size="icon" onClick={() => handleOpenEdit(agent)}>
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          setSelectedAgent(agent);
+                          setDeleteDialogOpen(true);
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
             )}
           </TableBody>
         </Table>
@@ -191,6 +210,21 @@ export default function SalesAgents() {
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                 placeholder={t("salesAgents.phone")}
               />
+            </div>
+            <div>
+              <Label htmlFor="commission_percentage">{t("salesAgents.commissionPct", "Persentase Komisi")}</Label>
+              <Input
+                id="commission_percentage"
+                type="number"
+                min={0}
+                max={100}
+                value={formData.commission_percentage}
+                onChange={(e) => setFormData({ ...formData, commission_percentage: Number(e.target.value) })}
+                placeholder="e.g., 10"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                {t("salesAgents.commissionHint", "Persentase dari omset yang didapat sales")}
+              </p>
             </div>
           </div>
           <DialogFooter>
