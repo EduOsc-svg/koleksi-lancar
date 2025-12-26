@@ -1,7 +1,8 @@
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useCollectionTrend } from "@/hooks/useCollectionTrend";
-import { useAgentOmset } from "@/hooks/useAgentOmset";
+import { useAgentPerformance, useAgentCollectionHistory } from "@/hooks/useAgentPerformance";
 import { formatRupiah } from "@/lib/format";
 import {
   LineChart,
@@ -11,16 +12,27 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  BarChart,
-  Bar,
 } from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
-import { TrendingUp, Users } from "lucide-react";
+import { TrendingUp, Users, ChevronRight, ArrowLeft, DollarSign, Target, Wallet, Percent } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function Dashboard() {
   const { t, i18n } = useTranslation();
   const { data: trendData, isLoading } = useCollectionTrend(30);
-  const { data: agentOmsetData, isLoading: isLoadingAgentOmset } = useAgentOmset();
+  const { data: agentData, isLoading: isLoadingAgents } = useAgentPerformance();
+  const [selectedAgent, setSelectedAgent] = useState<{ id: string; name: string } | null>(null);
+  const { data: historyData, isLoading: isLoadingHistory } = useAgentCollectionHistory(selectedAgent?.id || null);
 
   // Calculate summary stats
   const totalCollection = trendData?.reduce((sum, d) => sum + d.amount, 0) ?? 0;
@@ -28,8 +40,10 @@ export default function Dashboard() {
     ? totalCollection / trendData.length 
     : 0;
 
-  const totalOmset = agentOmsetData?.reduce((sum, d) => sum + d.total_omset, 0) ?? 0;
-  const totalCommission = agentOmsetData?.reduce((sum, d) => sum + d.total_commission, 0) ?? 0;
+  const totalOmset = agentData?.reduce((sum, d) => sum + d.total_omset, 0) ?? 0;
+  const totalCommission = agentData?.reduce((sum, d) => sum + d.total_commission, 0) ?? 0;
+  const totalToCollect = agentData?.reduce((sum, d) => sum + d.total_to_collect, 0) ?? 0;
+  const totalProfit = agentData?.reduce((sum, d) => sum + d.profit, 0) ?? 0;
 
   const locale = i18n.language === 'id' ? 'id-ID' : 'en-US';
 
@@ -40,6 +54,47 @@ export default function Dashboard() {
         <h2 className="text-2xl font-bold">{t("dashboard.title")}</h2>
       </div>
 
+      {/* Summary Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="pt-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Target className="h-4 w-4 text-orange-500" />
+              <span className="text-sm text-muted-foreground">{t("dashboard.toCollect", "Harus Ditagih")}</span>
+            </div>
+            <p className="text-lg font-bold">{formatRupiah(totalToCollect)}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4">
+            <div className="flex items-center gap-2 mb-2">
+              <DollarSign className="h-4 w-4 text-blue-500" />
+              <span className="text-sm text-muted-foreground">{t("dashboard.totalOmset", "Total Omset")}</span>
+            </div>
+            <p className="text-lg font-bold">{formatRupiah(totalOmset)}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Wallet className="h-4 w-4 text-green-500" />
+              <span className="text-sm text-muted-foreground">{t("dashboard.profit", "Keuntungan")}</span>
+            </div>
+            <p className="text-lg font-bold">{formatRupiah(totalProfit)}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Percent className="h-4 w-4 text-purple-500" />
+              <span className="text-sm text-muted-foreground">{t("dashboard.totalCommission", "Total Komisi")}</span>
+            </div>
+            <p className="text-lg font-bold">{formatRupiah(totalCommission)}</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Collection Trend Chart */}
       <Card>
         <CardHeader>
           <CardTitle>{t("dashboard.collectionTrend")} - 30 {t("dashboard.days", "Hari")}</CardTitle>
@@ -48,7 +103,7 @@ export default function Dashboard() {
           </p>
         </CardHeader>
         <CardContent>
-          <div className="h-[400px]">
+          <div className="h-[300px]">
             {isLoading ? (
               <div className="flex items-center justify-center h-full">
                 <Skeleton className="h-full w-full" />
@@ -100,7 +155,7 @@ export default function Dashboard() {
         </CardContent>
       </Card>
 
-      {/* Sales Agent Performance */}
+      {/* Sales Agent Performance Table */}
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
@@ -108,59 +163,117 @@ export default function Dashboard() {
             <CardTitle>{t("dashboard.salesPerformance", "Performa Sales Agent")}</CardTitle>
           </div>
           <p className="text-sm text-muted-foreground">
-            {t("dashboard.totalOmset", "Total Omset")}: {formatRupiah(totalOmset)} | 
-            {t("dashboard.totalCommission", "Total Komisi")}: {formatRupiah(totalCommission)}
+            {t("dashboard.clickToViewHistory", "Klik untuk melihat riwayat penagihan")}
           </p>
         </CardHeader>
         <CardContent>
-          <div className="h-[350px]">
-            {isLoadingAgentOmset ? (
-              <div className="flex items-center justify-center h-full">
-                <Skeleton className="h-full w-full" />
-              </div>
-            ) : (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={agentOmsetData} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                  <XAxis 
-                    type="number" 
-                    tickFormatter={(v) => `${(v / 1000000).toFixed(1)}M`}
-                    className="text-xs"
-                  />
-                  <YAxis 
-                    type="category" 
-                    dataKey="agent_name" 
-                    className="text-xs"
-                    width={100}
-                  />
-                  <Tooltip
-                    formatter={(value: number, name: string) => [
-                      formatRupiah(value), 
-                      name === 'total_omset' ? t("dashboard.omset", "Omset") : t("dashboard.commission", "Komisi")
-                    ]}
-                    contentStyle={{ 
-                      backgroundColor: "hsl(var(--card))", 
-                      border: "1px solid hsl(var(--border))" 
-                    }}
-                  />
-                  <Bar 
-                    dataKey="total_omset" 
-                    fill="hsl(var(--primary))" 
-                    name="total_omset"
-                    radius={[0, 4, 4, 0]}
-                  />
-                  <Bar 
-                    dataKey="total_commission" 
-                    fill="hsl(var(--chart-2))" 
-                    name="total_commission"
-                    radius={[0, 4, 4, 0]}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            )}
-          </div>
+          {isLoadingAgents ? (
+            <Skeleton className="h-[300px] w-full" />
+          ) : (
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[50px]">#</TableHead>
+                    <TableHead>{t("dashboard.agentName", "Nama Sales")}</TableHead>
+                    <TableHead className="text-right">{t("dashboard.toCollect", "Harus Ditagih")}</TableHead>
+                    <TableHead className="text-right">{t("dashboard.omset", "Omset")}</TableHead>
+                    <TableHead className="text-right">{t("dashboard.profit", "Keuntungan")}</TableHead>
+                    <TableHead className="text-right">{t("dashboard.commission", "Komisi")}</TableHead>
+                    <TableHead className="w-[50px]"></TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {agentData?.map((agent, index) => (
+                    <TableRow 
+                      key={agent.agent_id}
+                      className="cursor-pointer hover:bg-muted/50"
+                      onClick={() => setSelectedAgent({ id: agent.agent_id, name: agent.agent_name })}
+                    >
+                      <TableCell className="font-medium">{index + 1}</TableCell>
+                      <TableCell>
+                        <div>
+                          <p className="font-medium">{agent.agent_name}</p>
+                          <p className="text-xs text-muted-foreground">{agent.agent_code} • {agent.commission_percentage}%</p>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right text-orange-600">{formatRupiah(agent.total_to_collect)}</TableCell>
+                      <TableCell className="text-right">{formatRupiah(agent.total_omset)}</TableCell>
+                      <TableCell className="text-right text-green-600">{formatRupiah(agent.profit)}</TableCell>
+                      <TableCell className="text-right text-purple-600">{formatRupiah(agent.total_commission)}</TableCell>
+                      <TableCell>
+                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {(!agentData || agentData.length === 0) && (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                        {t("dashboard.noAgentData", "Belum ada data sales agent")}
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </CardContent>
       </Card>
+
+      {/* Agent History Dialog */}
+      <Dialog open={!!selectedAgent} onOpenChange={() => setSelectedAgent(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Button variant="ghost" size="icon" onClick={() => setSelectedAgent(null)}>
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+              {t("dashboard.collectionHistory", "Riwayat Penagihan")} - {selectedAgent?.name}
+            </DialogTitle>
+          </DialogHeader>
+          <ScrollArea className="max-h-[60vh]">
+            {isLoadingHistory ? (
+              <Skeleton className="h-[200px] w-full" />
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{t("dashboard.date", "Tanggal")}</TableHead>
+                    <TableHead>{t("dashboard.customer", "Pelanggan")}</TableHead>
+                    <TableHead>{t("dashboard.contract", "Kontrak")}</TableHead>
+                    <TableHead className="text-center">{t("dashboard.installment", "Cicilan")}</TableHead>
+                    <TableHead className="text-right">{t("dashboard.amount", "Jumlah")}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {historyData?.map((item, index) => (
+                    <TableRow key={index}>
+                      <TableCell>
+                        {new Date(item.payment_date).toLocaleDateString(locale, {
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric'
+                        })}
+                      </TableCell>
+                      <TableCell>{item.customer_name}</TableCell>
+                      <TableCell className="font-mono text-sm">{item.contract_ref}</TableCell>
+                      <TableCell className="text-center">#{item.installment_index}</TableCell>
+                      <TableCell className="text-right font-medium">{formatRupiah(item.amount_paid)}</TableCell>
+                    </TableRow>
+                  ))}
+                  {(!historyData || historyData.length === 0) && (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                        {t("dashboard.noHistory", "Belum ada riwayat penagihan")}
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            )}
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
