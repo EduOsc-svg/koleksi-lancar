@@ -22,8 +22,20 @@ const VoucherCard: React.FC<VoucherCardProps> = ({ data, isEmpty = false }) => {
     return <div className="voucher-card voucher-empty"></div>;
   }
 
+  // Cek apakah voucher jatuh tempo dalam 10 hari ke depan
+  const checkDueDateUrgency = (dueDate: string): boolean => {
+    const today = new Date();
+    const due = new Date(dueDate);
+    const diffTime = due.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays <= 10;
+  };
+
+  const isUrgent = checkDueDateUrgency(data.dueDate);
+  const voucherClass = isUrgent ? "voucher-card voucher-urgent" : "voucher-card voucher-normal";
+
   return (
-    <div className="voucher-card">
+    <div className={voucherClass}>
       <div className="voucher-field no-faktur">{data.noFaktur}</div>
       <div className="voucher-field customer-name">{data.customerName}/{data.customerCode}</div>
       <div className="voucher-field customer-address">{data.customerAddress}</div>

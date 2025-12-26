@@ -63,11 +63,20 @@
     width: 10cm;
     height: 6.5cm;
     position: relative;
-    background-image: url('/voucher background.png');
     background-size: 100% 100%;
     background-repeat: no-repeat;
     background-position: center;
     border: 0.5px solid #ddd; /* Cutting guide */
+  }
+
+  /* Background untuk voucher normal (hitam) */
+  .voucher-normal {
+    background-image: url('/Voucher background Hitam.png');
+  }
+
+  /* Background untuk voucher urgent - 10 hari terakhir (merah) */
+  .voucher-urgent {
+    background-image: url('/Voucher background Merah.png');
   }
 
   /* Empty voucher cards */
@@ -186,11 +195,20 @@
     width: 10cm;
     height: 6.5cm;
     position: relative;
-    background-image: url('/voucher background.png');
     background-size: 100% 100%;
     background-repeat: no-repeat;
     background-position: center;
     border: 1px solid #ddd;
+  }
+
+  /* Background untuk voucher normal (hitam) - Screen */
+  .voucher-normal {
+    background-image: url('/voucher background.png');
+  }
+
+  /* Background untuk voucher urgent - 10 hari terakhir (merah) - Screen */
+  .voucher-urgent {
+    background-image: url('/voucher background red.png');
   }
 
   /* Empty voucher preview */
