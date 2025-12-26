@@ -14,12 +14,15 @@ export interface AgentPerformanceData {
   profit: number; // Omset - Total Loan
 }
 
-export interface AgentCollectionHistory {
-  payment_date: string;
-  amount_paid: number;
-  customer_name: string;
+export interface AgentContractHistory {
   contract_ref: string;
-  installment_index: number;
+  customer_name: string;
+  product_type: string | null;
+  omset: number;
+  total_loan_amount: number;
+  tenor_days: number;
+  start_date: string;
+  status: string;
 }
 
 export const useAgentPerformance = () => {
@@ -166,45 +169,47 @@ export const useAgentPerformance = () => {
   });
 };
 
-export const useAgentCollectionHistory = (agentId: string | null) => {
+export const useAgentContractHistory = (agentId: string | null) => {
   return useQuery({
-    queryKey: ['agent_collection_history', agentId],
+    queryKey: ['agent_contract_history', agentId],
     queryFn: async () => {
       if (!agentId) return [];
 
       const { data, error } = await supabase
-        .from('payment_logs')
+        .from('credit_contracts')
         .select(`
           id,
-          payment_date,
-          amount_paid,
-          installment_index,
-          credit_contracts!inner(
-            contract_ref,
-            customer_id,
-            customers!inner(
-              name,
-              assigned_sales_id
-            )
+          contract_ref,
+          product_type,
+          omset,
+          total_loan_amount,
+          tenor_days,
+          start_date,
+          status,
+          customers!inner(
+            name,
+            assigned_sales_id
           )
         `)
-        .order('payment_date', { ascending: false })
-        .limit(50);
+        .order('start_date', { ascending: false });
       
       if (error) throw error;
 
       // Filter by sales agent
-      const filtered = (data || []).filter((payment: any) => 
-        payment.credit_contracts?.customers?.assigned_sales_id === agentId
+      const filtered = (data || []).filter((contract: any) => 
+        contract.customers?.assigned_sales_id === agentId
       );
 
-      return filtered.map((payment: any) => ({
-        payment_date: payment.payment_date,
-        amount_paid: Number(payment.amount_paid),
-        customer_name: payment.credit_contracts?.customers?.name || '-',
-        contract_ref: payment.credit_contracts?.contract_ref || '-',
-        installment_index: payment.installment_index,
-      })) as AgentCollectionHistory[];
+      return filtered.map((contract: any) => ({
+        contract_ref: contract.contract_ref,
+        customer_name: contract.customers?.name || '-',
+        product_type: contract.product_type,
+        omset: Number(contract.omset || 0),
+        total_loan_amount: Number(contract.total_loan_amount || 0),
+        tenor_days: contract.tenor_days,
+        start_date: contract.start_date,
+        status: contract.status,
+      })) as AgentContractHistory[];
     },
     enabled: !!agentId,
   });

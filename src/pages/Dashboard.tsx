@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useCollectionTrend } from "@/hooks/useCollectionTrend";
-import { useAgentPerformance, useAgentCollectionHistory } from "@/hooks/useAgentPerformance";
+import { useAgentPerformance, useAgentContractHistory } from "@/hooks/useAgentPerformance";
 import { formatRupiah } from "@/lib/format";
 import {
   LineChart,
@@ -32,7 +32,7 @@ export default function Dashboard() {
   const { data: trendData, isLoading } = useCollectionTrend(30);
   const { data: agentData, isLoading: isLoadingAgents } = useAgentPerformance();
   const [selectedAgent, setSelectedAgent] = useState<{ id: string; name: string } | null>(null);
-  const { data: historyData, isLoading: isLoadingHistory } = useAgentCollectionHistory(selectedAgent?.id || null);
+  const { data: historyData, isLoading: isLoadingHistory } = useAgentContractHistory(selectedAgent?.id || null);
 
   // Calculate summary stats
   const totalCollection = trendData?.reduce((sum, d) => sum + d.amount, 0) ?? 0;
@@ -163,7 +163,7 @@ export default function Dashboard() {
             <CardTitle>{t("dashboard.salesPerformance", "Performa Sales Agent")}</CardTitle>
           </div>
           <p className="text-sm text-muted-foreground">
-            {t("dashboard.clickToViewHistory", "Klik untuk melihat riwayat penagihan")}
+            {t("dashboard.clickToViewHistory", "Klik untuk melihat kontrak yang didapat")}
           </p>
         </CardHeader>
         <CardContent>
@@ -220,15 +220,15 @@ export default function Dashboard() {
         </CardContent>
       </Card>
 
-      {/* Agent History Dialog */}
+      {/* Agent Contract History Dialog */}
       <Dialog open={!!selectedAgent} onOpenChange={() => setSelectedAgent(null)}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-3xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Button variant="ghost" size="icon" onClick={() => setSelectedAgent(null)}>
                 <ArrowLeft className="h-4 w-4" />
               </Button>
-              {t("dashboard.collectionHistory", "Riwayat Penagihan")} - {selectedAgent?.name}
+              {t("dashboard.contractHistory", "Kontrak Didapat")} - {selectedAgent?.name}
             </DialogTitle>
           </DialogHeader>
           <ScrollArea className="max-h-[60vh]">
@@ -238,33 +238,45 @@ export default function Dashboard() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>{t("dashboard.date", "Tanggal")}</TableHead>
-                    <TableHead>{t("dashboard.customer", "Pelanggan")}</TableHead>
+                    <TableHead>{t("dashboard.startDate", "Tanggal Mulai")}</TableHead>
                     <TableHead>{t("dashboard.contract", "Kontrak")}</TableHead>
-                    <TableHead className="text-center">{t("dashboard.installment", "Cicilan")}</TableHead>
-                    <TableHead className="text-right">{t("dashboard.amount", "Jumlah")}</TableHead>
+                    <TableHead>{t("dashboard.customer", "Pelanggan")}</TableHead>
+                    <TableHead>{t("dashboard.product", "Produk")}</TableHead>
+                    <TableHead className="text-right">{t("dashboard.omset", "Omset")}</TableHead>
+                    <TableHead className="text-right">{t("dashboard.loan", "Pinjaman")}</TableHead>
+                    <TableHead className="text-center">{t("dashboard.status", "Status")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {historyData?.map((item, index) => (
                     <TableRow key={index}>
                       <TableCell>
-                        {new Date(item.payment_date).toLocaleDateString(locale, {
+                        {new Date(item.start_date).toLocaleDateString(locale, {
                           day: 'numeric',
                           month: 'short',
                           year: 'numeric'
                         })}
                       </TableCell>
-                      <TableCell>{item.customer_name}</TableCell>
                       <TableCell className="font-mono text-sm">{item.contract_ref}</TableCell>
-                      <TableCell className="text-center">#{item.installment_index}</TableCell>
-                      <TableCell className="text-right font-medium">{formatRupiah(item.amount_paid)}</TableCell>
+                      <TableCell>{item.customer_name}</TableCell>
+                      <TableCell>{item.product_type || '-'}</TableCell>
+                      <TableCell className="text-right font-medium">{formatRupiah(item.omset)}</TableCell>
+                      <TableCell className="text-right">{formatRupiah(item.total_loan_amount)}</TableCell>
+                      <TableCell className="text-center">
+                        <span className={`px-2 py-1 rounded-full text-xs ${
+                          item.status === 'active' ? 'bg-green-100 text-green-700' : 
+                          item.status === 'completed' ? 'bg-blue-100 text-blue-700' : 
+                          'bg-gray-100 text-gray-700'
+                        }`}>
+                          {item.status}
+                        </span>
+                      </TableCell>
                     </TableRow>
                   ))}
                   {(!historyData || historyData.length === 0) && (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
-                        {t("dashboard.noHistory", "Belum ada riwayat penagihan")}
+                      <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                        {t("dashboard.noContracts", "Belum ada kontrak yang didapat")}
                       </TableCell>
                     </TableRow>
                   )}
