@@ -6,8 +6,10 @@ export interface AgentOmsetData {
   agent_name: string;
   agent_code: string;
   commission_percentage: number;
-  total_omset: number;
+  total_modal: number;
+  total_loan: number;
   total_contracts: number;
+  profit: number;
   total_commission: number;
 }
 
@@ -23,30 +25,31 @@ export const useAgentOmset = () => {
       
       if (agentsError) throw agentsError;
 
-      // Get all contracts with omset, linked via customer -> assigned_sales_id
+      // Get all contracts with omset (modal) and loan, linked via sales_agent_id directly
       const { data: contracts, error: contractsError } = await supabase
         .from('credit_contracts')
-        .select(`
-          id,
-          omset,
-          customer_id,
-          customers!inner(
-            assigned_sales_id
-          )
-        `)
-        .gt('omset', 0);
+        .select('id, omset, total_loan_amount, sales_agent_id');
       
       if (contractsError) throw contractsError;
 
-      // Aggregate omset per sales agent
-      const agentOmsetMap = new Map<string, { total_omset: number; total_contracts: number }>();
+      // Aggregate data per sales agent
+      const agentDataMap = new Map<string, { 
+        total_modal: number; 
+        total_loan: number;
+        total_contracts: number 
+      }>();
 
       (contracts || []).forEach((contract: any) => {
-        const salesAgentId = contract.customers?.assigned_sales_id;
+        const salesAgentId = contract.sales_agent_id;
         if (salesAgentId) {
-          const existing = agentOmsetMap.get(salesAgentId) || { total_omset: 0, total_contracts: 0 };
-          agentOmsetMap.set(salesAgentId, {
-            total_omset: existing.total_omset + Number(contract.omset || 0),
+          const existing = agentDataMap.get(salesAgentId) || { 
+            total_modal: 0, 
+            total_loan: 0,
+            total_contracts: 0 
+          };
+          agentDataMap.set(salesAgentId, {
+            total_modal: existing.total_modal + Number(contract.omset || 0),
+            total_loan: existing.total_loan + Number(contract.total_loan_amount || 0),
             total_contracts: existing.total_contracts + 1,
           });
         }
@@ -54,17 +57,24 @@ export const useAgentOmset = () => {
 
       // Combine with agent info
       const result: AgentOmsetData[] = (agents || []).map((agent) => {
-        const omsetData = agentOmsetMap.get(agent.id) || { total_omset: 0, total_contracts: 0 };
+        const data = agentDataMap.get(agent.id) || { 
+          total_modal: 0, 
+          total_loan: 0,
+          total_contracts: 0 
+        };
         const commissionPct = Number(agent.commission_percentage) || 0;
-        const totalCommission = (omsetData.total_omset * commissionPct) / 100;
+        const profit = data.total_loan - data.total_modal;
+        const totalCommission = (profit * commissionPct) / 100;
         
         return {
           agent_id: agent.id,
           agent_name: agent.name,
           agent_code: agent.agent_code,
           commission_percentage: commissionPct,
-          total_omset: omsetData.total_omset,
-          total_contracts: omsetData.total_contracts,
+          total_modal: data.total_modal,
+          total_loan: data.total_loan,
+          total_contracts: data.total_contracts,
+          profit,
           total_commission: totalCommission,
         };
       });
