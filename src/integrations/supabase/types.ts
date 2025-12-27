@@ -131,6 +131,7 @@ export type Database = {
           id: string
           omset: number | null
           product_type: string | null
+          sales_agent_id: string | null
           start_date: string
           status: string
           tenor_days: number
@@ -145,6 +146,7 @@ export type Database = {
           id?: string
           omset?: number | null
           product_type?: string | null
+          sales_agent_id?: string | null
           start_date?: string
           status?: string
           tenor_days?: number
@@ -159,6 +161,7 @@ export type Database = {
           id?: string
           omset?: number | null
           product_type?: string | null
+          sales_agent_id?: string | null
           start_date?: string
           status?: string
           tenor_days?: number
@@ -170,6 +173,20 @@ export type Database = {
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "credit_contracts_sales_agent_id_fkey"
+            columns: ["sales_agent_id"]
+            isOneToOne: false
+            referencedRelation: "invoice_details"
+            referencedColumns: ["sales_agent_id"]
+          },
+          {
+            foreignKeyName: "credit_contracts_sales_agent_id_fkey"
+            columns: ["sales_agent_id"]
+            isOneToOne: false
+            referencedRelation: "sales_agents"
             referencedColumns: ["id"]
           },
         ]

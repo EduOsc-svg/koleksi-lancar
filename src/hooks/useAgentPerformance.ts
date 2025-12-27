@@ -6,19 +6,19 @@ export interface AgentPerformanceData {
   agent_name: string;
   agent_code: string;
   commission_percentage: number;
-  total_omset: number;
+  total_modal: number; // Modal yang dikeluarkan
   total_contracts: number;
   total_commission: number;
   total_to_collect: number; // Total yang harus ditagih (unpaid coupons)
   total_collected: number;  // Total yang sudah tertagih
-  profit: number; // Omset - Total Loan
+  profit: number; // Total Loan - Modal
 }
 
 export interface AgentContractHistory {
   contract_ref: string;
   customer_name: string;
   product_type: string | null;
-  omset: number;
+  modal: number;
   total_loan_amount: number;
   tenor_days: number;
   start_date: string;
@@ -37,18 +37,10 @@ export const useAgentPerformance = () => {
       
       if (agentsError) throw agentsError;
 
-      // Get all contracts with omset and loan info
+      // Get all contracts with omset (modal) and loan info - now using sales_agent_id directly
       const { data: contracts, error: contractsError } = await supabase
         .from('credit_contracts')
-        .select(`
-          id,
-          omset,
-          total_loan_amount,
-          customer_id,
-          customers!inner(
-            assigned_sales_id
-          )
-        `);
+        .select('id, omset, total_loan_amount, sales_agent_id');
       
       if (contractsError) throw contractsError;
 
@@ -59,10 +51,7 @@ export const useAgentPerformance = () => {
           amount,
           contract_id,
           credit_contracts!inner(
-            customer_id,
-            customers!inner(
-              assigned_sales_id
-            )
+            sales_agent_id
           )
         `)
         .eq('status', 'unpaid');
@@ -76,10 +65,7 @@ export const useAgentPerformance = () => {
           amount_paid,
           contract_id,
           credit_contracts!inner(
-            customer_id,
-            customers!inner(
-              assigned_sales_id
-            )
+            sales_agent_id
           )
         `);
       
@@ -87,19 +73,19 @@ export const useAgentPerformance = () => {
 
       // Aggregate data per sales agent
       const agentDataMap = new Map<string, {
-        total_omset: number;
+        total_modal: number;
         total_contracts: number;
         total_loan: number;
         total_to_collect: number;
         total_collected: number;
       }>();
 
-      // Process contracts
+      // Process contracts - use sales_agent_id directly from contract
       (contracts || []).forEach((contract: any) => {
-        const salesAgentId = contract.customers?.assigned_sales_id;
+        const salesAgentId = contract.sales_agent_id;
         if (salesAgentId) {
           const existing = agentDataMap.get(salesAgentId) || {
-            total_omset: 0,
+            total_modal: 0,
             total_contracts: 0,
             total_loan: 0,
             total_to_collect: 0,
@@ -107,7 +93,7 @@ export const useAgentPerformance = () => {
           };
           agentDataMap.set(salesAgentId, {
             ...existing,
-            total_omset: existing.total_omset + Number(contract.omset || 0),
+            total_modal: existing.total_modal + Number(contract.omset || 0),
             total_contracts: existing.total_contracts + 1,
             total_loan: existing.total_loan + Number(contract.total_loan_amount || 0),
           });
@@ -116,7 +102,7 @@ export const useAgentPerformance = () => {
 
       // Process unpaid coupons
       (unpaidCoupons || []).forEach((coupon: any) => {
-        const salesAgentId = coupon.credit_contracts?.customers?.assigned_sales_id;
+        const salesAgentId = coupon.credit_contracts?.sales_agent_id;
         if (salesAgentId) {
           const existing = agentDataMap.get(salesAgentId);
           if (existing) {
@@ -127,7 +113,7 @@ export const useAgentPerformance = () => {
 
       // Process payments
       (payments || []).forEach((payment: any) => {
-        const salesAgentId = payment.credit_contracts?.customers?.assigned_sales_id;
+        const salesAgentId = payment.credit_contracts?.sales_agent_id;
         if (salesAgentId) {
           const existing = agentDataMap.get(salesAgentId);
           if (existing) {
@@ -139,22 +125,22 @@ export const useAgentPerformance = () => {
       // Combine with agent info
       const result: AgentPerformanceData[] = (agents || []).map((agent) => {
         const data = agentDataMap.get(agent.id) || {
-          total_omset: 0,
+          total_modal: 0,
           total_contracts: 0,
           total_loan: 0,
           total_to_collect: 0,
           total_collected: 0,
         };
         const commissionPct = Number(agent.commission_percentage) || 0;
-        const totalCommission = (data.total_omset * commissionPct) / 100;
-        const profit = data.total_omset - data.total_loan;
+        const profit = data.total_loan - data.total_modal; // Profit = Loan - Modal
+        const totalCommission = (profit * commissionPct) / 100; // Komisi dari profit
         
         return {
           agent_id: agent.id,
           agent_name: agent.name,
           agent_code: agent.agent_code,
           commission_percentage: commissionPct,
-          total_omset: data.total_omset,
+          total_modal: data.total_modal,
           total_contracts: data.total_contracts,
           total_commission: totalCommission,
           total_to_collect: data.total_to_collect,
@@ -163,8 +149,8 @@ export const useAgentPerformance = () => {
         };
       });
 
-      // Sort by total_omset descending
-      return result.sort((a, b) => b.total_omset - a.total_omset);
+      // Sort by profit descending
+      return result.sort((a, b) => b.profit - a.profit);
     },
   });
 };
@@ -186,25 +172,19 @@ export const useAgentContractHistory = (agentId: string | null) => {
           tenor_days,
           start_date,
           status,
-          customers!inner(
-            name,
-            assigned_sales_id
-          )
+          sales_agent_id,
+          customers(name)
         `)
+        .eq('sales_agent_id', agentId)
         .order('start_date', { ascending: false });
       
       if (error) throw error;
 
-      // Filter by sales agent
-      const filtered = (data || []).filter((contract: any) => 
-        contract.customers?.assigned_sales_id === agentId
-      );
-
-      return filtered.map((contract: any) => ({
+      return (data || []).map((contract: any) => ({
         contract_ref: contract.contract_ref,
         customer_name: contract.customers?.name || '-',
         product_type: contract.product_type,
-        omset: Number(contract.omset || 0),
+        modal: Number(contract.omset || 0),
         total_loan_amount: Number(contract.total_loan_amount || 0),
         tenor_days: contract.tenor_days,
         start_date: contract.start_date,

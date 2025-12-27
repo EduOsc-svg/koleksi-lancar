@@ -6,8 +6,10 @@ export interface CreditContract {
   id: string;
   contract_ref: string;
   customer_id: string;
+  sales_agent_id: string | null;
   product_type: string | null;
   total_loan_amount: number;
+  omset: number | null;
   tenor_days: number;
   daily_installment_amount: number;
   current_installment_index: number;

@@ -40,7 +40,7 @@ export default function Dashboard() {
     ? totalCollection / trendData.length 
     : 0;
 
-  const totalOmset = agentData?.reduce((sum, d) => sum + d.total_omset, 0) ?? 0;
+  const totalModal = agentData?.reduce((sum, d) => sum + d.total_modal, 0) ?? 0;
   const totalCommission = agentData?.reduce((sum, d) => sum + d.total_commission, 0) ?? 0;
   const totalToCollect = agentData?.reduce((sum, d) => sum + d.total_to_collect, 0) ?? 0;
   const totalProfit = agentData?.reduce((sum, d) => sum + d.profit, 0) ?? 0;
@@ -69,9 +69,9 @@ export default function Dashboard() {
           <CardContent className="pt-4">
             <div className="flex items-center gap-2 mb-2">
               <DollarSign className="h-4 w-4 text-blue-500" />
-              <span className="text-sm text-muted-foreground">{t("dashboard.totalOmset", "Total Omset")}</span>
+              <span className="text-sm text-muted-foreground">{t("dashboard.totalModal", "Total Modal")}</span>
             </div>
-            <p className="text-lg font-bold">{formatRupiah(totalOmset)}</p>
+            <p className="text-lg font-bold">{formatRupiah(totalModal)}</p>
           </CardContent>
         </Card>
         <Card>
@@ -177,7 +177,7 @@ export default function Dashboard() {
                     <TableHead className="w-[50px]">#</TableHead>
                     <TableHead>{t("dashboard.agentName", "Nama Sales")}</TableHead>
                     <TableHead className="text-right">{t("dashboard.toCollect", "Harus Ditagih")}</TableHead>
-                    <TableHead className="text-right">{t("dashboard.omset", "Omset")}</TableHead>
+                    <TableHead className="text-right">{t("dashboard.modal", "Modal")}</TableHead>
                     <TableHead className="text-right">{t("dashboard.profit", "Keuntungan")}</TableHead>
                     <TableHead className="text-right">{t("dashboard.commission", "Komisi")}</TableHead>
                     <TableHead className="w-[50px]"></TableHead>
@@ -198,7 +198,7 @@ export default function Dashboard() {
                         </div>
                       </TableCell>
                       <TableCell className="text-right text-orange-600">{formatRupiah(agent.total_to_collect)}</TableCell>
-                      <TableCell className="text-right">{formatRupiah(agent.total_omset)}</TableCell>
+                      <TableCell className="text-right">{formatRupiah(agent.total_modal)}</TableCell>
                       <TableCell className="text-right text-green-600">{formatRupiah(agent.profit)}</TableCell>
                       <TableCell className="text-right text-purple-600">{formatRupiah(agent.total_commission)}</TableCell>
                       <TableCell>
@@ -242,7 +242,7 @@ export default function Dashboard() {
                     <TableHead>{t("dashboard.contract", "Kontrak")}</TableHead>
                     <TableHead>{t("dashboard.customer", "Pelanggan")}</TableHead>
                     <TableHead>{t("dashboard.product", "Produk")}</TableHead>
-                    <TableHead className="text-right">{t("dashboard.omset", "Omset")}</TableHead>
+                    <TableHead className="text-right">{t("dashboard.modal", "Modal")}</TableHead>
                     <TableHead className="text-right">{t("dashboard.loan", "Pinjaman")}</TableHead>
                     <TableHead className="text-center">{t("dashboard.status", "Status")}</TableHead>
                   </TableRow>
@@ -260,7 +260,7 @@ export default function Dashboard() {
                       <TableCell className="font-mono text-sm">{item.contract_ref}</TableCell>
                       <TableCell>{item.customer_name}</TableCell>
                       <TableCell>{item.product_type || '-'}</TableCell>
-                      <TableCell className="text-right font-medium">{formatRupiah(item.omset)}</TableCell>
+                      <TableCell className="text-right font-medium">{formatRupiah(item.modal)}</TableCell>
                       <TableCell className="text-right">{formatRupiah(item.total_loan_amount)}</TableCell>
                       <TableCell className="text-center">
                         <span className={`px-2 py-1 rounded-full text-xs ${
