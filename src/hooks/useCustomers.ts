@@ -6,7 +6,7 @@ export interface Customer {
   id: string;
   name: string;
   customer_code: string | null;
-  nik: string | null;
+  nik: string; // Required 16-digit NIK
   address: string | null;
   phone: string | null;
   assigned_sales_id: string | null;
@@ -16,7 +16,7 @@ export interface Customer {
 
 export interface CustomerWithRelations extends Customer {
   customer_code: string | null;
-  nik: string | null;
+  nik: string; // Required 16-digit NIK
   sales_agents: { name: string; agent_code: string } | null;
   routes: { code: string; name: string } | null;
 }

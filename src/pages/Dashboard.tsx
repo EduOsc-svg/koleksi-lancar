@@ -26,13 +26,18 @@ import {
 } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { usePagination } from "@/hooks/usePagination";
+import { TablePagination } from "@/components/TablePagination";
 
 export default function Dashboard() {
   const { t, i18n } = useTranslation();
   const { data: trendData, isLoading } = useCollectionTrend(30);
   const { data: agentData, isLoading: isLoadingAgents } = useAgentPerformance();
-  const [selectedAgent, setSelectedAgent] = useState<{ id: string; name: string } | null>(null);
+  const [selectedAgent, setSelectedAgent] = useState<{ id: string; name: string; code: string } | null>(null);
   const { data: historyData, isLoading: isLoadingHistory } = useAgentContractHistory(selectedAgent?.id || null);
+  
+  // Add pagination for agent contract history
+  const { currentPage, totalPages, paginatedItems: paginatedHistory, goToPage, totalItems } = usePagination(historyData, 5);
 
   // Calculate summary stats
   const totalCollection = trendData?.reduce((sum, d) => sum + d.amount, 0) ?? 0;
@@ -175,7 +180,7 @@ export default function Dashboard() {
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-[50px]">#</TableHead>
-                    <TableHead>{t("dashboard.agentName", "Nama Sales")}</TableHead>
+                    <TableHead>{t("dashboard.agentCode", "Kode Sales")}</TableHead>
                     <TableHead className="text-right">{t("dashboard.toCollect", "Harus Ditagih")}</TableHead>
                     <TableHead className="text-right">{t("dashboard.omset", "Omset")}</TableHead>
                     <TableHead className="text-right">{t("dashboard.profit", "Keuntungan")}</TableHead>
@@ -188,13 +193,13 @@ export default function Dashboard() {
                     <TableRow 
                       key={agent.agent_id}
                       className="cursor-pointer hover:bg-muted/50"
-                      onClick={() => setSelectedAgent({ id: agent.agent_id, name: agent.agent_name })}
+                      onClick={() => setSelectedAgent({ id: agent.agent_id, name: agent.agent_name, code: agent.agent_code })}
                     >
                       <TableCell className="font-medium">{index + 1}</TableCell>
                       <TableCell>
                         <div>
-                          <p className="font-medium">{agent.agent_name}</p>
-                          <p className="text-xs text-muted-foreground">{agent.agent_code} • {agent.commission_percentage}%</p>
+                          <p className="font-medium">{agent.agent_code}</p>
+                          <p className="text-xs text-muted-foreground">{agent.agent_name} • {agent.commission_percentage}%</p>
                         </div>
                       </TableCell>
                       <TableCell className="text-right text-orange-600">{formatRupiah(agent.total_to_collect)}</TableCell>
@@ -228,60 +233,77 @@ export default function Dashboard() {
               <Button variant="ghost" size="icon" onClick={() => setSelectedAgent(null)}>
                 <ArrowLeft className="h-4 w-4" />
               </Button>
-              {t("dashboard.contractHistory", "Kontrak Didapat")} - {selectedAgent?.name}
+              {t("dashboard.contractHistory", "Kontrak Didapat")} - {selectedAgent?.code} ({selectedAgent?.name})
             </DialogTitle>
           </DialogHeader>
           <ScrollArea className="max-h-[60vh]">
             {isLoadingHistory ? (
               <Skeleton className="h-[200px] w-full" />
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>{t("dashboard.startDate", "Tanggal Mulai")}</TableHead>
-                    <TableHead>{t("dashboard.contract", "Kontrak")}</TableHead>
-                    <TableHead>{t("dashboard.customer", "Pelanggan")}</TableHead>
-                    <TableHead>{t("dashboard.product", "Produk")}</TableHead>
-                    <TableHead className="text-right">{t("dashboard.omset", "Omset")}</TableHead>
-                    <TableHead className="text-right">{t("dashboard.loan", "Pinjaman")}</TableHead>
-                    <TableHead className="text-center">{t("dashboard.status", "Status")}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {historyData?.map((item, index) => (
-                    <TableRow key={index}>
-                      <TableCell>
-                        {new Date(item.start_date).toLocaleDateString(locale, {
-                          day: 'numeric',
-                          month: 'short',
-                          year: 'numeric'
-                        })}
-                      </TableCell>
-                      <TableCell className="font-mono text-sm">{item.contract_ref}</TableCell>
-                      <TableCell>{item.customer_name}</TableCell>
-                      <TableCell>{item.product_type || '-'}</TableCell>
-                      <TableCell className="text-right font-medium">{formatRupiah(item.omset)}</TableCell>
-                      <TableCell className="text-right">{formatRupiah(item.total_loan_amount)}</TableCell>
-                      <TableCell className="text-center">
-                        <span className={`px-2 py-1 rounded-full text-xs ${
-                          item.status === 'active' ? 'bg-green-100 text-green-700' : 
-                          item.status === 'completed' ? 'bg-blue-100 text-blue-700' : 
-                          'bg-gray-100 text-gray-700'
-                        }`}>
-                          {item.status}
-                        </span>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                  {(!historyData || historyData.length === 0) && (
+              <>
+                <Table>
+                  <TableHeader>
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
-                        {t("dashboard.noContracts", "Belum ada kontrak yang didapat")}
-                      </TableCell>
+                      <TableHead>{t("dashboard.startDate", "Tanggal Mulai")}</TableHead>
+                      <TableHead>{t("dashboard.contract", "Kontrak")}</TableHead>
+                      <TableHead>{t("dashboard.customerCode", "Kode Pelanggan")}</TableHead>
+                      <TableHead>{t("dashboard.product", "Produk")}</TableHead>
+                      <TableHead className="text-right">{t("dashboard.omset", "Omset")}</TableHead>
+                      <TableHead className="text-right">{t("dashboard.loan", "Pinjaman")}</TableHead>
+                      <TableHead className="text-center">{t("dashboard.status", "Status")}</TableHead>
                     </TableRow>
-                  )}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {paginatedHistory?.map((item, index) => (
+                      <TableRow key={index}>
+                        <TableCell>
+                          {new Date(item.start_date).toLocaleDateString(locale, {
+                            day: 'numeric',
+                            month: 'short',
+                            year: 'numeric'
+                          })}
+                        </TableCell>
+                        <TableCell className="font-mono text-sm">{item.contract_ref}</TableCell>
+                        <TableCell>
+                          <div>
+                            <p className="font-medium">{item.customer_code || 'N/A'}</p>
+                            <p className="text-xs text-muted-foreground">{item.customer_name}</p>
+                          </div>
+                        </TableCell>
+                        <TableCell>{item.product_type || '-'}</TableCell>
+                        <TableCell className="text-right font-medium">{formatRupiah(item.omset)}</TableCell>
+                        <TableCell className="text-right">{formatRupiah(item.total_loan_amount)}</TableCell>
+                        <TableCell className="text-center">
+                          <span className={`px-2 py-1 rounded-full text-xs ${
+                            item.status === 'active' ? 'bg-green-100 text-green-700' : 
+                            item.status === 'completed' ? 'bg-blue-100 text-blue-700' : 
+                            'bg-gray-100 text-gray-700'
+                          }`}>
+                            {item.status}
+                          </span>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {(!historyData || historyData.length === 0) && (
+                      <TableRow>
+                        <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                          {t("dashboard.noContracts", "Belum ada kontrak yang didapat")}
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+                {totalPages > 1 && (
+                  <div className="px-4 pb-4">
+                    <TablePagination
+                      currentPage={currentPage}
+                      totalPages={totalPages}
+                      onPageChange={goToPage}
+                      totalItems={totalItems}
+                    />
+                  </div>
+                )}
+              </>
             )}
           </ScrollArea>
         </DialogContent>

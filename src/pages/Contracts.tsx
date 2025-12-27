@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
+import { useSearchParams } from "react-router-dom";
 import { Plus, Pencil, Trash2, Eye, Printer } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -51,6 +53,8 @@ import { CurrencyInput } from "@/components/ui/currency-input";
 
 export default function Contracts() {
   const { t } = useTranslation();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const highlightId = searchParams.get('highlight');
   const { data: contracts, isLoading } = useContracts();
   const { data: invoiceDetails } = useInvoiceDetails();
   const { data: customers } = useCustomers();
@@ -58,12 +62,14 @@ export default function Contracts() {
   const updateContract = useUpdateContract();
   const deleteContract = useDeleteContract();
   const generateCoupons = useGenerateCoupons();
-  const { currentPage, totalPages, paginatedItems, goToPage, totalItems } = usePagination(contracts);
+  const { currentPage, totalPages, paginatedItems, goToPage, totalItems } = usePagination(contracts, 5);
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [selectedContract, setSelectedContract] = useState<ContractWithCustomer | null>(null);
+  const [highlightedRowId, setHighlightedRowId] = useState<string | null>(null);
+  const highlightedRowRef = useRef<HTMLTableRowElement>(null);
   const [formData, setFormData] = useState({
     contract_ref: "",
     customer_id: "",
@@ -78,7 +84,52 @@ export default function Contracts() {
 
   // Fetch coupons for selected contract (for detail view and printing)
   const { data: selectedContractCoupons } = useCouponsByContract(selectedContract?.id || null);
+  
+  // Add pagination for coupons in detail dialog
+  const { 
+    currentPage: couponsPage, 
+    totalPages: couponsTotalPages, 
+    paginatedItems: paginatedCoupons, 
+    goToPage: goToCouponsPage,
+    totalItems: totalCoupons 
+  } = usePagination(selectedContractCoupons, 5);
   const [printMode, setPrintMode] = useState(false);
+
+  // Handle highlighting item from global search
+  useEffect(() => {
+    if (highlightId && contracts?.length) {
+      const targetContract = contracts.find(c => c.id === highlightId);
+      if (targetContract) {
+        setHighlightedRowId(highlightId);
+        
+        // Find the page where this contract is located
+        const contractIndex = contracts.findIndex(c => c.id === highlightId);
+        const targetPage = Math.floor(contractIndex / 5) + 1;
+        
+        // Navigate to the correct page
+        if (targetPage !== currentPage) {
+          goToPage(targetPage);
+        }
+        
+        // Auto scroll and highlight
+        setTimeout(() => {
+          if (highlightedRowRef.current) {
+            highlightedRowRef.current.scrollIntoView({ 
+              behavior: 'smooth', 
+              block: 'center' 
+            });
+          }
+          // Remove highlight after 3 seconds
+          setTimeout(() => {
+            setHighlightedRowId(null);
+            // Remove highlight parameter from URL
+            searchParams.delete('highlight');
+            setSearchParams(searchParams, { replace: true });
+          }, 3000);
+        }, 100);
+      }
+    }
+  }, [highlightId, contracts, currentPage, goToPage, searchParams, setSearchParams]);
 
   const handleOpenCreate = () => {
     setSelectedContract(null);
@@ -305,7 +356,13 @@ export default function Contracts() {
                 }
                 
                 return (
-                  <TableRow key={contract.id}>
+                  <TableRow 
+                    key={contract.id}
+                    ref={highlightedRowId === contract.id ? highlightedRowRef : null}
+                    className={cn(
+                      highlightedRowId === contract.id && "bg-yellow-100 border-yellow-300 animate-pulse"
+                    )}
+                  >
                     <TableCell className="font-medium">{contract.contract_ref}</TableCell>
                     <TableCell className="font-mono text-xs">{getNoFaktur(contract.id)}</TableCell>
                     <TableCell>{contract.customers?.name}</TableCell>
@@ -545,7 +602,7 @@ export default function Contracts() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {selectedContractCoupons?.map((coupon) => (
+                    {paginatedCoupons?.map((coupon) => (
                       <TableRow key={coupon.id}>
                         <TableCell className="font-medium">Ke-{coupon.installment_index}</TableCell>
                         <TableCell>{formatDate(coupon.due_date)}</TableCell>
@@ -567,6 +624,18 @@ export default function Contracts() {
                   </TableBody>
                 </Table>
               </div>
+              
+              {/* Coupons pagination */}
+              {couponsTotalPages > 1 && (
+                <div className="mt-2">
+                  <TablePagination
+                    currentPage={couponsPage}
+                    totalPages={couponsTotalPages}
+                    onPageChange={goToCouponsPage}
+                    totalItems={totalCoupons}
+                  />
+                </div>
+              )}
             </div>
           )}
           <DialogFooter>

@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/select";
 import { useAggregatedPayments } from "@/hooks/useAggregatedPayments";
 import { useSalesAgents } from "@/hooks/useSalesAgents";
+import { useCustomers } from "@/hooks/useCustomers";
 import { formatRupiah, formatDate } from "@/lib/format";
 import { usePagination } from "@/hooks/usePagination";
 import { TablePagination } from "@/components/TablePagination";
@@ -29,11 +30,13 @@ import { TablePagination } from "@/components/TablePagination";
 export default function Reports() {
   const { t } = useTranslation();
   const { data: agents } = useSalesAgents();
+  const { data: customers } = useCustomers();
   const [dateFrom, setDateFrom] = useState(
     new Date(new Date().setDate(1)).toISOString().split("T")[0]
   );
   const [dateTo, setDateTo] = useState(new Date().toISOString().split("T")[0]);
   const [collectorId, setSalesId] = useState<string>("");
+  const [customerId, setCustomerId] = useState<string>("");
 
   const { data: payments, isLoading } = useAggregatedPayments(
     dateFrom,
@@ -41,11 +44,17 @@ export default function Reports() {
     collectorId || undefined
   );
 
-  const { currentPage, totalPages, paginatedItems, goToPage, totalItems } = usePagination(payments);
-  const totalAmount = payments?.reduce((sum, p) => sum + p.total_amount, 0) ?? 0;
+  // Client-side filtering untuk customer
+  const filteredPayments = payments?.filter(payment => {
+    if (!customerId) return true; // Jika tidak ada filter customer, tampilkan semua
+    return payment.customer_id === customerId;
+  });
+
+  const { currentPage, totalPages, paginatedItems, goToPage, totalItems } = usePagination(filteredPayments, 5);
+  const totalAmount = filteredPayments?.reduce((sum, p) => sum + p.total_amount, 0) ?? 0;
 
   const handleExportExcel = async () => {
-    if (!payments?.length) return;
+    if (!filteredPayments?.length) return;
 
     try {
       // Dynamic import ExcelJS untuk mengurangi bundle size awal
@@ -69,6 +78,34 @@ export default function Reports() {
     // Period row
     worksheet.mergeCells('A2:G2');
     const periodCell = worksheet.getCell('A2');
+    periodCell.value = `Periode: ${formatDate(dateFrom)} - ${formatDate(dateTo)}`;
+    periodCell.font = { size: 12 };
+    periodCell.alignment = { horizontal: 'center' };
+
+    // Filter info row
+    const selectedCustomerInfo = customerId 
+      ? customers?.find(c => c.id === customerId)
+      : null;
+    const selectedSalesInfo = collectorId
+      ? agents?.find(a => a.id === collectorId) 
+      : null;
+    
+    worksheet.mergeCells('A3:G3');
+    const filterCell = worksheet.getCell('A3');
+    let filterText = 'Filter: ';
+    if (selectedCustomerInfo) {
+      filterText += `Customer: ${selectedCustomerInfo.customer_code} - ${selectedCustomerInfo.name}`;
+    }
+    if (selectedSalesInfo) {
+      if (selectedCustomerInfo) filterText += ' | ';
+      filterText += `Sales: ${selectedSalesInfo.agent_code} - ${selectedSalesInfo.name}`;
+    }
+    if (!selectedCustomerInfo && !selectedSalesInfo) {
+      filterText += 'Semua Customer & Sales';
+    }
+    filterCell.value = filterText;
+    filterCell.font = { size: 11 };
+    filterCell.alignment = { horizontal: 'center' };
     periodCell.value = `Periode: ${formatDate(dateFrom)} - ${formatDate(dateTo)}`;
     periodCell.font = { size: 12 };
     periodCell.alignment = { horizontal: 'center' };
@@ -105,8 +142,8 @@ export default function Reports() {
     });
 
     // Data rows with formulas
-    payments.forEach((p, index) => {
-      const rowNumber = index + 5; // Starting from row 5 (after headers)
+    filteredPayments.forEach((p, index) => {
+      const rowNumber = index + 6; // Starting from row 6 (after headers and filter info)
       
       // Generate code coupon (A001, A002, etc.)
       const codeCoupon = `A${String(index + 1).padStart(3, '0')}`;
@@ -148,9 +185,9 @@ export default function Reports() {
     // Total row with SUM formula
     const totalRow = worksheet.addRow([
       '', '', '', 
-      { formula: `SUM(D5:D${4 + payments.length})` }, // Total Jumlah Coupon
+      { formula: `SUM(D6:D${5 + filteredPayments.length})` }, // Total Jumlah Coupon
       'TOTAL:',
-      { formula: `SUM(F5:F${4 + payments.length})` }, // Total Amount
+      { formula: `SUM(F6:F${5 + filteredPayments.length})` }, // Total Amount
       ''
     ]);
 
@@ -222,7 +259,7 @@ export default function Reports() {
           <CardTitle>{t("reports.filter", "Filter")}</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div>
               <Label>{t("reports.fromDate", "Dari Tanggal")}</Label>
               <Input
@@ -240,7 +277,23 @@ export default function Reports() {
               />
             </div>
             <div>
-              <Label>{t("Filter Berdasarkan Sales")}</Label>
+              <Label>{t("Filter Berdasarkan Customer (Kode)")}</Label>
+              <Select value={customerId} onValueChange={(v) => setCustomerId(v === "all" ? "" : v)}>
+                <SelectTrigger>
+                  <SelectValue placeholder={t("Semua Customer")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t("Semua Customer")}</SelectItem>
+                  {customers?.map((customer) => (
+                    <SelectItem key={customer.id} value={customer.id}>
+                      {customer.customer_code} - {customer.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>{t("Filter Berdasarkan Sales (Kode)")}</Label>
               <Select value={collectorId} onValueChange={(v) => setSalesId(v === "all" ? "" : v)}>
                 <SelectTrigger>
                   <SelectValue placeholder={t("Semua Sales")} />
@@ -249,17 +302,45 @@ export default function Reports() {
                   <SelectItem value="all">{t("Semua Sales")}</SelectItem>
                   {agents?.map((agent) => (
                     <SelectItem key={agent.id} value={agent.id}>
-                      {agent.name}
+                      {agent.agent_code} - {agent.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex items-end">
+            <div className="flex items-end md:col-span-2 lg:col-span-1">
               <Button onClick={handleExportExcel} variant="outline" className="w-full">
                 <FileSpreadsheet className="mr-2 h-4 w-4" />
                 {t("reports.exportExcel", "Export Excel")}
               </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Summary & Filter Info */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+            <div className="space-y-2">
+              <h3 className="font-semibold text-lg">Ringkasan Filter Aktif:</h3>
+              <div className="text-sm text-muted-foreground space-y-1">
+                <div>📅 Periode: {formatDate(dateFrom)} - {formatDate(dateTo)}</div>
+                {customerId && (
+                  <div>👤 Customer: {customers?.find(c => c.id === customerId)?.customer_code} - {customers?.find(c => c.id === customerId)?.name}</div>
+                )}
+                {collectorId && (
+                  <div>🏢 Sales: {agents?.find(a => a.id === collectorId)?.agent_code} - {agents?.find(a => a.id === collectorId)?.name}</div>
+                )}
+                {!customerId && !collectorId && (
+                  <div>🌍 Menampilkan: Semua Customer & Sales</div>
+                )}
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="text-2xl font-bold text-primary">{formatRupiah(totalAmount)}</div>
+              <div className="text-sm text-muted-foreground">Total Pembayaran</div>
+              <div className="text-sm text-muted-foreground">{filteredPayments?.length || 0} Transaksi</div>
             </div>
           </div>
         </CardContent>
@@ -283,10 +364,10 @@ export default function Reports() {
               <TableRow>
                 <TableCell colSpan={7} className="text-center">{t("common.loading")}</TableCell>
               </TableRow>
-            ) : payments?.length === 0 ? (
+            ) : filteredPayments?.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={7} className="text-center text-muted-foreground">
-                  {t("common.noData")}
+                  {payments?.length === 0 ? t("common.noData") : "Tidak ada data yang sesuai dengan filter"}
                 </TableCell>
               </TableRow>
             ) : (

@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useSearchParams } from "react-router-dom";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -50,21 +52,61 @@ import { TablePagination } from "@/components/TablePagination";
 
 export default function Routes() {
   const { t } = useTranslation();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const highlightId = searchParams.get('highlight');
   const { data: routes, isLoading } = useRoutes();
   const { data: agents } = useSalesAgents();
   const createRoute = useCreateRoute();
   const updateRoute = useUpdateRoute();
   const deleteRoute = useDeleteRoute();
-  const { currentPage, totalPages, paginatedItems, goToPage, totalItems } = usePagination(routes);
+  const { currentPage, totalPages, paginatedItems, goToPage, totalItems } = usePagination(routes, 5);
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedRoute, setSelectedRoute] = useState<RouteWithSales | null>(null);
+  const [highlightedRowId, setHighlightedRowId] = useState<string | null>(null);
+  const highlightedRowRef = useRef<HTMLTableRowElement>(null);
   const [formData, setFormData] = useState({
     code: "",
     name: "",
     default_collector_id: null as string | null,
   });
+
+  // Handle highlighting item from global search
+  useEffect(() => {
+    if (highlightId && routes?.length) {
+      const targetRoute = routes.find(r => r.id === highlightId);
+      if (targetRoute) {
+        setHighlightedRowId(highlightId);
+        
+        // Find the page where this route is located
+        const routeIndex = routes.findIndex(r => r.id === highlightId);
+        const targetPage = Math.floor(routeIndex / 5) + 1;
+        
+        // Navigate to the correct page
+        if (targetPage !== currentPage) {
+          goToPage(targetPage);
+        }
+        
+        // Auto scroll and highlight
+        setTimeout(() => {
+          if (highlightedRowRef.current) {
+            highlightedRowRef.current.scrollIntoView({ 
+              behavior: 'smooth', 
+              block: 'center' 
+            });
+          }
+          // Remove highlight after 3 seconds
+          setTimeout(() => {
+            setHighlightedRowId(null);
+            // Remove highlight parameter from URL
+            searchParams.delete('highlight');
+            setSearchParams(searchParams, { replace: true });
+          }, 3000);
+        }, 100);
+      }
+    }
+  }, [highlightId, routes, currentPage, goToPage, searchParams, setSearchParams]);
 
   const handleOpenCreate = () => {
     setSelectedRoute(null);
@@ -140,7 +182,13 @@ export default function Routes() {
               </TableRow>
             ) : (
               paginatedItems.map((route) => (
-                <TableRow key={route.id}>
+                <TableRow 
+                  key={route.id}
+                  ref={highlightedRowId === route.id ? highlightedRowRef : null}
+                  className={cn(
+                    highlightedRowId === route.id && "bg-yellow-100 border-yellow-300 animate-pulse"
+                  )}
+                >
                   <TableCell className="font-medium">{route.code}</TableCell>
                   <TableCell>{route.name}</TableCell>
                   <TableCell>{route.sales_agents?.name || "-"}</TableCell>

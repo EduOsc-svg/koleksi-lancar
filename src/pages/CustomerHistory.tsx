@@ -23,6 +23,9 @@ import { useCustomers } from "@/hooks/useCustomers";
 import { useContracts } from "@/hooks/useContracts";
 import { usePaymentsByContract } from "@/hooks/usePayments";
 import { formatRupiah, formatDate } from "@/lib/format";
+import { usePagination } from "@/hooks/usePagination";
+import { TablePagination } from "@/components/TablePagination";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function CustomerHistory() {
   const { data: customers } = useCustomers();
@@ -42,6 +45,19 @@ export default function CustomerHistory() {
   const { data: payments, isLoading: loadingPayments } = usePaymentsByContract(
     selectedContractId
   );
+
+  // Add pagination for payments
+  const { currentPage, totalPages, paginatedItems: paginatedPayments, goToPage, totalItems } = usePagination(payments, 5);
+
+  // Add pagination for customer list
+  const displayCustomers = searchTerm ? filteredCustomers : customers;
+  const { 
+    currentPage: customerPage, 
+    totalPages: customerTotalPages, 
+    paginatedItems: paginatedCustomers, 
+    goToPage: goToCustomerPage,
+    totalItems: totalCustomers 
+  } = usePagination(displayCustomers, 5);
 
   const selectedContract = contracts?.find((c) => c.id === selectedContractId);
   const progress = selectedContract
@@ -67,31 +83,43 @@ export default function CustomerHistory() {
             />
           </div>
 
-          {/* Show filtered list or all customers ascending */}
-          <div className="border rounded-lg max-h-64 overflow-y-auto">
-            {(searchTerm ? filteredCustomers : customers)?.map((customer) => (
-              <div
-                key={customer.id}
-                className={`p-3 hover:bg-muted cursor-pointer border-b last:border-b-0 ${
-                  selectedCustomerId === customer.id ? "bg-muted" : ""
-                }`}
-                onClick={() => {
-                  setSelectedCustomerId(customer.id);
-                  setSelectedContractId("");
-                }}
-              >
-                <div className="font-medium">{customer.name}</div>
-                <div className="text-xs text-muted-foreground">
-                  Route: {customer.routes?.code} | Agent: {customer.sales_agents?.name || "-"}
+          {/* Show filtered list or all customers with pagination */}
+          <ScrollArea className="border rounded-lg h-64">
+            <div className="space-y-1 p-2">
+              {paginatedCustomers?.map((customer) => (
+                <div
+                  key={customer.id}
+                  className={`p-3 hover:bg-muted cursor-pointer rounded-md ${
+                    selectedCustomerId === customer.id ? "bg-muted" : ""
+                  }`}
+                  onClick={() => {
+                    setSelectedCustomerId(customer.id);
+                    setSelectedContractId("");
+                  }}
+                >
+                  <div className="font-medium">{customer.name}</div>
+                  <div className="text-xs text-muted-foreground">
+                    Route: {customer.routes?.code} | Agent: {customer.sales_agents?.name || "-"}
+                  </div>
                 </div>
-              </div>
-            ))}
-            {(!searchTerm ? customers : filteredCustomers)?.length === 0 && (
-              <div className="p-3 text-center text-muted-foreground">
-                No customers found
-              </div>
-            )}
-          </div>
+              ))}
+              {(!paginatedCustomers || paginatedCustomers.length === 0) && (
+                <div className="p-3 text-center text-muted-foreground">
+                  No customers found
+                </div>
+              )}
+            </div>
+          </ScrollArea>
+          
+          {/* Customer pagination */}
+          {customerTotalPages > 1 && (
+            <TablePagination
+              currentPage={customerPage}
+              totalPages={customerTotalPages}
+              onPageChange={goToCustomerPage}
+              totalItems={totalCustomers}
+            />
+          )}
 
           {selectedCustomerId && (
             <div>
@@ -185,14 +213,14 @@ export default function CustomerHistory() {
                       <TableRow>
                         <TableCell colSpan={5} className="text-center">Loading...</TableCell>
                       </TableRow>
-                    ) : payments?.length === 0 ? (
+                    ) : paginatedPayments?.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={5} className="text-center text-muted-foreground">
                           No payments yet
                         </TableCell>
                       </TableRow>
                     ) : (
-                      payments?.map((payment) => (
+                      paginatedPayments?.map((payment) => (
                         <TableRow key={payment.id}>
                           <TableCell>
                             <Badge variant="outline">{payment.installment_index}</Badge>
@@ -211,6 +239,18 @@ export default function CustomerHistory() {
                   </TableBody>
                 </Table>
               </div>
+              
+              {/* Payments pagination */}
+              {totalPages > 1 && (
+                <div className="mt-4">
+                  <TablePagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={goToPage}
+                    totalItems={totalItems}
+                  />
+                </div>
+              )}
             </CardContent>
           </Card>
         </>

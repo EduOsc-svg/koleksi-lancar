@@ -90,7 +90,7 @@ export function GlobalSearch() {
         <Input
           ref={inputRef}
           type="text"
-          placeholder="Cari sales, customer, route, contract..."
+          placeholder="Cari nama, kode agent, kode customer, kode route, kontrak..."
           value={query}
           onChange={(e) => {
             setQuery(e.target.value);

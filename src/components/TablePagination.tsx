@@ -44,14 +44,22 @@ export function TablePagination({
         <PaginationContent>
           <PaginationItem>
             <PaginationPrevious
-              onClick={() => onPageChange(currentPage - 1)}
+              onClick={() => {
+                console.log('Previous clicked, current page:', currentPage);
+                if (currentPage > 1) {
+                  onPageChange(currentPage - 1);
+                }
+              }}
               className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
             />
           </PaginationItem>
           {pages.map((page) => (
             <PaginationItem key={page}>
               <PaginationLink
-                onClick={() => onPageChange(page)}
+                onClick={() => {
+                  console.log('Page clicked:', page);
+                  onPageChange(page);
+                }}
                 isActive={page === currentPage}
                 className="cursor-pointer"
               >
@@ -61,7 +69,12 @@ export function TablePagination({
           ))}
           <PaginationItem>
             <PaginationNext
-              onClick={() => onPageChange(currentPage + 1)}
+              onClick={() => {
+                console.log('Next clicked, current page:', currentPage, 'total pages:', totalPages);
+                if (currentPage < totalPages) {
+                  onPageChange(currentPage + 1);
+                }
+              }}
               className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
             />
           </PaginationItem>

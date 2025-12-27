@@ -17,6 +17,7 @@ export interface AgentPerformanceData {
 export interface AgentContractHistory {
   contract_ref: string;
   customer_name: string;
+  customer_code: string | null;
   product_type: string | null;
   omset: number;
   total_loan_amount: number;
@@ -188,6 +189,7 @@ export const useAgentContractHistory = (agentId: string | null) => {
           status,
           customers!inner(
             name,
+            customer_code,
             assigned_sales_id
           )
         `)
@@ -203,6 +205,7 @@ export const useAgentContractHistory = (agentId: string | null) => {
       return filtered.map((contract: any) => ({
         contract_ref: contract.contract_ref,
         customer_name: contract.customers?.name || '-',
+        customer_code: contract.customers?.customer_code || null,
         product_type: contract.product_type,
         omset: Number(contract.omset || 0),
         total_loan_amount: Number(contract.total_loan_amount || 0),

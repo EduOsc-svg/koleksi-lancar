@@ -34,6 +34,8 @@ import { Badge } from "@/components/ui/badge";
 import { useLastPaymentDate, useNextCouponDueDate, calculateLateNoteFromDueDate } from "@/hooks/useLastPaymentDate";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Textarea } from "@/components/ui/textarea";
+import { usePagination } from "@/hooks/usePagination";
+import { TablePagination } from "@/components/TablePagination";
 
 export default function Collection() {
   const { t } = useTranslation();
@@ -85,29 +87,71 @@ export default function Collection() {
   }, [selectedContract, nextCouponDueDate, paymentDate]);
 
   const manifestContracts = contracts?.filter((c) => {
+    // Ensure customer data exists
+    if (!c.customers) return false;
+    
     // Filter by route
     if (selectedRoute) {
-      const routeMatch = c.customers?.routes && routes?.find(r => r.id === selectedRoute)?.code === c.customers.routes.code;
+      const routeMatch = c.customers.route_id === selectedRoute;
       if (!routeMatch) return false;
     }
     
     // Filter by customer
-    const matchesCustomer = !selectedCustomer || c.customer_id === selectedCustomer;
+    if (selectedCustomer) {
+      const customerMatch = c.customer_id === selectedCustomer;
+      if (!customerMatch) return false;
+    }
     
     // Filter by sales agent
     if (selectedSales) {
-      const salesMatch = c.customers?.sales_agents && agents?.find(a => a.id === selectedSales)?.agent_code === c.customers.sales_agents.agent_code;
+      const salesMatch = c.customers.assigned_sales_id === selectedSales;
       if (!salesMatch) return false;
     }
     
-    return matchesCustomer;
-  });
+    return true;
+  }) || [];
+
+  // Pagination for manifest contracts
+  const {
+    paginatedItems: paginatedManifestContracts,
+    currentPage: manifestPage,
+    goToPage: setManifestPage,
+    totalPages: manifestTotalPages,
+    totalItems: manifestTotalItems
+  } = usePagination(manifestContracts, 5);
+
+  // Debug wrapper for setManifestPage
+  const handleManifestPageChange = (page: number) => {
+    console.log('Collection: setManifestPage called with:', page, 'current:', manifestPage);
+    setManifestPage(page);
+  };
+
+  // Debug effect to track pagination state
+  useEffect(() => {
+    console.log('Collection pagination state:', {
+      manifestPage,
+      totalPages: manifestTotalPages,
+      totalItems: manifestTotalItems,
+      manifestContractsLength: manifestContracts.length,
+      paginatedLength: paginatedManifestContracts?.length
+    });
+  }, [manifestPage, manifestTotalPages, manifestTotalItems, manifestContracts.length, paginatedManifestContracts]);
 
   const selectedCustomerName = selectedCustomer 
-    ? customers?.find(c => c.id === selectedCustomer)?.name
+    ? (() => {
+        const customer = customers?.find(c => c.id === selectedCustomer);
+        const code = customer?.customer_code || 'N/A';
+        const name = customer?.name || 'Unknown';
+        return `${code} - ${name}`;
+      })()
     : null;
   const selectedSalesName = selectedSales
-    ? agents?.find(a => a.id === selectedSales)?.name
+    ? (() => {
+        const agent = agents?.find(a => a.id === selectedSales);
+        const code = agent?.agent_code || 'N/A';
+        const name = agent?.name || 'Unknown';
+        return `${code} - ${name}`;
+      })()
     : null;
 
   const [printMode, setPrintMode] = useState<"a4-landscape" | null>(null);
@@ -172,7 +216,19 @@ export default function Collection() {
   return (
     <div className="space-y-6 print:space-y-0" ref={printRef}>
       {printMode === "a4-landscape" && manifestContracts && (
-        <VoucherPage contracts={manifestContracts} />
+        <>
+          {/* Print Header - Filter Information */}
+          <div className="print:block hidden print:mb-4 print:border-b print:border-black print:pb-2">
+            <h1 className="text-xl font-bold text-center">DAFTAR KUPON COLLECTION</h1>
+            <div className="text-sm text-center mt-2">
+              {selectedCustomerName && <div>Pelanggan: {selectedCustomerName}</div>}
+              {selectedSalesName && <div>Sales Agent: {selectedSalesName}</div>}
+              {!selectedCustomerName && !selectedSalesName && <div>Semua Pelanggan & Sales Agent</div>}
+              <div className="mt-1">Tanggal Cetak: {new Date().toLocaleDateString('id-ID')}</div>
+            </div>
+          </div>
+          <VoucherPage contracts={manifestContracts} />
+        </>
       )}
 
       <h2 className="text-2xl font-bold print:hidden">{t("collection.title")}</h2>
@@ -226,7 +282,7 @@ export default function Collection() {
                       <SelectItem value="all">{t("Semua Pelanggan")}</SelectItem>
                       {customers?.map((customer) => (
                         <SelectItem key={customer.id} value={customer.id}>
-                          {customer.name}
+                          {customer.customer_code} - {customer.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -244,7 +300,7 @@ export default function Collection() {
                       <SelectItem value="all">{t("Semua Sales")}</SelectItem>
                       {agents?.map((agent) => (
                         <SelectItem key={agent.id} value={agent.id}>
-                          {agent.name} ({agent.agent_code})
+                          {agent.agent_code} - {agent.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -275,16 +331,22 @@ export default function Collection() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {manifestContracts?.length === 0 ? (
+                {!contracts ? (
                   <TableRow className="print:hidden">
-                    <TableCell colSpan={6} className="text-center text-muted-foreground">
+                    <TableCell colSpan={8} className="text-center text-muted-foreground">
+                      Loading contracts...
+                    </TableCell>
+                  </TableRow>
+                ) : manifestContracts.length === 0 ? (
+                  <TableRow className="print:hidden">
+                    <TableCell colSpan={8} className="text-center text-muted-foreground">
                       {t("collection.noContracts")}
                     </TableCell>
                   </TableRow>
                 ) : (
-                  manifestContracts?.map((contract, i) => (
+                  paginatedManifestContracts?.map((contract, i) => (
                     <TableRow key={contract.id} className="print:break-inside-avoid">
-                      <TableCell className="print:text-black print:border print:border-black">{i + 1}</TableCell>
+                      <TableCell className="print:text-black print:border print:border-black">{(manifestPage - 1) * 5 + i + 1}</TableCell>
                       <TableCell className="font-medium print:text-black print:border print:border-black">{contract.customers?.name}</TableCell>
                       <TableCell className="print:text-black print:border print:border-black">
                         <Badge variant="outline" className="print:border-black print:text-black">{contract.customers?.routes?.code}</Badge>
@@ -301,6 +363,16 @@ export default function Collection() {
                 )}
               </TableBody>
             </Table>
+          </div>
+          
+          {/* Pagination for manifest contracts */}
+          <div className="print:hidden">
+            <TablePagination
+              currentPage={manifestPage}
+              totalPages={manifestTotalPages}
+              onPageChange={handleManifestPageChange}
+              totalItems={manifestTotalItems}
+            />
           </div>
         </TabsContent>
 
@@ -408,7 +480,7 @@ export default function Collection() {
                     <SelectContent>
                       {agents?.map((agent) => (
                         <SelectItem key={agent.id} value={agent.id}>
-                          {agent.name}
+                          {agent.agent_code}
                         </SelectItem>
                       ))}
                     </SelectContent>

@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useSearchParams } from "react-router-dom";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -53,17 +55,21 @@ import { TablePagination } from "@/components/TablePagination";
 
 export default function Customers() {
   const { t } = useTranslation();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const highlightId = searchParams.get('highlight');
   const { data: customers, isLoading } = useCustomers();
   const { data: agents } = useSalesAgents();
   const { data: routes } = useRoutes();
   const createCustomer = useCreateCustomer();
   const updateCustomer = useUpdateCustomer();
   const deleteCustomer = useDeleteCustomer();
-  const { currentPage, totalPages, paginatedItems, goToPage, totalItems } = usePagination(customers);
+  const { currentPage, totalPages, paginatedItems, goToPage, totalItems } = usePagination(customers, 5);
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerWithRelations | null>(null);
+  const [highlightedRowId, setHighlightedRowId] = useState<string | null>(null);
+  const highlightedRowRef = useRef<HTMLTableRowElement>(null);
   const [formData, setFormData] = useState({
     name: "",
     customer_code: "",
@@ -73,6 +79,42 @@ export default function Customers() {
     route_id: "",
     assigned_sales_id: null as string | null,
   });
+
+  // Handle highlighting item from global search
+  useEffect(() => {
+    if (highlightId && customers?.length) {
+      const targetCustomer = customers.find(c => c.id === highlightId);
+      if (targetCustomer) {
+        setHighlightedRowId(highlightId);
+        
+        // Find the page where this customer is located
+        const customerIndex = customers.findIndex(c => c.id === highlightId);
+        const targetPage = Math.floor(customerIndex / 5) + 1;
+        
+        // Navigate to the correct page
+        if (targetPage !== currentPage) {
+          goToPage(targetPage);
+        }
+        
+        // Auto scroll and highlight
+        setTimeout(() => {
+          if (highlightedRowRef.current) {
+            highlightedRowRef.current.scrollIntoView({ 
+              behavior: 'smooth', 
+              block: 'center' 
+            });
+          }
+          // Remove highlight after 3 seconds
+          setTimeout(() => {
+            setHighlightedRowId(null);
+            // Remove highlight parameter from URL
+            searchParams.delete('highlight');
+            setSearchParams(searchParams, { replace: true });
+          }, 3000);
+        }, 100);
+      }
+    }
+  }, [highlightId, customers, currentPage, goToPage, searchParams, setSearchParams]);
 
   const handleOpenCreate = () => {
     setSelectedCustomer(null);
@@ -103,11 +145,19 @@ export default function Customers() {
       toast.error(t("errors.customerCodeRequired", "Masukkan kode pelanggan"));
       return;
     }
+    if (!formData.nik.trim()) {
+      toast.error(t("errors.nikRequired", "NIK wajib diisi"));
+      return;
+    }
+    if (formData.nik.trim().length !== 16) {
+      toast.error(t("errors.nikMustBe16Digits", "NIK harus 16 digit"));
+      return;
+    }
     try {
       const submitData = {
         ...formData,
         customer_code: formData.customer_code.trim() || null,
-        nik: formData.nik.trim() || null,
+        nik: formData.nik.trim(), // NIK is required, no fallback to null
       };
       if (selectedCustomer) {
         await updateCustomer.mutateAsync({ id: selectedCustomer.id, ...submitData });
@@ -119,7 +169,13 @@ export default function Customers() {
       setDialogOpen(false);
     } catch (error: any) {
       if (error?.message?.includes('duplicate') || error?.code === '23505') {
-        toast.error(t("errors.duplicateCode", "Kode pelanggan sudah digunakan"));
+        if (error?.message?.includes('nik') || error?.message?.includes('unique_nik')) {
+          toast.error(t("errors.duplicateNik", "NIK sudah digunakan"));
+        } else {
+          toast.error(t("errors.duplicateCode", "Kode pelanggan sudah digunakan"));
+        }
+      } else if (error?.message?.includes('check_nik_format')) {
+        toast.error(t("errors.nikMustBe16Digits", "NIK harus 16 digit"));
       } else {
         toast.error(t("errors.saveFailed"));
       }
@@ -172,7 +228,13 @@ export default function Customers() {
               </TableRow>
             ) : (
               paginatedItems.map((customer) => (
-                <TableRow key={customer.id}>
+                <TableRow 
+                  key={customer.id}
+                  ref={highlightedRowId === customer.id ? highlightedRowRef : null}
+                  className={cn(
+                    highlightedRowId === customer.id && "bg-yellow-100 border-yellow-300 animate-pulse"
+                  )}
+                >
                   <TableCell>
                     <Badge variant="secondary">{customer.customer_code || "-"}</Badge>
                   </TableCell>
@@ -239,15 +301,25 @@ export default function Customers() {
               />
             </div>
             <div>
-              <Label htmlFor="nik">{t("customers.nik")}</Label>
+              <Label htmlFor="nik">{t("customers.nik")} *</Label>
               <Input
                 id="nik"
                 value={formData.nik}
                 onChange={(e) => setFormData({ ...formData, nik: e.target.value.replace(/\D/g, '') })}
                 placeholder="16 digit NIK"
                 maxLength={16}
+                className={formData.nik && formData.nik.length !== 16 ? "border-destructive" : ""}
+                required
               />
-              <p className="text-xs text-muted-foreground mt-1">Nomor Induk Kependudukan (16 digit)</p>
+              <p className={`text-xs mt-1 ${
+                !formData.nik ? 'text-destructive' : 
+                formData.nik.length === 16 ? 'text-green-600' : 
+                'text-muted-foreground'
+              }`}>
+                {!formData.nik ? 'NIK wajib diisi (16 digit)' :
+                 formData.nik.length === 16 ? '✓ NIK valid' :
+                 `${formData.nik.length}/16 digit`}
+              </p>
             </div>
             <div>
               <Label htmlFor="phone">{t("customers.phone")}</Label>

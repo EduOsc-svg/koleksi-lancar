@@ -227,6 +227,9 @@
     "deleteFailed": "Failed to delete",
     "loadFailed": "Failed to load data",
     "customerCodeRequired": "Please enter a customer code",
+    "nikRequired": "NIK is required",
+    "nikMustBe16Digits": "NIK must be 16 digits",
+    "duplicateNik": "NIK already exists",
     "duplicateCode": "Customer code already exists",
     "duplicateDate": "This date is already marked as a holiday",
     "duplicateDay": "This weekday is already set as recurring holiday"

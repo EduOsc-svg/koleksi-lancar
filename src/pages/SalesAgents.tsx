@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useSearchParams } from "react-router-dom";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -44,17 +46,57 @@ import { formatRupiah } from "@/lib/format";
 
 export default function SalesAgents() {
   const { t } = useTranslation();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const highlightId = searchParams.get('highlight');
   const { data: agents, isLoading } = useSalesAgents();
   const { data: agentOmsetData } = useAgentOmset();
   const createAgent = useCreateSalesAgent();
   const updateAgent = useUpdateSalesAgent();
   const deleteAgent = useDeleteSalesAgent();
-  const { currentPage, totalPages, paginatedItems, goToPage, totalItems } = usePagination(agents);
+  const { currentPage, totalPages, paginatedItems, goToPage, totalItems } = usePagination(agents, 5);
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState<SalesAgent | null>(null);
+  const [highlightedRowId, setHighlightedRowId] = useState<string | null>(null);
+  const highlightedRowRef = useRef<HTMLTableRowElement>(null);
   const [formData, setFormData] = useState({ agent_code: "", name: "", phone: "", commission_percentage: 0 });
+
+  // Handle highlighting item from global search
+  useEffect(() => {
+    if (highlightId && agents?.length) {
+      const targetAgent = agents.find(a => a.id === highlightId);
+      if (targetAgent) {
+        setHighlightedRowId(highlightId);
+        
+        // Find the page where this agent is located
+        const agentIndex = agents.findIndex(a => a.id === highlightId);
+        const targetPage = Math.floor(agentIndex / 5) + 1;
+        
+        // Navigate to the correct page
+        if (targetPage !== currentPage) {
+          goToPage(targetPage);
+        }
+        
+        // Auto scroll and highlight
+        setTimeout(() => {
+          if (highlightedRowRef.current) {
+            highlightedRowRef.current.scrollIntoView({ 
+              behavior: 'smooth', 
+              block: 'center' 
+            });
+          }
+          // Remove highlight after 3 seconds
+          setTimeout(() => {
+            setHighlightedRowId(null);
+            // Remove highlight parameter from URL
+            searchParams.delete('highlight');
+            setSearchParams(searchParams, { replace: true });
+          }, 3000);
+        }, 100);
+      }
+    }
+  }, [highlightId, agents, currentPage, goToPage, searchParams, setSearchParams]);
 
   const handleOpenCreate = () => {
     setSelectedAgent(null);
@@ -140,7 +182,13 @@ export default function SalesAgents() {
               paginatedItems.map((agent) => {
                 const omsetData = getAgentOmset(agent.id);
                 return (
-                  <TableRow key={agent.id}>
+                  <TableRow 
+                    key={agent.id}
+                    ref={highlightedRowId === agent.id ? highlightedRowRef : null}
+                    className={cn(
+                      highlightedRowId === agent.id && "bg-yellow-100 border-yellow-300 animate-pulse"
+                    )}
+                  >
                     <TableCell className="font-medium">{agent.agent_code}</TableCell>
                     <TableCell>{agent.name}</TableCell>
                     <TableCell>{agent.phone || "-"}</TableCell>

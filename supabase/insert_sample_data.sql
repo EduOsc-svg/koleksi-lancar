@@ -1,8 +1,3 @@
--- =========================================
--- SAMPLE DATA INSERTION SCRIPT
--- =========================================
--- This script inserts realistic sample data for all tables
--- Approximately 10 records per table where appropriate
 
 -- =========================================
 -- 1. SALES AGENTS (10 records)
@@ -37,64 +32,64 @@ INSERT INTO public.routes (id, code, name, default_collector_id) VALUES
 -- =========================================
 -- 3. CUSTOMERS (15 records - more realistic)
 -- =========================================
-INSERT INTO public.customers (id, name, address, phone, customer_code, assigned_sales_id, route_id) VALUES
-(gen_random_uuid(), 'Ayu Lestari', 'Jl. Mawar No. 12, Karawang Timur', '087654321001', 'C001', 
+INSERT INTO public.customers (id, name, address, phone, nik, customer_code, assigned_sales_id, route_id) VALUES
+(gen_random_uuid(), 'Ayu Lestari', 'Jl. Mawar No. 12, Karawang Timur', '087654321001', '3275012345678901', 'K01', 
  (SELECT id FROM sales_agents WHERE agent_code = 'S001' LIMIT 1),
  (SELECT id FROM routes WHERE code = 'RT001' LIMIT 1)),
 
-(gen_random_uuid(), 'Bambang Sutrisno', 'Jl. Melati No. 25, Karawang Barat', '087654321002', 'C002',
+(gen_random_uuid(), 'Bambang Sutrisno', 'Jl. Melati No. 25, Karawang Barat', '087654321002', '3275023456789012', 'K02',
  (SELECT id FROM sales_agents WHERE agent_code = 'S002' LIMIT 1),
  (SELECT id FROM routes WHERE code = 'RT002' LIMIT 1)),
 
-(gen_random_uuid(), 'Citra Dewi', 'Jl. Anggrek No. 8, Bekasi Utara', '087654321003', 'C003',
+(gen_random_uuid(), 'Citra Dewi', 'Jl. Anggrek No. 8, Bekasi Utara', '087654321003', '3275034567890123', 'K03',
  (SELECT id FROM sales_agents WHERE agent_code = 'S003' LIMIT 1),
  (SELECT id FROM routes WHERE code = 'RT003' LIMIT 1)),
 
-(gen_random_uuid(), 'Dedi Kurniawan', 'Jl. Kenanga No. 15, Bekasi Selatan', '087654321004', 'C004',
+(gen_random_uuid(), 'Dedi Kurniawan', 'Jl. Kenanga No. 15, Bekasi Selatan', '087654321004', '3275045678901234', 'K04',
  (SELECT id FROM sales_agents WHERE agent_code = 'S004' LIMIT 1),
  (SELECT id FROM routes WHERE code = 'RT004' LIMIT 1)),
 
-(gen_random_uuid(), 'Erna Sari', 'Jl. Dahlia No. 30, Cibitung', '087654321005', 'C005',
+(gen_random_uuid(), 'Erna Sari', 'Jl. Dahlia No. 30, Cibitung', '087654321005', '3275055678901235', 'K05',
  (SELECT id FROM sales_agents WHERE agent_code = 'S005' LIMIT 1),
  (SELECT id FROM routes WHERE code = 'RT005' LIMIT 1)),
 
-(gen_random_uuid(), 'Fajar Nugraha', 'Jl. Tulip No. 7, Cikarang', '087654321006', 'C006',
+(gen_random_uuid(), 'Fajar Nugraha', 'Jl. Tulip No. 7, Cikarang', '087654321006', '3275066789012346', 'K06',
  (SELECT id FROM sales_agents WHERE agent_code = 'S006' LIMIT 1),
  (SELECT id FROM routes WHERE code = 'RT006' LIMIT 1)),
 
-(gen_random_uuid(), 'Gita Purnama', 'Jl. Sakura No. 22, Tambun', '087654321007', 'C007',
+(gen_random_uuid(), 'Gita Purnama', 'Jl. Sakura No. 22, Tambun', '087654321007', '3275077890123457', 'K07',
  (SELECT id FROM sales_agents WHERE agent_code = 'S007' LIMIT 1),
  (SELECT id FROM routes WHERE code = 'RT007' LIMIT 1)),
 
-(gen_random_uuid(), 'Hendra Wijaya', 'Jl. Flamboyan No. 18, Rawa Lumbu', '087654321008', 'C008',
+(gen_random_uuid(), 'Hendra Wijaya', 'Jl. Flamboyan No. 18, Rawa Lumbu', '087654321008', '3275088901234568', 'K08',
  (SELECT id FROM sales_agents WHERE agent_code = 'S008' LIMIT 1),
  (SELECT id FROM routes WHERE code = 'RT008' LIMIT 1)),
 
-(gen_random_uuid(), 'Indah Permata', 'Jl. Cempaka No. 11, Teluk Pucung', '087654321009', 'C009',
+(gen_random_uuid(), 'Indah Permata', 'Jl. Cempaka No. 11, Teluk Pucung', '087654321009', '3275099012345679', 'K09',
  (SELECT id FROM sales_agents WHERE agent_code = 'S009' LIMIT 1),
  (SELECT id FROM routes WHERE code = 'RT009' LIMIT 1)),
 
-(gen_random_uuid(), 'Jaka Prasetya', 'Jl. Bougenvil No. 28, Klari', '087654321010', 'C010',
+(gen_random_uuid(), 'Jaka Prasetya', 'Jl. Bougenvil No. 28, Klari', '087654321010', '3275100123456780', 'K10',
  (SELECT id FROM sales_agents WHERE agent_code = 'S010' LIMIT 1),
  (SELECT id FROM routes WHERE code = 'RT010' LIMIT 1)),
 
-(gen_random_uuid(), 'Kartika Sari', 'Jl. Kamboja No. 5, Karawang Timur', '087654321011', 'C011',
+(gen_random_uuid(), 'Kartika Sari', 'Jl. Kamboja No. 5, Karawang Timur', '087654321011', '3275111234567891', 'K11',
  (SELECT id FROM sales_agents WHERE agent_code = 'S001' LIMIT 1),
  (SELECT id FROM routes WHERE code = 'RT001' LIMIT 1)),
 
-(gen_random_uuid(), 'Lukman Hakim', 'Jl. Alamanda No. 33, Karawang Barat', '087654321012', 'C012',
+(gen_random_uuid(), 'Lukman Hakim', 'Jl. Alamanda No. 33, Karawang Barat', '087654321012', '3275122345678902', 'K12',
  (SELECT id FROM sales_agents WHERE agent_code = 'S002' LIMIT 1),
  (SELECT id FROM routes WHERE code = 'RT002' LIMIT 1)),
 
-(gen_random_uuid(), 'Maya Sari', 'Jl. Bougenville No. 14, Bekasi Utara', '087654321013', 'C013',
+(gen_random_uuid(), 'Maya Sari', 'Jl. Bougenville No. 14, Bekasi Utara', '087654321013', '3275133456789013', 'K13',
  (SELECT id FROM sales_agents WHERE agent_code = 'S003' LIMIT 1),
  (SELECT id FROM routes WHERE code = 'RT003' LIMIT 1)),
 
-(gen_random_uuid(), 'Nanda Pratama', 'Jl. Teratai No. 20, Bekasi Selatan', '087654321014', 'C014',
+(gen_random_uuid(), 'Nanda Pratama', 'Jl. Teratai No. 20, Bekasi Selatan', '087654321014', '3275144567890124', 'K14',
  (SELECT id FROM sales_agents WHERE agent_code = 'S004' LIMIT 1),
  (SELECT id FROM routes WHERE code = 'RT004' LIMIT 1)),
 
-(gen_random_uuid(), 'Octavia Putri', 'Jl. Seroja No. 9, Cibitung', '087654321015', 'C015',
+(gen_random_uuid(), 'Octavia Putri', 'Jl. Seroja No. 9, Cibitung', '087654321015', '3275155678901235', 'K15',
  (SELECT id FROM sales_agents WHERE agent_code = 'S005' LIMIT 1),
  (SELECT id FROM routes WHERE code = 'RT005' LIMIT 1));
 
@@ -125,117 +120,117 @@ INSERT INTO public.holidays (id, holiday_date, description, holiday_type, day_of
 -- 5. CREDIT CONTRACTS (12 records)
 -- =========================================
 INSERT INTO public.credit_contracts (id, contract_ref, customer_id, product_type, total_loan_amount, omset, tenor_days, daily_installment_amount, current_installment_index, status, start_date) VALUES
-(gen_random_uuid(), 'KNT-2024-001', 
- (SELECT id FROM customers WHERE customer_code = 'C001' LIMIT 1),
- 'Elektronik', 5000000, 6000000, 100, 50000, 15, 'active', '2024-11-01'),
+(gen_random_uuid(), 'A001', 
+ (SELECT id FROM customers WHERE customer_code = 'K01' LIMIT 1),
+ 'Elektronik', 5000000, 6000000, 100, 50000, 15, 'active', '2025-01-15'),
 
-(gen_random_uuid(), 'KNT-2024-002',
- (SELECT id FROM customers WHERE customer_code = 'C002' LIMIT 1),
- 'Furniture', 8000000, 9600000, 120, 66667, 25, 'active', '2024-10-15'),
+(gen_random_uuid(), 'A002',
+ (SELECT id FROM customers WHERE customer_code = 'K02' LIMIT 1),
+ 'Furniture', 8000000, 9600000, 120, 66667, 25, 'active', '2025-01-10'),
 
-(gen_random_uuid(), 'KNT-2024-003',
- (SELECT id FROM customers WHERE customer_code = 'C003' LIMIT 1),
- 'Motor', 12000000, 14400000, 150, 80000, 30, 'active', '2024-10-01'),
+(gen_random_uuid(), 'A003',
+ (SELECT id FROM customers WHERE customer_code = 'K03' LIMIT 1),
+ 'Motor', 12000000, 14400000, 150, 80000, 30, 'active', '2025-01-05'),
 
-(gen_random_uuid(), 'KNT-2024-004',
- (SELECT id FROM customers WHERE customer_code = 'C004' LIMIT 1),
- 'Handphone', 3000000, 3600000, 60, 50000, 45, 'active', '2024-11-15'),
+(gen_random_uuid(), 'A004',
+ (SELECT id FROM customers WHERE customer_code = 'K04' LIMIT 1),
+ 'Handphone', 3000000, 3600000, 60, 50000, 45, 'active', '2025-01-20'),
 
-(gen_random_uuid(), 'KNT-2024-005',
- (SELECT id FROM customers WHERE customer_code = 'C005' LIMIT 1),
- 'Perabotan', 6000000, 7200000, 100, 60000, 20, 'active', '2024-11-10'),
+(gen_random_uuid(), 'A005',
+ (SELECT id FROM customers WHERE customer_code = 'K05' LIMIT 1),
+ 'Perabotan', 6000000, 7200000, 100, 60000, 20, 'active', '2025-02-01'),
 
-(gen_random_uuid(), 'KNT-2024-006',
- (SELECT id FROM customers WHERE customer_code = 'C006' LIMIT 1),
- 'Laptop', 10000000, 12000000, 100, 100000, 10, 'active', '2024-12-01'),
+(gen_random_uuid(), 'A006',
+ (SELECT id FROM customers WHERE customer_code = 'K06' LIMIT 1),
+ 'Laptop', 10000000, 12000000, 100, 100000, 10, 'active', '2025-12-01'),
 
-(gen_random_uuid(), 'KNT-2024-007',
- (SELECT id FROM customers WHERE customer_code = 'C007' LIMIT 1),
- 'Kulkas', 7000000, 8400000, 90, 77778, 60, 'active', '2024-09-15'),
+(gen_random_uuid(), 'A007',
+ (SELECT id FROM customers WHERE customer_code = 'K07' LIMIT 1),
+ 'Kulkas', 7000000, 8400000, 90, 77778, 60, 'active', '2024-12-15'),
 
-(gen_random_uuid(), 'KNT-2024-008',
- (SELECT id FROM customers WHERE customer_code = 'C008' LIMIT 1),
- 'AC', 4000000, 4800000, 80, 50000, 70, 'active', '2024-09-01'),
+(gen_random_uuid(), 'A008',
+ (SELECT id FROM customers WHERE customer_code = 'K08' LIMIT 1),
+ 'AC', 4000000, 4800000, 80, 50000, 70, 'active', '2024-12-01'),
 
-(gen_random_uuid(), 'KNT-2024-009',
- (SELECT id FROM customers WHERE customer_code = 'C009' LIMIT 1),
- 'TV', 5500000, 6600000, 110, 50000, 35, 'active', '2024-10-20'),
+(gen_random_uuid(), 'A009',
+ (SELECT id FROM customers WHERE customer_code = 'K09' LIMIT 1),
+ 'TV', 5500000, 6600000, 110, 50000, 35, 'active', '2024-11-20'),
 
-(gen_random_uuid(), 'KNT-2023-010',
- (SELECT id FROM customers WHERE customer_code = 'C010' LIMIT 1),
- 'Mesin Cuci', 6500000, 7800000, 100, 65000, 95, 'active', '2023-12-15'),
+(gen_random_uuid(), 'KNT-2024-010',
+ (SELECT id FROM customers WHERE customer_code = 'K10' LIMIT 1),
+ 'Mesin Cuci', 6500000, 7800000, 100, 65000, 95, 'active', '2024-10-15'),
 
-(gen_random_uuid(), 'KNT-2023-011',
- (SELECT id FROM customers WHERE customer_code = 'C011' LIMIT 1),
- 'Smartphone', 8000000, 9600000, 80, 100000, 80, 'completed', '2023-10-01'),
+(gen_random_uuid(), 'KNT-2024-011',
+ (SELECT id FROM customers WHERE customer_code = 'K11' LIMIT 1),
+ 'Smartphone', 8000000, 9600000, 80, 100000, 80, 'completed', '2024-09-01'),
 
-(gen_random_uuid(), 'KNT-2024-012',
- (SELECT id FROM customers WHERE customer_code = 'C012' LIMIT 1),
- 'Sepeda Motor', 15000000, 18000000, 120, 125000, 40, 'active', '2024-09-10');
+(gen_random_uuid(), 'A012',
+ (SELECT id FROM customers WHERE customer_code = 'K12' LIMIT 1),
+ 'Sepeda Motor', 15000000, 18000000, 120, 125000, 40, 'active', '2024-11-10');
 
 -- =========================================
 -- 6. PAYMENT LOGS (25 records - various payments)
 -- =========================================
 INSERT INTO public.payment_logs (id, contract_id, payment_date, installment_index, amount_paid) VALUES
--- Payments for contract KNT-2024-001 (C001)
-(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'KNT-2024-001' LIMIT 1), '2024-11-01', 1, 50000),
-(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'KNT-2024-001' LIMIT 1), '2024-11-02', 2, 50000),
-(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'KNT-2024-001' LIMIT 1), '2024-11-05', 3, 50000),
-(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'KNT-2024-001' LIMIT 1), '2024-11-06', 4, 50000),
-(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'KNT-2024-001' LIMIT 1), '2024-11-07', 5, 50000),
+-- Payments for contract A001 (K01)
+(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'A001' LIMIT 1), '2025-01-15', 1, 50000),
+(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'A001' LIMIT 1), '2025-01-16', 2, 50000),
+(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'A001' LIMIT 1), '2025-01-17', 3, 50000),
+(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'A001' LIMIT 1), '2025-01-20', 4, 50000),
+(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'A001' LIMIT 1), '2025-01-21', 5, 50000),
 
--- Payments for contract KNT-2024-002 (C002)
-(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'KNT-2024-002' LIMIT 1), '2024-10-15', 1, 66667),
-(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'KNT-2024-002' LIMIT 1), '2024-10-16', 2, 66667),
-(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'KNT-2024-002' LIMIT 1), '2024-10-17', 3, 66667),
-(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'KNT-2024-002' LIMIT 1), '2024-10-18', 4, 66667),
+-- Payments for contract A002 (K02)
+(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'A002' LIMIT 1), '2024-12-10', 1, 66667),
+(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'A002' LIMIT 1), '2024-12-11', 2, 66667),
+(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'A002' LIMIT 1), '2024-12-12', 3, 66667),
+(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'A002' LIMIT 1), '2024-12-13', 4, 66667),
 
--- Payments for contract KNT-2024-003 (C003)
-(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'KNT-2024-003' LIMIT 1), '2024-10-01', 1, 80000),
-(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'KNT-2024-003' LIMIT 1), '2024-10-02', 2, 80000),
-(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'KNT-2024-003' LIMIT 1), '2024-10-03', 3, 80000),
-(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'KNT-2024-003' LIMIT 1), '2024-10-04', 4, 80000),
+-- Payments for contract A003 (K03)
+(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'A003' LIMIT 1), '2024-12-20', 1, 80000),
+(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'A003' LIMIT 1), '2024-12-23', 2, 80000),
+(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'A003' LIMIT 1), '2024-12-24', 3, 80000),
+(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'A003' LIMIT 1), '2024-12-26', 4, 80000),
 
--- Payments for contract KNT-2024-006 (C006) - Recent contract
-(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'KNT-2024-006' LIMIT 1), '2024-12-01', 1, 100000),
-(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'KNT-2024-006' LIMIT 1), '2024-12-02', 2, 100000),
-(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'KNT-2024-006' LIMIT 1), '2024-12-03', 3, 100000),
+-- Payments for contract A006 (K06) - Recent contract
+(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'A006' LIMIT 1), '2025-01-01', 1, 100000),
+(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'A006' LIMIT 1), '2025-01-02', 2, 100000),
+(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'A006' LIMIT 1), '2025-01-03', 3, 100000),
 
--- Payments for completed contract KNT-2023-011 (C011)
-(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'KNT-2023-011' LIMIT 1), '2023-10-01', 1, 100000),
-(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'KNT-2023-011' LIMIT 1), '2023-10-02', 2, 100000),
-(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'KNT-2023-011' LIMIT 1), '2023-10-03', 3, 100000),
+-- Payments for completed contract KNT-2024-010 (K11)
+(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'KNT-2024-010' LIMIT 1), '2024-10-01', 1, 100000),
+(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'KNT-2024-010' LIMIT 1), '2024-10-02', 2, 100000),
+(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'KNT-2024-010' LIMIT 1), '2024-10-03', 3, 100000),
 
 -- Mixed payments from recent dates (for dashboard trends)
-(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'KNT-2024-008' LIMIT 1), '2024-12-25', 71, 50000),
-(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'KNT-2024-009' LIMIT 1), '2024-12-25', 36, 50000),
-(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'KNT-2024-012' LIMIT 1), '2024-12-26', 41, 125000),
-(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'KNT-2024-007' LIMIT 1), '2024-12-26', 61, 77778),
+(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'A008' LIMIT 1), '2024-12-25', 71, 50000),
+(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'A009' LIMIT 1), '2024-12-25', 36, 50000),
+(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'A012' LIMIT 1), '2024-12-26', 41, 125000),
+(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'A007' LIMIT 1), '2024-12-26', 61, 77778),
 
 -- Christmas day payments
-(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'KNT-2024-004' LIMIT 1), '2024-12-25', 46, 50000),
-(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'KNT-2024-005' LIMIT 1), '2024-12-24', 21, 60000);
+(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'A004' LIMIT 1), '2024-12-25', 46, 50000),
+(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'A005' LIMIT 1), '2024-12-24', 21, 60000);
 
 -- =========================================
 -- 7. INSTALLMENT COUPONS (Sample for few contracts)
 -- =========================================
--- Generate some sample coupons for contract KNT-2024-006 (recent contract)
+-- Generate some sample coupons for contract A006 (recent contract)
 INSERT INTO public.installment_coupons (id, contract_id, installment_index, due_date, amount, status) VALUES
-(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'KNT-2024-006' LIMIT 1), 1, '2024-12-01', 100000, 'paid'),
-(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'KNT-2024-006' LIMIT 1), 2, '2024-12-02', 100000, 'paid'),
-(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'KNT-2024-006' LIMIT 1), 3, '2024-12-03', 100000, 'paid'),
-(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'KNT-2024-006' LIMIT 1), 4, '2024-12-04', 100000, 'unpaid'),
-(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'KNT-2024-006' LIMIT 1), 5, '2024-12-05', 100000, 'unpaid'),
-(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'KNT-2024-006' LIMIT 1), 6, '2024-12-06', 100000, 'unpaid'),
-(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'KNT-2024-006' LIMIT 1), 7, '2024-12-09', 100000, 'unpaid'),
-(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'KNT-2024-006' LIMIT 1), 8, '2024-12-10', 100000, 'unpaid'),
+(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'A006' LIMIT 1), 1, '2025-01-01', 100000, 'paid'),
+(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'A006' LIMIT 1), 2, '2025-01-02', 100000, 'paid'),
+(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'A006' LIMIT 1), 3, '2025-01-03', 100000, 'paid'),
+(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'A006' LIMIT 1), 4, '2025-01-06', 100000, 'unpaid'),
+(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'A006' LIMIT 1), 5, '2025-01-07', 100000, 'unpaid'),
+(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'A006' LIMIT 1), 6, '2025-01-08', 100000, 'unpaid'),
+(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'A006' LIMIT 1), 7, '2025-01-09', 100000, 'unpaid'),
+(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'A006' LIMIT 1), 8, '2025-01-10', 100000, 'unpaid'),
 
--- Generate some coupons for contract KNT-2024-004 (shorter tenor, almost finished)
-(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'KNT-2024-004' LIMIT 1), 46, '2024-12-25', 50000, 'paid'),
-(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'KNT-2024-004' LIMIT 1), 47, '2024-12-26', 50000, 'unpaid'),
-(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'KNT-2024-004' LIMIT 1), 48, '2024-12-27', 50000, 'unpaid'),
-(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'KNT-2024-004' LIMIT 1), 49, '2024-12-30', 50000, 'unpaid'),
-(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'KNT-2024-004' LIMIT 1), 50, '2024-12-31', 50000, 'unpaid');
+-- Generate some coupons for contract A004 (shorter tenor, almost finished)
+(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'A004' LIMIT 1), 46, '2024-12-25', 50000, 'paid'),
+(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'A004' LIMIT 1), 47, '2025-01-02', 50000, 'unpaid'),
+(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'A004' LIMIT 1), 48, '2025-01-03', 50000, 'unpaid'),
+(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'A004' LIMIT 1), 49, '2025-01-06', 50000, 'unpaid'),
+(gen_random_uuid(), (SELECT id FROM credit_contracts WHERE contract_ref = 'A004' LIMIT 1), 50, '2025-01-07', 50000, 'unpaid');
 
 -- =========================================
 -- VERIFICATION QUERIES

@@ -237,6 +237,9 @@
     "deleteFailed": "Gagal menghapus",
     "loadFailed": "Gagal memuat data",
     "customerCodeRequired": "Masukkan kode pelanggan",
+    "nikRequired": "NIK wajib diisi",
+    "nikMustBe16Digits": "NIK harus 16 digit",
+    "duplicateNik": "NIK sudah digunakan",
     "duplicateCode": "Kode pelanggan sudah digunakan",
     "duplicateDate": "Tanggal ini sudah ditandai sebagai libur",
     "duplicateDay": "Hari ini sudah diatur sebagai libur berulang"
