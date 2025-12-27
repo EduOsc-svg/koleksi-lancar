@@ -120,22 +120,10 @@ export default function Collection() {
     totalItems: manifestTotalItems
   } = usePagination(manifestContracts, 5);
 
-  // Debug wrapper for setManifestPage
-  const handleManifestPageChange = (page: number) => {
-    console.log('Collection: setManifestPage called with:', page, 'current:', manifestPage);
-    setManifestPage(page);
-  };
-
-  // Debug effect to track pagination state
+  // Reset pagination when filters change
   useEffect(() => {
-    console.log('Collection pagination state:', {
-      manifestPage,
-      totalPages: manifestTotalPages,
-      totalItems: manifestTotalItems,
-      manifestContractsLength: manifestContracts.length,
-      paginatedLength: paginatedManifestContracts?.length
-    });
-  }, [manifestPage, manifestTotalPages, manifestTotalItems, manifestContracts.length, paginatedManifestContracts]);
+    setManifestPage(1);
+  }, [selectedRoute, selectedCustomer, selectedSales]);
 
   const selectedCustomerName = selectedCustomer 
     ? (() => {
@@ -366,14 +354,16 @@ export default function Collection() {
           </div>
           
           {/* Pagination for manifest contracts */}
-          <div className="print:hidden">
-            <TablePagination
-              currentPage={manifestPage}
-              totalPages={manifestTotalPages}
-              onPageChange={handleManifestPageChange}
-              totalItems={manifestTotalItems}
-            />
-          </div>
+          {manifestTotalPages > 1 && (
+            <div className="print:hidden">
+              <TablePagination
+                currentPage={manifestPage}
+                totalPages={manifestTotalPages}
+                onPageChange={setManifestPage}
+                totalItems={manifestTotalItems}
+              />
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="payment" className="space-y-4 print:hidden">

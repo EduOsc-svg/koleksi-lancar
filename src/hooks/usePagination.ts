@@ -27,23 +27,19 @@ export function usePagination<T>(items: T[] | undefined, itemsPerPage: number = 
   useEffect(() => {
     const currentLength = items?.length;
     
-    // Reset to page 1 only if:
-    // 1. Items just became available (went from undefined/null to array)
-    // 2. Items array length changed significantly (not just reordering)
+    // Reset to page 1 only if items just became available or length changed significantly
     if (currentLength !== prevItemsLength.current) {
-      if (prevItemsLength.current !== undefined && currentLength !== undefined) {
-        // If current page is beyond new total pages, adjust it
-        const newTotalPages = Math.ceil(currentLength / itemsPerPage);
-        if (currentPage > newTotalPages) {
-          setCurrentPage(Math.max(1, newTotalPages));
-        }
-      } else {
-        // First load or items became undefined
+      // If current page is beyond new total pages, adjust it
+      const newTotalPages = Math.ceil((currentLength || 0) / itemsPerPage);
+      if (currentPage > newTotalPages && newTotalPages > 0) {
+        setCurrentPage(newTotalPages);
+      } else if (!prevItemsLength.current && currentLength) {
+        // Only reset to 1 on initial load
         setCurrentPage(1);
       }
       prevItemsLength.current = currentLength;
     }
-  }, [items, itemsPerPage, currentPage]);
+  }, [items?.length, itemsPerPage]);
 
   return {
     currentPage,
