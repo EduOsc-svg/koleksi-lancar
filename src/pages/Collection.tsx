@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { CreditCard, FileText, AlertTriangle } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import "@/styles/Voucher.css"; // New pixel-perfect voucher styles
+import "@/styles/Voucher.css"; // Pixel-perfect voucher styles (9.5cm x 6.5cm)
 import VoucherPage from "@/components/print/VoucherPage";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -149,11 +149,25 @@ export default function Collection() {
       toast.error(t("collection.noContracts"));
       return;
     }
-    setPrintMode("a4-landscape");
-    setTimeout(() => {
+    
+    console.log("=== PRINT DEBUG START ===");
+    console.log("Manifest contracts count:", manifestContracts.length);
+    console.log("Sample contract:", manifestContracts[0]);
+    
+    // Check if voucher container exists
+    const voucherContainer = document.querySelector('.voucher-print-container');
+    console.log("Voucher container found:", !!voucherContainer);
+    console.log("Voucher container content:", voucherContainer?.innerHTML.substring(0, 200));
+    
+    try {
+      console.log("Opening print dialog...");
       window.print();
-      setPrintMode(null);
-    }, 100);
+      console.log("Print dialog opened successfully");
+    } catch (error) {
+      console.error("Print error:", error);
+      toast.error("Terjadi error saat membuka print dialog");
+    }
+    console.log("=== PRINT DEBUG END ===");
   };
 
   const formatCurrencyInput = (value: string) => {
@@ -203,21 +217,19 @@ export default function Collection() {
 
   return (
     <div className="space-y-6 print:space-y-0" ref={printRef}>
-      {printMode === "a4-landscape" && manifestContracts && (
-        <>
-          {/* Print Header - Filter Information */}
-          <div className="print:block hidden print:mb-4 print:border-b print:border-black print:pb-2">
-            <h1 className="text-xl font-bold text-center">DAFTAR KUPON COLLECTION</h1>
-            <div className="text-sm text-center mt-2">
-              {selectedCustomerName && <div>Pelanggan: {selectedCustomerName}</div>}
-              {selectedSalesName && <div>Sales Agent: {selectedSalesName}</div>}
-              {!selectedCustomerName && !selectedSalesName && <div>Semua Pelanggan & Sales Agent</div>}
-              <div className="mt-1">Tanggal Cetak: {new Date().toLocaleDateString('id-ID')}</div>
-            </div>
-          </div>
-          <VoucherPage contracts={manifestContracts} />
-        </>
-      )}
+      {/* Print Header - Filter Information */}
+      <div className="print:block hidden print:mb-4 print:border-b print:border-black print:pb-2">
+        <h1 className="text-xl font-bold text-center">DAFTAR KUPON COLLECTION</h1>
+        <div className="text-sm text-center mt-2">
+          {selectedCustomerName && <div>Pelanggan: {selectedCustomerName}</div>}
+          {selectedSalesName && <div>Sales Agent: {selectedSalesName}</div>}
+          {!selectedCustomerName && !selectedSalesName && <div>Semua Pelanggan & Sales Agent</div>}
+          <div className="mt-1">Tanggal Cetak: {new Date().toLocaleDateString('id-ID')}</div>
+        </div>
+      </div>
+      
+      {/* VoucherPage - will be rendered with voucher-print-container class */}
+      {manifestContracts && <VoucherPage contracts={manifestContracts} />}
 
       <h2 className="text-2xl font-bold print:hidden">{t("collection.title")}</h2>
 
@@ -294,10 +306,22 @@ export default function Collection() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="flex items-end">
+                <div className="flex items-end space-x-2">
                   <Button onClick={handlePrintCoupons} className="flex-1 print:hidden">
                     <FileText className="mr-2 h-4 w-4" />
                     {t("collection.printCoupons")}
+                  </Button>
+                  <Button 
+                    onClick={() => {
+                      console.log("=== DATA DEBUG ===");
+                      console.log("Manifest contracts:", manifestContracts);
+                      console.log("Contracts count:", manifestContracts?.length);
+                      console.log("First contract:", manifestContracts?.[0]);
+                    }} 
+                    variant="outline"
+                    className="print:hidden"
+                  >
+                    Debug
                   </Button>
                 </div>
               </div>

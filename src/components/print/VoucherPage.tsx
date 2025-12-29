@@ -30,7 +30,7 @@ interface VoucherPageProps {
 
 const VoucherPage: React.FC<VoucherPageProps> = ({ 
   contracts, 
-  couponsPerPage = 9, 
+  couponsPerPage = 9, // 3x3 layout dengan positioning pixel-perfect dari template HTML
   totalCoupons 
 }) => {
   const { data: holidays } = useHolidays();

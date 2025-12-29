@@ -48,7 +48,7 @@ import { usePagination } from "@/hooks/usePagination";
 import { TablePagination } from "@/components/TablePagination";
 import { useCouponsByContract, useGenerateCoupons, InstallmentCoupon } from "@/hooks/useInstallmentCoupons";
 import VoucherPage from "@/components/print/VoucherPage";
-import "@/styles/Voucher.css";
+import "@/styles/Voucher.css"; // Pixel-perfect voucher styles (9.5cm x 6.5cm)
 import { CurrencyInput } from "@/components/ui/currency-input";
 
 export default function Contracts() {
