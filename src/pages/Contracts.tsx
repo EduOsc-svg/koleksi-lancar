@@ -43,6 +43,7 @@ import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { useContracts, useCreateContract, useUpdateContract, useDeleteContract, useInvoiceDetails, ContractWithCustomer } from "@/hooks/useContracts";
 import { useCustomers } from "@/hooks/useCustomers";
+import { useSalesAgents } from "@/hooks/useSalesAgents";
 import { formatRupiah } from "@/lib/format";
 import { usePagination } from "@/hooks/usePagination";
 import { TablePagination } from "@/components/TablePagination";
@@ -58,6 +59,7 @@ export default function Contracts() {
   const { data: contracts, isLoading } = useContracts();
   const { data: invoiceDetails } = useInvoiceDetails();
   const { data: customers } = useCustomers();
+  const { data: salesAgents } = useSalesAgents();
   const createContract = useCreateContract();
   const updateContract = useUpdateContract();
   const deleteContract = useDeleteContract();
@@ -73,6 +75,7 @@ export default function Contracts() {
   const [formData, setFormData] = useState({
     contract_ref: "",
     customer_id: "",
+    sales_agent_id: "",
     product_type: "",
     total_loan_amount: 0,
     tenor_days: "100",
@@ -136,6 +139,7 @@ export default function Contracts() {
     setFormData({
       contract_ref: "",
       customer_id: "",
+      sales_agent_id: "",
       product_type: "",
       total_loan_amount: 0,
       tenor_days: "100",
@@ -152,11 +156,12 @@ export default function Contracts() {
     setFormData({
       contract_ref: contract.contract_ref,
       customer_id: contract.customer_id,
+      sales_agent_id: contract.sales_agent_id || "",
       product_type: contract.product_type || "",
       total_loan_amount: contract.total_loan_amount,
       tenor_days: contract.tenor_days.toString(),
       daily_installment_amount: contract.daily_installment_amount,
-      start_date: (contract as any).start_date || new Date().toISOString().split("T")[0],
+      start_date: contract.start_date || new Date().toISOString().split("T")[0],
       status: contract.status,
       modal: (contract as any).omset || 0,
     });
@@ -192,6 +197,7 @@ export default function Contracts() {
           id: selectedContract.id,
           contract_ref: formData.contract_ref,
           customer_id: formData.customer_id,
+          sales_agent_id: formData.sales_agent_id || null,
           product_type: formData.product_type || null,
           total_loan_amount: formData.total_loan_amount || 0,
           tenor_days: tenorDays,
@@ -205,6 +211,7 @@ export default function Contracts() {
         const { data: newContract } = await createContract.mutateAsync({
           contract_ref: formData.contract_ref,
           customer_id: formData.customer_id,
+          sales_agent_id: formData.sales_agent_id || null,
           product_type: formData.product_type || null,
           total_loan_amount: formData.total_loan_amount || 0,
           tenor_days: tenorDays,
@@ -306,6 +313,7 @@ export default function Contracts() {
               <TableHead>Contract Ref</TableHead>
               <TableHead>No. Faktur</TableHead>
               <TableHead>Customer</TableHead>
+              <TableHead>Sales Agent</TableHead>
               <TableHead>Start Date</TableHead>
               <TableHead>Loan Amount</TableHead>
               <TableHead>Modal</TableHead>
@@ -317,11 +325,11 @@ export default function Contracts() {
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={9} className="text-center">Loading...</TableCell>
+                <TableCell colSpan={10} className="text-center">Loading...</TableCell>
               </TableRow>
             ) : contracts?.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={9} className="text-center text-muted-foreground">
+                <TableCell colSpan={10} className="text-center text-muted-foreground">
                   No contracts found
                 </TableCell>
               </TableRow>
@@ -366,9 +374,10 @@ export default function Contracts() {
                     <TableCell className="font-medium">{contract.contract_ref}</TableCell>
                     <TableCell className="font-mono text-xs">{getNoFaktur(contract.id)}</TableCell>
                     <TableCell>{contract.customers?.name}</TableCell>
-                    <TableCell>{(contract as any).start_date ? formatDate((contract as any).start_date) : "-"}</TableCell>
+                    <TableCell>{salesAgents?.find(a => a.id === contract.sales_agent_id)?.name || "-"}</TableCell>
+                    <TableCell>{contract.start_date ? formatDate(contract.start_date) : "-"}</TableCell>
                     <TableCell>{formatRupiah(contract.total_loan_amount)}</TableCell>
-                    <TableCell>{formatRupiah((contract as any).omset || 0)}</TableCell>
+                    <TableCell>{formatRupiah(contract.omset || 0)}</TableCell>
                     <TableCell>
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
@@ -459,6 +468,27 @@ export default function Contracts() {
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+            <div>
+              <Label htmlFor="sales_agent">Sales Agent</Label>
+              <Select
+                value={formData.sales_agent_id}
+                onValueChange={(v) => setFormData({ ...formData, sales_agent_id: v })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Pilih sales agent" />
+                </SelectTrigger>
+                <SelectContent>
+                  {salesAgents?.map((agent) => (
+                    <SelectItem key={agent.id} value={agent.id}>
+                      {agent.name} ({agent.agent_code})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground mt-1">
+                Komisi akan otomatis masuk ke sales ini
+              </p>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>

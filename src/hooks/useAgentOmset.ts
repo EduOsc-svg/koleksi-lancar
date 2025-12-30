@@ -9,8 +9,8 @@ export interface AgentOmsetData {
   total_omset: number; // Total revenue dari loan amount
   total_modal: number; // Total modal dari field omset
   total_contracts: number;
-  total_commission: number;
   profit: number; // Keuntungan = Omset - Modal
+  total_commission: number;
 }
 
 export const useAgentOmset = () => {
@@ -25,18 +25,10 @@ export const useAgentOmset = () => {
       
       if (agentsError) throw agentsError;
 
-      // Get all contracts with omset and total_loan_amount, linked via customer -> assigned_sales_id
+      // Get all contracts with omset (modal) and loan amount, using sales_agent_id directly
       const { data: contracts, error: contractsError } = await supabase
         .from('credit_contracts')
-        .select(`
-          id,
-          omset,
-          total_loan_amount,
-          customer_id,
-          customers!inner(
-            assigned_sales_id
-          )
-        `);
+        .select('id, omset, total_loan_amount, sales_agent_id');
       
       if (contractsError) throw contractsError;
 
@@ -48,7 +40,7 @@ export const useAgentOmset = () => {
       }>();
 
       (contracts || []).forEach((contract: any) => {
-        const salesAgentId = contract.customers?.assigned_sales_id;
+        const salesAgentId = contract.sales_agent_id;
         if (salesAgentId) {
           const existing = agentOmsetMap.get(salesAgentId) || { 
             total_omset: 0, 
@@ -76,8 +68,8 @@ export const useAgentOmset = () => {
           total_contracts: 0 
         };
         const commissionPct = Number(agent.commission_percentage) || 0;
-        const totalCommission = (data.total_omset * commissionPct) / 100;
         const profit = data.total_omset - data.total_modal; // Keuntungan = Omset - Modal
+        const totalCommission = (data.total_omset * commissionPct) / 100;
         
         return {
           agent_id: agent.id,
@@ -87,8 +79,8 @@ export const useAgentOmset = () => {
           total_omset: data.total_omset,
           total_modal: data.total_modal,
           total_contracts: data.total_contracts,
-          total_commission: totalCommission,
           profit,
+          total_commission: totalCommission,
         };
       });
 
