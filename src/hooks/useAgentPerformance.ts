@@ -6,12 +6,14 @@ export interface AgentPerformanceData {
   agent_name: string;
   agent_code: string;
   commission_percentage: number;
-  total_omset: number;
+  total_omset: number;  // Total revenue/penjualan dari kontrak
+  total_modal: number;  // Total modal/investasi awal
   total_contracts: number;
   total_commission: number;
   total_to_collect: number; // Total yang harus ditagih (unpaid coupons)
   total_collected: number;  // Total yang sudah tertagih
-  profit: number; // Omset - Total Loan
+  profit: number; // Omset - Modal (keuntungan bersih)
+  profit_margin: number; // Persentase keuntungan
 }
 
 export interface AgentContractHistory {
@@ -19,8 +21,9 @@ export interface AgentContractHistory {
   customer_name: string;
   customer_code: string | null;
   product_type: string | null;
-  omset: number;
-  total_loan_amount: number;
+  modal: number; // Modal awal kontrak
+  omset: number; // Total yang dibayar customer
+  profit: number; // Keuntungan = Omset - Modal
   tenor_days: number;
   start_date: string;
   status: string;
@@ -89,6 +92,7 @@ export const useAgentPerformance = () => {
       // Aggregate data per sales agent
       const agentDataMap = new Map<string, {
         total_omset: number;
+        total_modal: number;
         total_contracts: number;
         total_loan: number;
         total_to_collect: number;
@@ -101,14 +105,22 @@ export const useAgentPerformance = () => {
         if (salesAgentId) {
           const existing = agentDataMap.get(salesAgentId) || {
             total_omset: 0,
+            total_modal: 0,
             total_contracts: 0,
             total_loan: 0,
             total_to_collect: 0,
             total_collected: 0,
           };
+          
+          // Hitung omset dari total_loan_amount + modal (profit)
+          // Omset = Modal + Keuntungan = Total Loan Amount (yang dibayar customer)
+          const modal = Number(contract.omset || 0); // Field omset sebenarnya adalah modal
+          const omset = Number(contract.total_loan_amount || 0); // Total yang dibayar customer adalah omset sebenarnya
+          
           agentDataMap.set(salesAgentId, {
             ...existing,
-            total_omset: existing.total_omset + Number(contract.omset || 0),
+            total_omset: existing.total_omset + omset,
+            total_modal: existing.total_modal + modal,
             total_contracts: existing.total_contracts + 1,
             total_loan: existing.total_loan + Number(contract.total_loan_amount || 0),
           });
@@ -141,6 +153,7 @@ export const useAgentPerformance = () => {
       const result: AgentPerformanceData[] = (agents || []).map((agent) => {
         const data = agentDataMap.get(agent.id) || {
           total_omset: 0,
+          total_modal: 0,
           total_contracts: 0,
           total_loan: 0,
           total_to_collect: 0,
@@ -148,7 +161,8 @@ export const useAgentPerformance = () => {
         };
         const commissionPct = Number(agent.commission_percentage) || 0;
         const totalCommission = (data.total_omset * commissionPct) / 100;
-        const profit = data.total_omset - data.total_loan;
+        const profit = data.total_omset - data.total_modal; // Keuntungan = Omset - Modal
+        const profitMargin = data.total_omset > 0 ? (profit / data.total_omset) * 100 : 0;
         
         return {
           agent_id: agent.id,
@@ -156,11 +170,13 @@ export const useAgentPerformance = () => {
           agent_code: agent.agent_code,
           commission_percentage: commissionPct,
           total_omset: data.total_omset,
+          total_modal: data.total_modal,
           total_contracts: data.total_contracts,
           total_commission: totalCommission,
           total_to_collect: data.total_to_collect,
           total_collected: data.total_collected,
           profit,
+          profit_margin: profitMargin,
         };
       });
 
@@ -202,17 +218,24 @@ export const useAgentContractHistory = (agentId: string | null) => {
         contract.customers?.assigned_sales_id === agentId
       );
 
-      return filtered.map((contract: any) => ({
-        contract_ref: contract.contract_ref,
-        customer_name: contract.customers?.name || '-',
-        customer_code: contract.customers?.customer_code || null,
-        product_type: contract.product_type,
-        omset: Number(contract.omset || 0),
-        total_loan_amount: Number(contract.total_loan_amount || 0),
-        tenor_days: contract.tenor_days,
-        start_date: contract.start_date,
-        status: contract.status,
-      })) as AgentContractHistory[];
+      return filtered.map((contract: any) => {
+        const modal = Number(contract.omset || 0); // Field omset sebenarnya adalah modal
+        const omset = Number(contract.total_loan_amount || 0); // Total loan amount adalah omset sebenarnya
+        const profit = omset - modal; // Keuntungan = Omset - Modal
+        
+        return {
+          contract_ref: contract.contract_ref,
+          customer_name: contract.customers?.name || '-',
+          customer_code: contract.customers?.customer_code || null,
+          product_type: contract.product_type,
+          modal,
+          omset,
+          profit,
+          tenor_days: contract.tenor_days,
+          start_date: contract.start_date,
+          status: contract.status,
+        };
+      }) as AgentContractHistory[];
     },
     enabled: !!agentId,
   });

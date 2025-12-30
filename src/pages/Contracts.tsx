@@ -48,7 +48,7 @@ import { usePagination } from "@/hooks/usePagination";
 import { TablePagination } from "@/components/TablePagination";
 import { useCouponsByContract, useGenerateCoupons, InstallmentCoupon } from "@/hooks/useInstallmentCoupons";
 import VoucherPage from "@/components/print/VoucherPage";
-import "@/styles/Voucher.css"; // Pixel-perfect voucher styles (9.5cm x 6.5cm)
+import "@/styles/Voucher-final.css"; // Pixel-perfect voucher styles (9.5cm x 6.5cm)
 import { CurrencyInput } from "@/components/ui/currency-input";
 
 export default function Contracts() {
@@ -79,7 +79,7 @@ export default function Contracts() {
     daily_installment_amount: 0,
     start_date: new Date().toISOString().split("T")[0],
     status: "active",
-    omset: 0,
+    modal: 0,
   });
 
   // Fetch coupons for selected contract (for detail view and printing)
@@ -142,7 +142,7 @@ export default function Contracts() {
       daily_installment_amount: 0,
       start_date: new Date().toISOString().split("T")[0],
       status: "active",
-      omset: 0,
+      modal: 0,
     });
     setDialogOpen(true);
   };
@@ -158,7 +158,7 @@ export default function Contracts() {
       daily_installment_amount: contract.daily_installment_amount,
       start_date: (contract as any).start_date || new Date().toISOString().split("T")[0],
       status: contract.status,
-      omset: (contract as any).omset || 0,
+      modal: (contract as any).omset || 0,
     });
     setDialogOpen(true);
   };
@@ -198,7 +198,7 @@ export default function Contracts() {
           daily_installment_amount: dailyAmount,
           start_date: formData.start_date,
           status: formData.status,
-          omset: formData.omset || 0,
+          omset: formData.modal || 0,
         } as any);
         toast.success(t("contracts.updatedSuccess"));
       } else {
@@ -211,7 +211,7 @@ export default function Contracts() {
           daily_installment_amount: dailyAmount,
           start_date: formData.start_date,
           status: formData.status,
-          omset: formData.omset || 0,
+          omset: formData.modal || 0,
         } as any);
         
         // Generate installment coupons for new active contracts
@@ -308,7 +308,7 @@ export default function Contracts() {
               <TableHead>Customer</TableHead>
               <TableHead>Start Date</TableHead>
               <TableHead>Loan Amount</TableHead>
-              <TableHead>Omset</TableHead>
+              <TableHead>Modal</TableHead>
               <TableHead>Progress</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Actions</TableHead>
@@ -535,15 +535,15 @@ export default function Contracts() {
               </div>
             </div>
             <div>
-              <Label htmlFor="omset">{t("contracts.omset", "Omset")}</Label>
+              <Label htmlFor="modal">{t("contracts.modal", "Modal")}</Label>
               <CurrencyInput
-                id="omset"
-                value={formData.omset}
-                onValueChange={(val) => setFormData({ ...formData, omset: val || 0 })}
+                id="modal"
+                value={formData.modal}
+                onValueChange={(val) => setFormData({ ...formData, modal: val || 0 })}
                 placeholder="Rp 0"
               />
               <p className="text-xs text-muted-foreground mt-1">
-                {t("contracts.omsetHint", "Keuntungan/margin dari kontrak ini")}
+                {t("contracts.modalHint", "Modal awal untuk kontrak ini")}
               </p>
             </div>
           </div>

@@ -35,6 +35,8 @@ const VoucherPage: React.FC<VoucherPageProps> = ({
 }) => {
   const { data: holidays } = useHolidays();
 
+  console.log("VoucherPage received contracts:", contracts?.length, contracts);
+
   // Calculate total coupons based on tenor if not provided
   const calculateTotalCoupons = (): number => {
     if (totalCoupons !== undefined) {
@@ -140,6 +142,9 @@ const VoucherPage: React.FC<VoucherPageProps> = ({
         // Calculate remaining tenor days
         const remainingTenorDays = tenor - (installmentNumber - 1);
 
+        // Generate kode kupon: KODE_CUSTOMER-INSTALLMENT (contoh: C001-23)
+        const couponCode = `${customerCode}-${installmentNumber.toString().padStart(2, '0')}`;
+
         allVouchers.push({
           contractRef: contract.contract_ref,
           noFaktur,
@@ -149,6 +154,7 @@ const VoucherPage: React.FC<VoucherPageProps> = ({
           dueDate: dueDateFormatted,
           installmentNumber,
           installmentAmount: contract.daily_installment_amount,
+          couponCode, // Tambahkan kode kupon
           remainingTenorDays, // Add remaining tenor days
         });
       }

@@ -46,9 +46,13 @@ export default function Dashboard() {
     : 0;
 
   const totalOmset = agentData?.reduce((sum, d) => sum + d.total_omset, 0) ?? 0;
+  const totalModal = agentData?.reduce((sum, d) => sum + d.total_modal, 0) ?? 0;
   const totalCommission = agentData?.reduce((sum, d) => sum + d.total_commission, 0) ?? 0;
   const totalToCollect = agentData?.reduce((sum, d) => sum + d.total_to_collect, 0) ?? 0;
   const totalProfit = agentData?.reduce((sum, d) => sum + d.profit, 0) ?? 0;
+  const avgProfitMargin = agentData && agentData.length > 0 
+    ? agentData.reduce((sum, d) => sum + d.profit_margin, 0) / agentData.length 
+    : 0;
 
   const locale = i18n.language === 'id' ? 'id-ID' : 'en-US';
 
@@ -60,7 +64,7 @@ export default function Dashboard() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <Card>
           <CardContent className="pt-4">
             <div className="flex items-center gap-2 mb-2">
@@ -82,7 +86,16 @@ export default function Dashboard() {
         <Card>
           <CardContent className="pt-4">
             <div className="flex items-center gap-2 mb-2">
-              <Wallet className="h-4 w-4 text-green-500" />
+              <Wallet className="h-4 w-4 text-indigo-500" />
+              <span className="text-sm text-muted-foreground">{t("dashboard.totalModal", "Total Modal")}</span>
+            </div>
+            <p className="text-lg font-bold">{formatRupiah(totalModal)}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4">
+            <div className="flex items-center gap-2 mb-2">
+              <TrendingUp className="h-4 w-4 text-green-500" />
               <span className="text-sm text-muted-foreground">{t("dashboard.profit", "Keuntungan")}</span>
             </div>
             <p className="text-lg font-bold">{formatRupiah(totalProfit)}</p>
@@ -95,6 +108,15 @@ export default function Dashboard() {
               <span className="text-sm text-muted-foreground">{t("dashboard.totalCommission", "Total Komisi")}</span>
             </div>
             <p className="text-lg font-bold">{formatRupiah(totalCommission)}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Percent className="h-4 w-4 text-emerald-500" />
+              <span className="text-sm text-muted-foreground">{t("dashboard.profitMargin", "Margin Profit")}</span>
+            </div>
+            <p className="text-lg font-bold">{avgProfitMargin.toFixed(1)}%</p>
           </CardContent>
         </Card>
       </div>
@@ -183,7 +205,9 @@ export default function Dashboard() {
                     <TableHead>{t("dashboard.agentCode", "Kode Sales")}</TableHead>
                     <TableHead className="text-right">{t("dashboard.toCollect", "Harus Ditagih")}</TableHead>
                     <TableHead className="text-right">{t("dashboard.omset", "Omset")}</TableHead>
+                    <TableHead className="text-right">{t("dashboard.modal", "Modal")}</TableHead>
                     <TableHead className="text-right">{t("dashboard.profit", "Keuntungan")}</TableHead>
+                    <TableHead className="text-right">{t("dashboard.profitMargin", "Margin %")}</TableHead>
                     <TableHead className="text-right">{t("dashboard.commission", "Komisi")}</TableHead>
                     <TableHead className="w-[50px]"></TableHead>
                   </TableRow>
@@ -204,7 +228,9 @@ export default function Dashboard() {
                       </TableCell>
                       <TableCell className="text-right text-orange-600">{formatRupiah(agent.total_to_collect)}</TableCell>
                       <TableCell className="text-right">{formatRupiah(agent.total_omset)}</TableCell>
+                      <TableCell className="text-right text-blue-600">{formatRupiah(agent.total_modal)}</TableCell>
                       <TableCell className="text-right text-green-600">{formatRupiah(agent.profit)}</TableCell>
+                      <TableCell className="text-right text-emerald-600">{agent.profit_margin.toFixed(1)}%</TableCell>
                       <TableCell className="text-right text-purple-600">{formatRupiah(agent.total_commission)}</TableCell>
                       <TableCell>
                         <ChevronRight className="h-4 w-4 text-muted-foreground" />
@@ -213,7 +239,7 @@ export default function Dashboard() {
                   ))}
                   {(!agentData || agentData.length === 0) && (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                      <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
                         {t("dashboard.noAgentData", "Belum ada data sales agent")}
                       </TableCell>
                     </TableRow>
@@ -248,8 +274,9 @@ export default function Dashboard() {
                       <TableHead>{t("dashboard.contract", "Kontrak")}</TableHead>
                       <TableHead>{t("dashboard.customerCode", "Kode Pelanggan")}</TableHead>
                       <TableHead>{t("dashboard.product", "Produk")}</TableHead>
+                      <TableHead className="text-right">{t("dashboard.modal", "Modal")}</TableHead>
                       <TableHead className="text-right">{t("dashboard.omset", "Omset")}</TableHead>
-                      <TableHead className="text-right">{t("dashboard.loan", "Pinjaman")}</TableHead>
+                      <TableHead className="text-right">{t("dashboard.profit", "Keuntungan")}</TableHead>
                       <TableHead className="text-center">{t("dashboard.status", "Status")}</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -271,8 +298,9 @@ export default function Dashboard() {
                           </div>
                         </TableCell>
                         <TableCell>{item.product_type || '-'}</TableCell>
+                        <TableCell className="text-right text-blue-600">{formatRupiah(item.modal)}</TableCell>
                         <TableCell className="text-right font-medium">{formatRupiah(item.omset)}</TableCell>
-                        <TableCell className="text-right">{formatRupiah(item.total_loan_amount)}</TableCell>
+                        <TableCell className="text-right text-green-600 font-medium">{formatRupiah(item.profit)}</TableCell>
                         <TableCell className="text-center">
                           <span className={`px-2 py-1 rounded-full text-xs ${
                             item.status === 'active' ? 'bg-green-100 text-green-700' : 
@@ -286,7 +314,7 @@ export default function Dashboard() {
                     ))}
                     {(!historyData || historyData.length === 0) && (
                       <TableRow>
-                        <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                        <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
                           {t("dashboard.noContracts", "Belum ada kontrak yang didapat")}
                         </TableCell>
                       </TableRow>

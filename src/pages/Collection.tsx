@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { CreditCard, FileText, AlertTriangle } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import "@/styles/Voucher.css"; // Pixel-perfect voucher styles (9.5cm x 6.5cm)
+import "@/styles/Voucher-final.css"; // Final positioned voucher styles
 import VoucherPage from "@/components/print/VoucherPage";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -142,32 +142,16 @@ export default function Collection() {
       })()
     : null;
 
-  const [printMode, setPrintMode] = useState<"a4-landscape" | null>(null);
-
   const handlePrintCoupons = () => {
     if (!manifestContracts?.length) {
       toast.error(t("collection.noContracts"));
       return;
     }
     
-    console.log("=== PRINT DEBUG START ===");
-    console.log("Manifest contracts count:", manifestContracts.length);
-    console.log("Sample contract:", manifestContracts[0]);
+    console.log("Print vouchers with contracts:", manifestContracts.length, manifestContracts);
     
-    // Check if voucher container exists
-    const voucherContainer = document.querySelector('.voucher-print-container');
-    console.log("Voucher container found:", !!voucherContainer);
-    console.log("Voucher container content:", voucherContainer?.innerHTML.substring(0, 200));
-    
-    try {
-      console.log("Opening print dialog...");
-      window.print();
-      console.log("Print dialog opened successfully");
-    } catch (error) {
-      console.error("Print error:", error);
-      toast.error("Terjadi error saat membuka print dialog");
-    }
-    console.log("=== PRINT DEBUG END ===");
+    // Langsung buka print dialog
+    window.print();
   };
 
   const formatCurrencyInput = (value: string) => {
@@ -311,24 +295,12 @@ export default function Collection() {
                     <FileText className="mr-2 h-4 w-4" />
                     {t("collection.printCoupons")}
                   </Button>
-                  <Button 
-                    onClick={() => {
-                      console.log("=== DATA DEBUG ===");
-                      console.log("Manifest contracts:", manifestContracts);
-                      console.log("Contracts count:", manifestContracts?.length);
-                      console.log("First contract:", manifestContracts?.[0]);
-                    }} 
-                    variant="outline"
-                    className="print:hidden"
-                  >
-                    Debug
-                  </Button>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <div className={`border rounded-lg ${printMode === "a4-landscape" ? "print:hidden" : "print:border-0 print:rounded-none print:w-full print:m-0"}`}>
+          <div className="border rounded-lg print:border-0 print:rounded-none print:w-full print:m-0 print:hidden">
             <Table className="print:w-full">
               <TableHeader>
                 <TableRow className="print:break-inside-avoid">
