@@ -57,12 +57,11 @@
         page-break-before: always; 
     }
     
-    /* Grid Layout 3x3 (Ukuran Aman) */
+    /* Grid Layout 3x3 (Ukuran Diperkecil) */
     .voucher-grid { 
         display: grid; 
-        grid-template-columns: repeat(3, 9.5cm); 
-        grid-template-rows: repeat(3, 6.5cm); 
-        gap: 3mm; 
+        grid-template-columns: repeat(3, 9.2cm); /* Kurangi 0.3cm dari 9.5cm */
+        grid-template-rows: repeat(3, 6.2cm); /* Kurangi 0.3cm dari 6.5cm */ 
         justify-content: center; 
         align-content: start; /* Ubah dari center ke start */
         width: 100%;
@@ -72,12 +71,13 @@
     
     /* Kartu Voucher */
     .voucher-card { 
-        width: 9.5cm; 
-        height: 6.5cm; 
+        width: 9.2cm; /* Kurangi 0.3cm dari 9.5cm */
+        height: 6.2cm; /* Kurangi 0.3cm dari 6.5cm */
         position: relative; 
         background-size: 100% 100%; 
         background-repeat: no-repeat; 
         background-position: center; 
+        border: 2px dashed #666; /* Garis potong 2px, warna lebih gelap */ 
        }
     
     /* Background Variation */
@@ -114,9 +114,9 @@
     
     /* Voucher Title - "Voucher Angsuran - Contract Ref" */
     .voucher-title {
-        left: 20px;
-        top: 20px;
-        font-size: 11px;
+        right: 23px;
+        top: 80px;
+        font-size: 17px;
         font-weight: bold;
         max-width: 80%;
         color: #000000;
@@ -125,49 +125,47 @@
     /* NO.Faktur */
     .no-faktur {
         left: 109px;
-        top: 91px;
-        font-size: 12px;
+        top: 85px;
+        font-size: 14px;
         max-width: 65%;
     }
 
     /* Customer Name */
     .customer-name {
         left: 109px;
-        top: 105px;
-        font-size: 12px;
+        top: 99px;
+        font-size: 14px;
         max-width: 65%;
-        font-weight: bold; /* Saya tambahkan bold agar nama jelas */
     }
 
     /* Customer Address */
     .customer-address {
         left: 109px;
-        top: 120px;
-        font-size: 12px;
+        top: 114px;
+        font-size: 14px;
         max-width: 65%;
     }
 
     /* Due Date */
     .due-date {
         left: 110px;
-        top: 134px;
-        font-size: 12px;
+        top: 128px;
+        font-size: 14px;
         max-width: 65%;
     }
 
     /* Installment Number */
     .installment-number {
         left: 190px;
-        top: 150px;
-        font-size: 12px;
+        top: 140px;
+        font-size: 14px;
         max-width: 20%;
     }
 
     /* Installment Amount */
     .installment-amount {
         right: 12%;
-        top: 180px;
-        font-weight: bold;
+        top: 169px;
         font-size: 14px;
         text-align: right;
         max-width: 35%;
@@ -175,7 +173,7 @@
 
     /* Company Info */
     .company-info {
-        left: 179px;
+        left: 170px;
         bottom: 21px;
         font-size: 15px;
         color: #CC0000;

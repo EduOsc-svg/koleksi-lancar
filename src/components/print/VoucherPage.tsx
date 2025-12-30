@@ -131,7 +131,7 @@ const VoucherPage: React.FC<VoucherPageProps> = ({
         const agentCode = contract.customers?.sales_agents?.agent_code || "XXX";
         const customerCode = contract.customers?.customer_code || "XXX";
         const installmentNumber = i;
-        const noFaktur = `${tenor}/${agentCode}/${customerCode}`;
+        const noFaktur = `${tenor} / ${agentCode} / ${customerCode}`;
 
         // Calculate due date for this specific coupon
         // Each coupon should be due on the next business day after the previous one
@@ -142,9 +142,6 @@ const VoucherPage: React.FC<VoucherPageProps> = ({
         // Calculate remaining tenor days
         const remainingTenorDays = tenor - (installmentNumber - 1);
 
-        // Generate kode kupon: KODE_CUSTOMER-INSTALLMENT (contoh: C001-23)
-        const couponCode = `${customerCode}-${installmentNumber.toString().padStart(2, '0')}`;
-
         allVouchers.push({
           contractRef: contract.contract_ref,
           noFaktur,
@@ -154,7 +151,6 @@ const VoucherPage: React.FC<VoucherPageProps> = ({
           dueDate: dueDateFormatted,
           installmentNumber,
           installmentAmount: contract.daily_installment_amount,
-          couponCode, // Tambahkan kode kupon
           remainingTenorDays, // Add remaining tenor days
         });
       }

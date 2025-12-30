@@ -36,7 +36,7 @@ const VoucherCard: React.FC<VoucherCardProps> = ({
 
   return (
     <div className={voucherClass}>
-      <div className="voucher-field voucher-title">Voucher Angsuran - {data.contractRef}</div>
+      <div className="voucher-field voucher-title">{data.contractRef}</div>
       <div className="voucher-field no-faktur">{data.noFaktur}</div>
       <div className="voucher-field customer-name">{data.customerName}</div>
       <div className="voucher-field customer-address">{data.customerAddress}</div>
