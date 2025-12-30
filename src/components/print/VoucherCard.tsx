@@ -4,6 +4,7 @@ interface VoucherData {
   contractRef: string;
   noFaktur: string;
   customerName: string;
+  customerCode: string;
   customerAddress: string;
   dueDate: string;
   installmentNumber: number;
@@ -24,7 +25,7 @@ const VoucherCard: React.FC<VoucherCardProps> = ({ data, isEmpty = false }) => {
   return (
     <div className="voucher-card">
       <div className="voucher-field no-faktur">{data.noFaktur}</div>
-      <div className="voucher-field customer-name">{data.customerName}</div>
+      <div className="voucher-field customer-name">{data.customerName}/{data.customerCode}</div>
       <div className="voucher-field customer-address">{data.customerAddress}</div>
       <div className="voucher-field due-date">{data.dueDate}</div>
       <div className="voucher-field installment-number">{data.installmentNumber}</div>

@@ -10,6 +10,7 @@ interface ContractData {
   tenor_days: number;
   customers?: {
     name: string;
+    customer_code?: string;
     address?: string | null;
     routes?: {
       code: string;
@@ -109,6 +110,7 @@ const VoucherPage: React.FC<VoucherPageProps> = ({
           contractRef: contract.contract_ref,
           noFaktur,
           customerName: contract.customers?.name || "-",
+          customerCode: contract.customers?.customer_code || "XXX",
           customerAddress: contract.customers?.address || "-",
           dueDate: dueDateFormatted,
           installmentNumber,
@@ -133,6 +135,7 @@ const VoucherPage: React.FC<VoucherPageProps> = ({
           contractRef: "",
           noFaktur: "",
           customerName: "",
+          customerCode: "",
           customerAddress: "",
           dueDate: "",
           installmentNumber: 0,
