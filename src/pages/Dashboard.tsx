@@ -335,34 +335,6 @@ export default function Dashboard() {
               </>
             )}
           </ScrollArea>
-                          }`}>
-                            {item.status}
-                          </span>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                    {(!historyData || historyData.length === 0) && (
-                      <TableRow>
-                        <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
-                          {t("dashboard.noContracts", "Belum ada kontrak yang didapat")}
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-                {totalPages > 1 && (
-                  <div className="px-4 pb-4">
-                    <TablePagination
-                      currentPage={currentPage}
-                      totalPages={totalPages}
-                      onPageChange={goToPage}
-                      totalItems={totalItems}
-                    />
-                  </div>
-                )}
-              </>
-            )}
-          </ScrollArea>
         </DialogContent>
       </Dialog>
     </div>
