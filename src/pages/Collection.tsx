@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { CreditCard, FileText, AlertTriangle } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import "@/styles/Voucher-final.css"; // Final positioned voucher styles
+import "@/styles/Voucher-new.css"; // New voucher styles based on HTML template
 import VoucherPage from "@/components/print/VoucherPage";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

@@ -1,5 +1,5 @@
 import React from 'react';
-import VoucherCard, { VoucherData } from './VoucherCard';
+import VoucherCard, { type VoucherData } from './VoucherCard';
 import { useHolidays } from '@/hooks/useHolidays';
 
 interface ContractData {

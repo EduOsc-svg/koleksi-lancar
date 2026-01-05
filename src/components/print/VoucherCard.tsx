@@ -9,41 +9,46 @@ interface VoucherData {
   dueDate: string;
   installmentNumber: number;
   installmentAmount: number;
-  remainingTenorDays?: number; // Add remaining tenor days
+  remainingTenorDays?: number;
 }
 
 interface VoucherCardProps {
   data?: VoucherData;
   isEmpty?: boolean;
-  voucherIndex?: number;  // Urutan voucher (0-99 untuk 100 voucher)
-  totalVouchers?: number; // Total voucher yang dicetak
+  voucherIndex?: number;
+  totalVouchers?: number;
 }
 
 const VoucherCard: React.FC<VoucherCardProps> = ({ 
   data, 
   isEmpty = false, 
   voucherIndex = 0, 
-  totalVouchers = 100 
+  totalVouchers = 100
 }) => {
   // Render empty card if no data or isEmpty flag is true
   if (isEmpty || !data) {
-    return <div className="voucher-card voucher-empty"></div>;
+    return <div className="voucher-container voucher-empty"></div>;
   }
 
-  // Logika baru: Background merah jika sisa tenor <= 10 hari
-  const isUrgentTenor = data.remainingTenorDays !== undefined && data.remainingTenorDays <= 10;
-  const voucherClass = isUrgentTenor ? "voucher-card voucher-urgent" : "voucher-card voucher-normal";
-
   return (
-    <div className={voucherClass}>
-      <div className="voucher-field voucher-title">{data.contractRef}</div>
-      <div className="voucher-field no-faktur">{data.noFaktur}</div>
-      <div className="voucher-field customer-name">{data.customerName}</div>
-      <div className="voucher-field customer-address">{data.customerAddress}</div>
-      <div className="voucher-field due-date">{data.dueDate}</div>
-      <div className="voucher-field installment-number">{data.installmentNumber}</div>
-      <div className="voucher-field installment-amount">{data.installmentAmount.toLocaleString('id-ID')}</div>
-      <div className="voucher-field company-info">0852 5882 5882</div>
+    <div className="voucher-container">
+      {/* Background akan di-handle oleh CSS background-image untuk print */}
+      
+      {/* Judul Voucher */}
+      <div className="field-item judul-voucer">VOUCER ANGSURAN</div>
+
+      {/* Data Fields - Positioning berdasarkan backup file */}
+      <div className="field-item nilai-field row-1">{data.noFaktur}</div>
+      <div className="field-item nilai-field row-2">{data.customerName}</div>
+      <div className="field-item nilai-field row-3">{data.customerAddress}</div>
+      <div className="field-item nilai-field row-4">{data.dueDate}</div>
+      <div className="field-item nilai-field row-5">{data.installmentNumber}</div>
+
+      {/* Nilai Angsuran */}
+      <div className="field-item nilai-angsuran">{data.installmentAmount.toLocaleString('id-ID')}</div>
+
+      {/* Info Kantor */}
+      <div className="field-item label-kantor">KANTOR/ 0852 5882 5882</div>
     </div>
   );
 };
