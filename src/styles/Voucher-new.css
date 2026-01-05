@@ -1,22 +1,28 @@
 /* ========================================
-   VOUCHER PRINT STYLES - PRINT ONLY MODE
-   Based on backup/print-a4-landscape.css
+   VOUCHER PRINT STYLES - CLEAN VERSION
    ======================================== */
 
 /* Reset standar */
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
-/* Screen preview with actual voucher display */
+/* Screen mode - hanya untuk control buttons */
 @media screen {
-    /* Hidden print container - tidak tampil di screen */
     .voucher-print-container {
         display: none !important;
     }
     
-    /* Preview container - hanya untuk screen preview */
+    /* Preview container untuk toggle visibility */
     .voucher-preview-container {
-        display: block !important;
+        display: none; /* Default hidden */
         margin: 20px auto;
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        border: 2px dashed #dee2e6;
+    }
+    
+    .voucher-preview-container.show {
+        display: block !important;
     }
     
     .voucher-preview-grid {
@@ -26,17 +32,12 @@
         gap: 15px !important;
         justify-items: center !important;
         align-items: center !important;
-        padding: 20px;
-        background: #f8f9fa;
-        border-radius: 8px;
-        border: 2px dashed #dee2e6;
     }
     
-    /* Voucher card preview styling - smaller scale for screen */
-    .voucher-preview-grid .voucher-card,
-    .voucher-preview-grid .voucher-container {
-        width: 240px !important; /* Scaled down from 80mm */
-        height: 150px !important; /* Scaled down from 50mm */
+    /* Voucher preview styling - sesuai class 'voucher' dari VoucherCard */
+    .voucher-preview-grid .voucher {
+        width: 240px !important;
+        height: 150px !important;
         position: relative !important;
         background-image: url('/Background with WM.png') !important;
         background-size: cover !important;
@@ -50,8 +51,8 @@
         overflow: hidden !important;
     }
     
-    /* Preview field styling */
-    .voucher-preview-grid .field-item {
+    /* Preview data positioning (scaled down for screen) */
+    .voucher-preview-grid .voucher span {
         position: absolute !important;
         font-family: "Times New Roman", Times, serif !important;
         color: #333 !important;
@@ -59,37 +60,17 @@
         white-space: nowrap !important;
         display: block !important;
         visibility: visible !important;
+        font-size: 9px !important;
     }
-    
-    /* Preview positioning (scaled down) */
-    .voucher-preview-grid .judul-voucer {
-        top: 25% !important;
-        left: 50% !important;
-        transform: translateX(-50%) !important;
-        font-size: 11px !important;
-        font-weight: bold !important;
-    }
-    
-    .voucher-preview-grid .row-1 .nilai-field { top: 37.5% !important; left: 23% !important; font-size: 9px !important; }
-    .voucher-preview-grid .row-2 .nilai-field { top: 45.5% !important; left: 23% !important; font-size: 9px !important; }
-    .voucher-preview-grid .row-3 .nilai-field { top: 53.5% !important; left: 23% !important; font-size: 8px !important; }
-    .voucher-preview-grid .row-4 .nilai-field { top: 61.5% !important; left: 32% !important; font-size: 9px !important; }
-    .voucher-preview-grid .row-5 .nilai-field { top: 69.5% !important; left: 32% !important; font-size: 9px !important; }
-    
-    .voucher-preview-grid .nilai-angsuran {
-        top: 78% !important;
-        left: 73% !important;
-        font-size: 10px !important;
-        font-weight: normal !important;
-        text-align: left !important;
-    }
-    
-    .voucher-preview-grid .label-kantor {
-        top: 87% !important;
-        left: 45% !important;
-        font-size: 8px !important;
-        font-weight: normal !important;
-    }
+
+    /* Scaled positioning for preview */
+    .voucher-preview-grid .data-faktur { top: 37.5% !important; left: 23% !important; }
+    .voucher-preview-grid .data-nama { top: 45.5% !important; left: 23% !important; }
+    .voucher-preview-grid .data-alamat { top: 53.5% !important; left: 23% !important; font-size: 8px !important; }
+    .voucher-preview-grid .data-jatuh-tempo { top: 61.5% !important; left: 32% !important; }
+    .voucher-preview-grid .data-angsuran-ke { top: 69.5% !important; left: 32% !important; }
+    .voucher-preview-grid .data-besar-angsuran { top: 78% !important; left: 73% !important; font-size: 10px !important; }
+    .voucher-preview-grid .data-kantor { top: 87% !important; left: 45% !important; font-size: 8px !important; }
     
     /* Empty voucher preview */
     .voucher-preview-grid .voucher-empty {
@@ -181,7 +162,7 @@
     }
     
     /* --- VOUCHER CONTAINER --- */
-    .voucher-card, .voucher-container {
+    .voucher {
         width: 80mm !important;
         height: 50mm !important;
         position: relative !important;
@@ -197,109 +178,30 @@
         visibility: visible !important;
     }
 
-    /* Background Image (not used in print, using CSS background-image instead) */
-    .voucher-bg {
-        display: none;
-    }
-
-    /* Styling Umum untuk Semua Field Teks */
-    .field-item {
+    /* Voucher data positioning - sesuai dengan VoucherCard.tsx */
+    .voucher span {
         position: absolute !important;
-        white-space: nowrap !important;
         font-family: "Times New Roman", Times, serif !important;
         color: #333 !important;
         font-weight: normal !important;
+        white-space: nowrap !important;
         display: block !important;
         visibility: visible !important;
-    }
-
-    /* --- POSITIONING SESUAI BACKUP FILE --- */
-    
-    /* Judul Tengah */
-    .judul-voucer {
-        top: 25% !important;
-        left: 50% !important;
-        transform: translateX(-50%) !important;
-        font-size: 11pt !important;
-        font-weight: bold !important;
-        color: #333 !important;
-    }
-
-    /* --- Field Labels dan Values --- */
-    .label-kiri {
-        font-weight: normal !important;
         font-size: 9pt !important;
-        left: 5% !important;
-        color: #333 !important;
-    }
-    .titik-dua {
-        font-weight: normal !important;
-        font-size: 9pt !important;
-        left: 22% !important;
-        color: #333 !important;
-    }
-    
-    /* Nilai Field dengan positioning sesuai backup */
-    .nilai-field {
-        font-weight: normal !important;
-        font-size: 9pt !important;
-        color: #333 !important;
-        overflow: hidden !important;
-        text-overflow: ellipsis !important;
-        display: block !important;
     }
 
-    /* Positioning sesuai backup file */
-    .row-1 .nilai-field { top: 37.5% !important; left: 23% !important; }  /* NO.Faktur */
-    .row-2 .nilai-field { top: 45.5% !important; left: 23% !important; }  /* Nama */
-    .row-3 .nilai-field { top: 53.5% !important; left: 23% !important; font-size: 8pt !important; } /* Alamat */
-    .row-4 .nilai-field { top: 61.5% !important; left: 32% !important; }  /* Jatuh Tempo */
-    .row-5 .nilai-field { top: 69.5% !important; left: 32% !important; }  /* Angsuran Ke- */
-
-    /* Hide labels in print mode (data only) */
-    .label-kiri, .titik-dua {
-        display: none !important;
-    }
-
-    /* --- Bagian Angsuran (Besar Angsuran) --- */
-    .label-besar-angsuran {
-        display: none !important; /* Hide label */
-    }
-    .label-rp {
-        display: none !important; /* Hide Rp label */
-    }
-    
-    /* Nilai Angsuran - positioning sesuai backup */
-    .nilai-angsuran {
-        top: 78% !important;
-        left: 73% !important;
-        font-size: 12pt !important;
-        font-weight: normal !important;
-        color: #333 !important;
-        text-align: left !important;
-        display: block !important;
-        visibility: visible !important;
-    }
-    
-    /* Hide garis */
-    .garis-input-rp {
-        display: none !important;
-    }
-
-    /* --- Info Kantor --- */
-    .label-kantor {
-        top: 87% !important;
-        left: 45% !important;
-        font-size: 9pt !important;
-        font-weight: normal !important;
-        color: #333 !important;
-        display: block !important;
-        visibility: visible !important;
-    }
+    /* Data positioning sesuai backup file */
+    .data-faktur { top: 37.5% !important; left: 23% !important; }  /* NO.Faktur */
+    .data-nama { top: 45.5% !important; left: 23% !important; }  /* Nama */
+    .data-alamat { top: 53.5% !important; left: 23% !important; font-size: 8pt !important; } /* Alamat */
+    .data-jatuh-tempo { top: 61.5% !important; left: 32% !important; }  /* Jatuh Tempo */
+    .data-angsuran-ke { top: 69.5% !important; left: 32% !important; }  /* Angsuran Ke- */
+    .data-besar-angsuran { top: 78% !important; left: 73% !important; font-size: 12pt !important; }  /* Besar Angsuran */
+    .data-kantor { top: 87% !important; left: 45% !important; font-size: 9pt !important; }  /* Info Kantor */
 
     /* Empty voucher styling */
     .voucher-empty {
-        background: none;
-        border: 1px dashed #ccc;
+        background: none !important;
+        border: 1px dashed #ccc !important;
     }
 }
