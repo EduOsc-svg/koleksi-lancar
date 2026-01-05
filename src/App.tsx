@@ -24,7 +24,6 @@ const CustomerHistory = lazy(() => import("./pages/CustomerHistory"));
 const AuditLog = lazy(() => import("./pages/AuditLog"));
 const Holidays = lazy(() => import("./pages/Holidays"));
 const VoucherDemo = lazy(() => import("./components/VoucherDemo"));
-const VoucherTest = lazy(() => import("./components/VoucherTest"));
 
 const queryClient = new QueryClient();
 
@@ -92,7 +91,6 @@ const AppRoutes = () => {
                   <Route path="/history" element={<CustomerHistory />} />
                   <Route path="/audit-log" element={<AuditLog />} />
                   <Route path="/voucher-demo" element={<VoucherDemo />} />
-                  <Route path="/voucher-test" element={<VoucherTest />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </Suspense>
