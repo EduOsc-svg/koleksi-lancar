@@ -43,6 +43,7 @@ const masterItems = [
 
 const operationItems = [
   { titleKey: "nav.collection", url: "/collection", icon: Wallet },
+  { titleKey: "nav.collector", url: "/collector", icon: Users },
   { titleKey: "nav.reports", url: "/reports", icon: BarChart3 },
   { titleKey: "nav.customerHistory", url: "/history", icon: History },
 ];

@@ -18,6 +18,7 @@ const RoutesPage = lazy(() => import("./pages/Routes"));
 const Customers = lazy(() => import("./pages/Customers"));
 const Contracts = lazy(() => import("./pages/Contracts"));
 const Collection = lazy(() => import("./pages/Collection"));
+const Collector = lazy(() => import("./pages/Collector"));
 const Reports = lazy(() => import("./pages/Reports"));
 const CustomerHistory = lazy(() => import("./pages/CustomerHistory"));
 const AuditLog = lazy(() => import("./pages/AuditLog"));
@@ -84,6 +85,7 @@ const AppRoutes = () => {
                   <Route path="/contracts" element={<Contracts />} />
                   <Route path="/holidays" element={<Holidays />} />
                   <Route path="/collection" element={<Collection />} />
+                  <Route path="/collector" element={<Collector />} />
                   <Route path="/reports" element={<Reports />} />
                   <Route path="/history" element={<CustomerHistory />} />
                   <Route path="/audit-log" element={<AuditLog />} />

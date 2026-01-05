@@ -16,6 +16,7 @@ export interface PaymentLog {
 export interface PaymentWithRelations extends PaymentLog {
   credit_contracts: {
     contract_ref: string;
+    customer_id: string;
     customers: { name: string } | null;
   } | null;
   sales_agents: { name: string } | null;
@@ -27,7 +28,7 @@ export const usePayments = (dateFrom?: string, dateTo?: string, collectorId?: st
     queryFn: async () => {
       let query = supabase
         .from('payment_logs')
-        .select('*, credit_contracts(contract_ref, customers(name)), sales_agents(name)')
+        .select('*, credit_contracts(contract_ref, customer_id, customers(name)), sales_agents(name)')
         .order('payment_date', { ascending: false });
       
       if (dateFrom) {
