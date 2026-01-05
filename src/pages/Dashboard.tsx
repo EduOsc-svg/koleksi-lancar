@@ -35,6 +35,8 @@ import { TablePagination } from "@/components/TablePagination";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format, startOfMonth, addMonths, subMonths } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
+import { StatCard } from "@/components/dashboard/StatCard";
+import { toast } from "sonner";
 
 export default function Dashboard() {
   const { t, i18n } = useTranslation();
@@ -128,71 +130,60 @@ export default function Dashboard() {
 
       {/* Monthly Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-        <Card>
-          <CardContent className="pt-4">
-            <div className="flex items-center gap-2 mb-2">
-              <DollarSign className="h-4 w-4 text-blue-500" />
-              <span className="text-xs text-muted-foreground">{t("dashboard.totalModal", "Total Modal")}</span>
-            </div>
-            <p className="text-lg font-bold">{formatRupiah(monthlyData?.total_modal ?? 0)}</p>
-            <p className="text-xs text-muted-foreground mt-1">Bulan ini</p>
-          </CardContent>
-        </Card>
+        <StatCard
+          icon={DollarSign}
+          iconColor="text-blue-500"
+          label={t("dashboard.totalModal", "Total Modal")}
+          value={monthlyData?.total_modal ?? 0}
+          onDetailClick={() => toast.info("Fitur detail modal sedang dikembangkan")}
+        />
         
-        <Card>
-          <CardContent className="pt-4">
-            <div className="flex items-center gap-2 mb-2">
-              <Wallet className="h-4 w-4 text-indigo-500" />
-              <span className="text-xs text-muted-foreground">{t("dashboard.omset", "Omset")}</span>
-            </div>
-            <p className="text-lg font-bold">{formatRupiah(monthlyData?.total_omset ?? 0)}</p>
-            <p className="text-xs text-muted-foreground mt-1">Bulan ini</p>
-          </CardContent>
-        </Card>
+        <StatCard
+          icon={Wallet}
+          iconColor="text-indigo-500"
+          label={t("dashboard.omset", "Omset")}
+          value={monthlyData?.total_omset ?? 0}
+          onDetailClick={() => toast.info("Fitur detail omset sedang dikembangkan")}
+        />
 
-        <Card>
-          <CardContent className="pt-4">
-            <div className="flex items-center gap-2 mb-2">
-              <TrendingUp className="h-4 w-4 text-green-500" />
-              <span className="text-xs text-muted-foreground">{t("dashboard.profit", "Keuntungan")}</span>
-            </div>
-            <p className="text-lg font-bold text-green-600">{formatRupiah(monthlyData?.total_profit ?? 0)}</p>
-            <p className="text-xs text-muted-foreground mt-1">Sebelum operasional</p>
-          </CardContent>
-        </Card>
+        <StatCard
+          icon={TrendingUp}
+          iconColor="text-green-500"
+          label={t("dashboard.profit", "Keuntungan")}
+          value={monthlyData?.total_profit ?? 0}
+          valueColor="text-green-600"
+          subtitle="Sebelum operasional"
+          onDetailClick={() => toast.info("Fitur detail keuntungan sedang dikembangkan")}
+        />
 
-        <Card>
-          <CardContent className="pt-4">
-            <div className="flex items-center gap-2 mb-2">
-              <Settings className="h-4 w-4 text-orange-500" />
-              <span className="text-xs text-muted-foreground">Biaya Operasional</span>
-            </div>
-            <p className="text-lg font-bold text-orange-600">-{formatRupiah(totalExpenses)}</p>
-            <p className="text-xs text-muted-foreground mt-1">Bulan ini</p>
-          </CardContent>
-        </Card>
+        <StatCard
+          icon={Settings}
+          iconColor="text-orange-500"
+          label="Biaya Operasional"
+          value={totalExpenses}
+          valueColor="text-orange-600"
+          isNegative
+          onDetailClick={() => setExpenseDialogOpen(true)}
+        />
 
-        <Card>
-          <CardContent className="pt-4">
-            <div className="flex items-center gap-2 mb-2">
-              <Percent className="h-4 w-4 text-purple-500" />
-              <span className="text-xs text-muted-foreground">{t("dashboard.totalCommission", "Total Komisi")}</span>
-            </div>
-            <p className="text-lg font-bold text-purple-600">{formatRupiah(monthlyData?.total_commission ?? 0)}</p>
-            <p className="text-xs text-muted-foreground mt-1">Bulan ini</p>
-          </CardContent>
-        </Card>
+        <StatCard
+          icon={Percent}
+          iconColor="text-purple-500"
+          label={t("dashboard.totalCommission", "Total Komisi")}
+          value={monthlyData?.total_commission ?? 0}
+          valueColor="text-purple-600"
+          onDetailClick={() => toast.info("Fitur detail komisi sedang dikembangkan")}
+        />
 
-        <Card>
-          <CardContent className="pt-4">
-            <div className="flex items-center gap-2 mb-2">
-              <Percent className="h-4 w-4 text-emerald-500" />
-              <span className="text-xs text-muted-foreground">{t("dashboard.profitMargin", "Margin")}</span>
-            </div>
-            <p className="text-lg font-bold text-emerald-600">{(monthlyData?.profit_margin ?? 0).toFixed(1)}%</p>
-            <p className="text-xs text-muted-foreground mt-1">Bulan ini</p>
-          </CardContent>
-        </Card>
+        <StatCard
+          icon={Percent}
+          iconColor="text-emerald-500"
+          label={t("dashboard.profitMargin", "Margin")}
+          value={monthlyData?.profit_margin ?? 0}
+          valueColor="text-emerald-600"
+          isPercentage
+          onDetailClick={() => toast.info("Fitur detail margin sedang dikembangkan")}
+        />
       </div>
 
       {/* Net Profit Card */}
