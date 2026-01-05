@@ -11,13 +11,13 @@ interface VoucherData {
 }
 
 interface VoucherCardProps {
-  data: VoucherData;
+  data?: VoucherData;
   isEmpty?: boolean;
 }
 
 const VoucherCard: React.FC<VoucherCardProps> = ({ data, isEmpty = false }) => {
   // Render empty voucher untuk slot kosong
-  if (isEmpty || (!data.contractRef && !data.noFaktur && !data.customerName)) {
+  if (isEmpty || !data || (!data.contractRef && !data.noFaktur && !data.customerName)) {
     return <div className="voucher voucher-empty"></div>;
   }
 
