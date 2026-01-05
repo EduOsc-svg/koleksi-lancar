@@ -116,7 +116,9 @@
     "editRoute": "Edit Route",
     "code": "Route Code",
     "name": "Route Name",
-    "defaultSales": "Default Sales",
+    "defaultSales": "Default Collector",
+    "defaultCollector": "Default Collector",
+    "selectCollector": "Select Collector",
     "deleteWarning": "Make sure no customers are assigned to this route."
   },
   "holidays": {

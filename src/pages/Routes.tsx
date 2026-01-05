@@ -47,6 +47,13 @@ import {
   RouteWithSales,
 } from "@/hooks/useRoutes";
 import { useSalesAgents } from "@/hooks/useSalesAgents";
+
+// Hook to get only collectors (agent_code starts with 'K')
+const useCollectors = () => {
+  const { data: agents, ...rest } = useSalesAgents();
+  const collectors = agents?.filter(agent => agent.agent_code.startsWith('K'));
+  return { data: collectors, ...rest };
+};
 import { usePagination } from "@/hooks/usePagination";
 import { TablePagination } from "@/components/TablePagination";
 
@@ -55,7 +62,7 @@ export default function Routes() {
   const [searchParams, setSearchParams] = useSearchParams();
   const highlightId = searchParams.get('highlight');
   const { data: routes, isLoading } = useRoutes();
-  const { data: agents } = useSalesAgents();
+  const { data: collectors } = useCollectors();
   const createRoute = useCreateRoute();
   const updateRoute = useUpdateRoute();
   const deleteRoute = useDeleteRoute();
@@ -165,7 +172,7 @@ export default function Routes() {
             <TableRow>
               <TableHead>{t("routes.code")}</TableHead>
               <TableHead>{t("routes.name")}</TableHead>
-              <TableHead>{t("routes.defaultSales")}</TableHead>
+              <TableHead>{t("routes.defaultCollector")}</TableHead>
               <TableHead className="text-right">{t("common.actions")}</TableHead>
             </TableRow>
           </TableHeader>
@@ -245,7 +252,7 @@ export default function Routes() {
               />
             </div>
             <div>
-              <Label htmlFor="collector">{t("routes.defaultSales")}</Label>
+              <Label htmlFor="collector">{t("routes.defaultCollector")}</Label>
               <Select
                 value={formData.default_collector_id || "none"}
                 onValueChange={(v) =>
@@ -253,13 +260,13 @@ export default function Routes() {
                 }
               >
                 <SelectTrigger>
-                  <SelectValue placeholder={t("collection.selectSales")} />
+                  <SelectValue placeholder={t("routes.selectCollector")} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">-</SelectItem>
-                  {agents?.map((agent) => (
-                    <SelectItem key={agent.id} value={agent.id}>
-                      {agent.name} ({agent.agent_code})
+                  {collectors?.map((collector) => (
+                    <SelectItem key={collector.id} value={collector.id}>
+                      {collector.name} ({collector.agent_code})
                     </SelectItem>
                   ))}
                 </SelectContent>
