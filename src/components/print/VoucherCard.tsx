@@ -27,11 +27,11 @@ const VoucherCard: React.FC<VoucherCardProps> = ({
 }) => {
   // Render empty card if no data or isEmpty flag is true
   if (isEmpty || !data) {
-    return <div className="voucher-container voucher-empty"></div>;
+    return <div className="voucher-card voucher-empty"></div>;
   }
 
   return (
-    <div className="voucher-container">
+    <div className="voucher-card">
       {/* Background akan di-handle oleh CSS background-image untuk print */}
       
       {/* Judul Voucher */}

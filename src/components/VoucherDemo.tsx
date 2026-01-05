@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import VoucherCard from '@/components/print/VoucherCard';
 import '@/styles/Voucher-new.css';
 
@@ -26,76 +26,143 @@ const demoVoucherDataUrgent = {
 };
 
 const VoucherDemo: React.FC = () => {
+  const [showPreview, setShowPreview] = useState(false);
+
+  const handleShowPreview = () => {
+    setShowPreview(true);
+  };
+
+  const handleHidePreview = () => {
+    setShowPreview(false);
+  };
+
+  const handlePrint = () => {
+    window.print();
+  };
   return (
-    <div className="p-8 bg-gray-50 min-h-screen">
-      <h1 className="text-2xl font-bold mb-6 text-center">Demo Voucher Layout - Print Only Mode</h1>
-      
-      <div className="mb-8 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-        <h2 className="text-lg font-semibold mb-2 text-yellow-800">️ Print Only Mode - Performance Optimized</h2>
-        <p className="text-yellow-700 mb-2">
-          Voucher layout ini menggunakan <strong>print-only mode</strong> berdasarkan file backup untuk performa optimal.
-        </p>
-        <p className="text-yellow-700">
-          <strong>Cara melihat voucher:</strong> Tekan <strong>Ctrl+P (Cmd+P di Mac)</strong> untuk print preview.
-        </p>
-      </div>
-
-      <div className="mb-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-        <h3 className="text-lg font-semibold mb-2 text-blue-800">🚀 Benefits Print-Only Mode:</h3>
-        <ul className="list-disc list-inside space-y-1 text-sm text-blue-700">
-          <li>✅ <strong>Performance Optimal</strong>: Tidak ada screen CSS yang memperberat kinerja</li>
-          <li>✅ <strong>Print Precision</strong>: Layout khusus untuk A4 landscape print</li>
-          <li>✅ <strong>Lightweight</strong>: File CSS minimal tanpa screen media</li>
-          <li>✅ <strong>Background Efficient</strong>: CSS background-image untuk print</li>
-          <li>✅ <strong>Data Focus</strong>: Hanya menampilkan data penting tanpa label</li>
-        </ul>
-      </div>
-
-      <div className="voucher-print-container print-only">
-        <div className="voucher-page">
-          <div className="voucher-grid">
-            <VoucherCard data={demoVoucherData} />
-            <VoucherCard data={demoVoucherDataUrgent} />
-            <VoucherCard data={{...demoVoucherData, noFaktur: "FK-001234569", customerName: "Budi Hartono"}} />
-            <VoucherCard data={{...demoVoucherData, noFaktur: "FK-001234570", customerName: "Maria Magdalena"}} />
-            <VoucherCard data={{...demoVoucherData, noFaktur: "FK-001234571", customerName: "Joko Widodo"}} />
-            <VoucherCard data={{...demoVoucherData, noFaktur: "FK-001234572", customerName: "Susi Susanti"}} />
-            <VoucherCard isEmpty={true} />
-            <VoucherCard isEmpty={true} />
-            <VoucherCard isEmpty={true} />
-          </div>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 py-6">
+          <h1 className="text-3xl font-bold text-gray-900">Voucher Preview & Print</h1>
+          <p className="mt-2 text-gray-600">
+            Preview voucher di layar dan print dengan layout A4 landscape
+          </p>
         </div>
       </div>
 
-      <div className="mt-8 p-4 bg-white rounded-lg shadow">
-        <h3 className="font-semibold mb-2">Fitur Layout Print-Only (Based on Backup):</h3>
-        <ul className="list-disc list-inside space-y-1 text-sm">
-          <li>✅ <strong>Data-Only Display</strong>: Tidak menampilkan label (NO.Faktur:, Nama:, dll)</li>
-          <li>✅ <strong>CSS Background</strong>: Background image di-handle CSS untuk print efficiency</li>
-          <li>✅ <strong>Positioning Presisi</strong>: Berdasarkan backup file yang sudah tested</li>
-          <li>✅ <strong>A4 Landscape Grid</strong>: 3x3 layout optimal (80mm x 50mm per voucher)</li>
-          <li>✅ <strong>Font Optimized</strong>: Times New Roman dengan size print-friendly</li>
-          <li>✅ <strong>No Screen CSS</strong>: Tidak ada media screen untuk performa maksimal</li>
-        </ul>
-      </div>
+      <div className="max-w-7xl mx-auto p-6">
+        {/* Info Panel */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <h2 className="text-lg font-semibold text-blue-800 mb-2">🖥️ Screen Preview</h2>
+            <p className="text-blue-700 text-sm">
+              Voucher ditampilkan di layar dengan ukuran diperkecil untuk preview. 
+              Layout dan positioning sama dengan hasil print.
+            </p>
+          </div>
+          
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+            <h2 className="text-lg font-semibold text-green-800 mb-2">�️ Print Mode</h2>
+            <p className="text-green-700 text-sm">
+              Tekan <strong>Ctrl+P</strong> untuk print preview ukuran sebenarnya 
+              (80mm x 50mm) dalam layout A4 landscape.
+            </p>
+          </div>
+        </div>
 
-      <div className="mt-4 p-4 bg-green-50 rounded-lg">
-        <h3 className="font-semibold mb-2 text-green-800">📋 Print Instructions:</h3>
-        <ol className="list-decimal list-inside space-y-1 text-sm text-green-700">
-          <li>Tekan <strong>Ctrl+P</strong> (Windows) atau <strong>Cmd+P</strong> (Mac)</li>
-          <li>Pilih <strong>Paper Size: A4</strong></li>
-          <li>Pilih <strong>Orientation: Landscape</strong></li>
-          <li>Set <strong>Margins: None</strong> atau <strong>Minimum</strong></li>
-          <li>Pastikan <strong>Print backgrounds</strong> enabled</li>
-          <li>Voucher akan muncul dalam grid 3x3 dengan background watermark</li>
-        </ol>
-      </div>
+        {/* Action Buttons */}
+        <div className="flex gap-4 mb-6">
+          {!showPreview ? (
+            <button 
+              onClick={handleShowPreview}
+              className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 flex items-center gap-2 font-medium"
+            >
+              👁️ Show Preview
+            </button>
+          ) : (
+            <div className="flex gap-4">
+              <button 
+                onClick={handlePrint}
+                className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 flex items-center gap-2 font-medium"
+              >
+                🖨️ Print Vouchers
+              </button>
+              <button 
+                onClick={handleHidePreview}
+                className="bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 flex items-center gap-2 font-medium"
+              >
+                ✕ Hide Preview
+              </button>
+            </div>
+          )}
+        </div>
 
-      <div className="mt-4 p-4 bg-gray-100 rounded-lg">
-        <h3 className="font-semibold mb-2">⚡ Performance Benefits:</h3>
-        <div className="text-sm text-gray-700">
-          <p><strong>Before (dengan screen media):</strong> CSS lebih besar, rendering ganda</p>
-          <p><strong>After (print-only):</strong> CSS minimal, rendering optimal untuk print</p>
+        {/* Voucher Preview Container - Only show when button is pressed */}
+        {showPreview && (
+          <div className="voucher-preview-container mb-8">
+            <div className="bg-white rounded-lg shadow-lg p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold text-gray-800">📋 Voucher Preview</h3>
+                <span className="text-sm text-gray-500">Preview Mode - Ukuran diperkecil untuk layar</span>
+              </div>
+              
+              <div className="voucher-preview-grid">
+                <VoucherCard data={demoVoucherData} />
+                <VoucherCard data={demoVoucherDataUrgent} />
+                <VoucherCard data={{...demoVoucherData, noFaktur: "FK-001234569", customerName: "Budi Hartono"}} />
+                <VoucherCard data={{...demoVoucherData, noFaktur: "FK-001234570", customerName: "Maria Magdalena"}} />
+                <VoucherCard data={{...demoVoucherData, noFaktur: "FK-001234571", customerName: "Joko Widodo"}} />
+                <VoucherCard data={{...demoVoucherData, noFaktur: "FK-001234572", customerName: "Susi Susanti"}} />
+                <VoucherCard isEmpty={true} />
+                <VoucherCard isEmpty={true} />
+                <VoucherCard isEmpty={true} />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Hidden Print Container - Only for printing */}
+        <div className="voucher-print-container">
+          <div className="voucher-page">
+            <div className="voucher-grid">
+              <VoucherCard data={demoVoucherData} />
+              <VoucherCard data={demoVoucherDataUrgent} />
+              <VoucherCard data={{...demoVoucherData, noFaktur: "FK-001234569", customerName: "Budi Hartono"}} />
+              <VoucherCard data={{...demoVoucherData, noFaktur: "FK-001234570", customerName: "Maria Magdalena"}} />
+              <VoucherCard data={{...demoVoucherData, noFaktur: "FK-001234571", customerName: "Joko Widodo"}} />
+              <VoucherCard data={{...demoVoucherData, noFaktur: "FK-001234572", customerName: "Susi Susanti"}} />
+              <VoucherCard isEmpty={true} />
+              <VoucherCard isEmpty={true} />
+              <VoucherCard isEmpty={true} />
+            </div>
+          </div>
+        </div>
+
+        {/* Features Info */}
+        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h3 className="font-semibold mb-4 text-gray-800">✨ Fitur Layout</h3>
+            <ul className="space-y-2 text-sm text-gray-600">
+              <li>✅ <strong>Data-Only Display</strong>: Tanpa label untuk clean look</li>
+              <li>✅ <strong>CSS Background</strong>: Background watermark via CSS</li>
+              <li>✅ <strong>Positioning Presisi</strong>: Berdasarkan backup testing</li>
+              <li>✅ <strong>A4 Landscape Grid</strong>: 3x3 layout optimal</li>
+              <li>✅ <strong>Font Optimized</strong>: Times New Roman print-friendly</li>
+            </ul>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h3 className="font-semibold mb-4 text-gray-800">�️ Print Instructions</h3>
+            <ol className="space-y-2 text-sm text-gray-600">
+              <li>1. Tekan <strong>Ctrl+P</strong> (Windows) atau <strong>Cmd+P</strong> (Mac)</li>
+              <li>2. Pilih <strong>Paper Size: A4</strong></li>
+              <li>3. Pilih <strong>Orientation: Landscape</strong></li>
+              <li>4. Set <strong>Margins: None</strong> atau <strong>Minimum</strong></li>
+              <li>5. Pastikan <strong>Print backgrounds</strong> enabled</li>
+              <li>6. Voucher akan muncul dalam grid 3x3</li>
+            </ol>
+          </div>
         </div>
       </div>
     </div>
