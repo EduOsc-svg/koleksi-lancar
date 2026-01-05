@@ -134,7 +134,9 @@
     "editRoute": "Ubah Jalur",
     "code": "Kode Jalur",
     "name": "Nama Jalur",
-    "defaultSales": "Sales Default",
+    "defaultSales": "Kolektor Default",
+    "defaultCollector": "Kolektor Default",
+    "selectCollector": "Pilih Kolektor",
     "deleteWarning": "Pastikan tidak ada pelanggan yang terhubung ke jalur ini."
   },
   "holidays": {
