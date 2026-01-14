@@ -15,7 +15,6 @@ export interface ActivityLog {
   customer_id: string | null;
   contract_id: string | null;
   sales_agent_id: string | null;
-  route_id: string | null;
   created_at: string;
 }
 
@@ -28,7 +27,6 @@ export interface LogActivityParams {
   customer_id?: string;
   contract_id?: string;
   sales_agent_id?: string;
-  route_id?: string;
 }
 
 export const useActivityLogs = (limit: number = 100) => {
@@ -85,7 +83,6 @@ export const useLogActivity = () => {
           customer_id: params.customer_id || null,
           contract_id: params.contract_id || null,
           sales_agent_id: params.sales_agent_id || null,
-          route_id: params.route_id || null,
         });
 
       if (error) throw error;

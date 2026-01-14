@@ -292,7 +292,6 @@ export default function Contracts() {
             customers: selectedContract.customers ? {
               name: selectedContract.customers.name,
               address: selectedContract.customers.address || null,
-              routes: selectedContract.customers.routes || null,
               sales_agents: selectedContract.customers.sales_agents || null,
             } : null,
           }]}
