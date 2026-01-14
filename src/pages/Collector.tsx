@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useSalesAgents } from "@/hooks/useSalesAgents";
+import { useCollectors } from "@/hooks/useCollectors";
 import { useAggregatedPayments } from "@/hooks/useAggregatedPayments";
 import { usePayments } from "@/hooks/usePayments";
 import { formatRupiah } from "@/lib/format";
@@ -29,7 +29,7 @@ import { usePagination } from "@/hooks/usePagination";
 
 export default function Collector() {
   const { t } = useTranslation();
-  const { data: agents } = useSalesAgents();
+  const { data: collectors } = useCollectors();
   
   // Month selection
   const currentDate = new Date();
@@ -49,14 +49,14 @@ export default function Collector() {
   const { data: aggregatedPayments } = useAggregatedPayments(dateFrom, dateTo, selectedCollector || undefined);
   
   // Calculate collector statistics
-  const collectorStats = agents?.map(agent => {
-    const agentPayments = payments?.filter(p => p.collector_id === agent.id) || [];
-    const totalCollected = agentPayments.reduce((sum, p) => sum + Number(p.amount_paid), 0);
-    const paymentCount = agentPayments.length;
-    const uniqueCustomers = new Set(agentPayments.map(p => p.credit_contracts?.customer_id)).size;
+  const collectorStats = collectors?.map(collector => {
+    const collectorPayments = payments?.filter(p => p.collector_id === collector.id) || [];
+    const totalCollected = collectorPayments.reduce((sum, p) => sum + Number(p.amount_paid), 0);
+    const paymentCount = collectorPayments.length;
+    const uniqueCustomers = new Set(collectorPayments.map(p => p.credit_contracts?.customer_id)).size;
     
     return {
-      ...agent,
+      ...collector,
       totalCollected,
       paymentCount,
       uniqueCustomers,
@@ -124,9 +124,9 @@ export default function Collector() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Semua Kolektor</SelectItem>
-              {agents?.map((agent) => (
-                <SelectItem key={agent.id} value={agent.id}>
-                  {agent.agent_code} - {agent.name}
+              {collectors?.map((collector) => (
+                <SelectItem key={collector.id} value={collector.id}>
+                  {collector.collector_code} - {collector.name}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -178,7 +178,7 @@ export default function Collector() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{activeCollectors}</div>
-            <p className="text-xs text-muted-foreground">dari {agents?.length || 0} total</p>
+            <p className="text-xs text-muted-foreground">dari {collectors?.length || 0} total</p>
           </CardContent>
         </Card>
       </div>
@@ -218,7 +218,7 @@ export default function Collector() {
                   <TableRow key={collector.id}>
                     <TableCell>{(collectorPage - 1) * 5 + i + 1}</TableCell>
                     <TableCell>
-                      <Badge variant="outline">{collector.agent_code}</Badge>
+                      <Badge variant="outline">{collector.collector_code}</Badge>
                     </TableCell>
                     <TableCell className="font-medium">{collector.name}</TableCell>
                     <TableCell className="text-right">{collector.paymentCount}</TableCell>
