@@ -26,7 +26,6 @@ export type Database = {
           entity_type: string
           id: string
           ip_address: unknown
-          route_id: string | null
           sales_agent_id: string | null
           user_agent: string | null
           user_id: string | null
@@ -44,7 +43,6 @@ export type Database = {
           entity_type: string
           id?: string
           ip_address?: unknown
-          route_id?: string | null
           sales_agent_id?: string | null
           user_agent?: string | null
           user_id?: string | null
@@ -62,7 +60,6 @@ export type Database = {
           entity_type?: string
           id?: string
           ip_address?: unknown
-          route_id?: string | null
           sales_agent_id?: string | null
           user_agent?: string | null
           user_id?: string | null
