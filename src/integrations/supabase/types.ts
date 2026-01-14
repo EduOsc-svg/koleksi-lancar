@@ -92,20 +92,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "activity_logs_route_id_fkey"
-            columns: ["route_id"]
-            isOneToOne: false
-            referencedRelation: "invoice_details"
-            referencedColumns: ["route_id"]
-          },
-          {
-            foreignKeyName: "activity_logs_route_id_fkey"
-            columns: ["route_id"]
-            isOneToOne: false
-            referencedRelation: "routes"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "activity_logs_sales_agent_id_fkey"
             columns: ["sales_agent_id"]
             isOneToOne: false
@@ -225,7 +211,6 @@ export type Database = {
           name: string
           nik: string | null
           phone: string | null
-          route_id: string
         }
         Insert: {
           address?: string | null
@@ -236,7 +221,6 @@ export type Database = {
           name: string
           nik?: string | null
           phone?: string | null
-          route_id: string
         }
         Update: {
           address?: string | null
@@ -247,7 +231,6 @@ export type Database = {
           name?: string
           nik?: string | null
           phone?: string | null
-          route_id?: string
         }
         Relationships: [
           {
@@ -262,20 +245,6 @@ export type Database = {
             columns: ["assigned_sales_id"]
             isOneToOne: false
             referencedRelation: "sales_agents"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "customers_route_id_fkey"
-            columns: ["route_id"]
-            isOneToOne: false
-            referencedRelation: "invoice_details"
-            referencedColumns: ["route_id"]
-          },
-          {
-            foreignKeyName: "customers_route_id_fkey"
-            columns: ["route_id"]
-            isOneToOne: false
-            referencedRelation: "routes"
             referencedColumns: ["id"]
           },
         ]
@@ -447,38 +416,6 @@ export type Database = {
           },
         ]
       }
-      routes: {
-        Row: {
-          code: string
-          created_at: string
-          default_collector_id: string | null
-          id: string
-          name: string
-        }
-        Insert: {
-          code: string
-          created_at?: string
-          default_collector_id?: string | null
-          id?: string
-          name: string
-        }
-        Update: {
-          code?: string
-          created_at?: string
-          default_collector_id?: string | null
-          id?: string
-          name?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "routes_default_collector_id_fkey"
-            columns: ["default_collector_id"]
-            isOneToOne: false
-            referencedRelation: "collectors"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       sales_agents: {
         Row: {
           agent_code: string
@@ -543,9 +480,6 @@ export type Database = {
           id: string | null
           no_faktur: string | null
           product_type: string | null
-          route_code: string | null
-          route_id: string | null
-          route_name: string | null
           sales_agent_id: string | null
           sales_agent_name: string | null
           status: string | null

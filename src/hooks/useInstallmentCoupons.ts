@@ -21,7 +21,6 @@ export interface CouponWithContract extends InstallmentCoupon {
       name: string;
       address: string | null;
       phone: string | null;
-      routes: { code: string; name: string } | null;
       sales_agents: { name: string; agent_code: string } | null;
     } | null;
   } | null;
@@ -64,7 +63,6 @@ export const useTodayDueCoupons = () => {
               name,
               address,
               phone,
-              routes(code, name),
               sales_agents(name, agent_code)
             )
           )
@@ -78,12 +76,12 @@ export const useTodayDueCoupons = () => {
   });
 };
 
-// Fetch unpaid coupons filtered by route or collector
-export const useUnpaidCoupons = (routeId?: string, collectorId?: string) => {
+// Fetch unpaid coupons filtered by sales agent
+export const useUnpaidCoupons = (salesAgentId?: string) => {
   return useQuery({
-    queryKey: ['installment_coupons', 'unpaid', routeId, collectorId],
+    queryKey: ['installment_coupons', 'unpaid', salesAgentId],
     queryFn: async () => {
-      let query = supabase
+      const query = supabase
         .from('installment_coupons')
         .select(`
           *,
@@ -96,9 +94,7 @@ export const useUnpaidCoupons = (routeId?: string, collectorId?: string) => {
               name,
               address,
               phone,
-              route_id,
               assigned_sales_id,
-              routes(code, name),
               sales_agents(name, agent_code)
             )
           )
@@ -110,17 +106,11 @@ export const useUnpaidCoupons = (routeId?: string, collectorId?: string) => {
       const { data, error } = await query;
       if (error) throw error;
 
-      // Filter in memory if route or collector specified
+      // Filter by sales agent if specified
       let filtered = data as CouponWithContract[];
-      if (routeId) {
+      if (salesAgentId) {
         filtered = filtered.filter(c => 
-          c.credit_contracts?.customers?.routes?.code && 
-          c.credit_contracts.customers.routes.code === routeId
-        );
-      }
-      if (collectorId) {
-        filtered = filtered.filter(c => 
-          c.credit_contracts?.customers?.sales_agents?.agent_code === collectorId
+          c.credit_contracts?.customers?.sales_agents?.agent_code === salesAgentId
         );
       }
 
@@ -154,7 +144,7 @@ export const useGenerateCoupons = () => {
       if (error) throw error;
       return { contractId };
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['installment_coupons'] });
       queryClient.invalidateQueries({ queryKey: ['credit_contracts'] });
     },
