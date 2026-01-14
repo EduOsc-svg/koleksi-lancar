@@ -93,7 +93,18 @@
 
 /* Container hanya untuk print */
 .voucher-print-container {
-  display: none;
+  display: none !important;
+}
+
+/* Hide A4 landscape container on screen - CRITICAL */
+.print-a4-landscape-container {
+  display: none !important;
+  visibility: hidden !important;
+  position: absolute !important;
+  left: -9999px !important;
+  width: 0 !important;
+  height: 0 !important;
+  overflow: hidden !important;
 }
 
 /* --- MODE CETAK (PRINT ONLY) --- */
@@ -116,21 +127,42 @@
     }
     
     /* Hide non-print elements */
-    body > *:not(.voucher-print-container) {
+    body > *:not(.voucher-print-container):not(.print-a4-landscape-container) {
         display: none !important;
     }
     
-    /* Show only print container and force visibility */
-    .voucher-print-container {
+    /* Show print containers */
+    .voucher-print-container,
+    .print-a4-landscape-container {
         display: block !important;
         visibility: visible !important;
         width: 100% !important;
         height: auto !important;
         position: relative !important;
+        left: 0 !important;
+        overflow: visible !important;
     }
     
-    .voucher-print-container * {
+    .voucher-print-container *,
+    .print-a4-landscape-container * {
         visibility: visible !important;
+    }
+    
+    /* Page styling for A4 landscape container */
+    .print-a4-landscape-container .page {
+        display: grid !important;
+        grid-template-columns: repeat(3, 1fr) !important;
+        grid-template-rows: repeat(4, 1fr) !important;
+        gap: 5mm !important;
+        padding: 10mm !important;
+        page-break-after: always !important;
+        width: 100% !important;
+        height: auto !important;
+        min-height: 190mm !important;
+    }
+    
+    .print-a4-landscape-container .page:last-child {
+        page-break-after: avoid !important;
     }
     
     /* Halaman A4 Landscape */
