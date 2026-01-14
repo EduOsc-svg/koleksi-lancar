@@ -14,7 +14,7 @@ import NotFound from "./pages/NotFound";
 // Lazy imports for large pages
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const SalesAgents = lazy(() => import("./pages/SalesAgents"));
-const RoutesPage = lazy(() => import("./pages/Routes"));
+
 const Customers = lazy(() => import("./pages/Customers"));
 const Contracts = lazy(() => import("./pages/Contracts"));
 const Collection = lazy(() => import("./pages/Collection"));
@@ -81,7 +81,7 @@ const AppRoutes = () => {
                 <Routes>
                   <Route path="/" element={<Dashboard />} />
                   <Route path="/sales-agents" element={<SalesAgents />} />
-                  <Route path="/routes" element={<RoutesPage />} />
+                  
                   <Route path="/customers" element={<Customers />} />
                   <Route path="/contracts" element={<Contracts />} />
                   <Route path="/holidays" element={<Holidays />} />

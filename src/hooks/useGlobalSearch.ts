@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 export interface SearchResult {
   id: string;
-  type: 'sales_agent' | 'customer' | 'route' | 'contract';
+  type: 'sales_agent' | 'customer' | 'contract';
   title: string;
   subtitle: string;
   url: string;
@@ -45,8 +45,7 @@ export const useGlobalSearch = (query: string) => {
           name, 
           customer_code, 
           address, 
-          phone,
-          routes(code, name)
+          phone
         `)
         .or(`name.ilike.${searchTerm},customer_code.ilike.${searchTerm},address.ilike.${searchTerm},phone.ilike.${searchTerm}`)
         .limit(5);
@@ -57,90 +56,9 @@ export const useGlobalSearch = (query: string) => {
             id: customer.id,
             type: 'customer',
             title: customer.name,
-            subtitle: `Kode: ${customer.customer_code || 'N/A'}${customer.address ? ` | ${customer.address}` : ''}${(customer.routes as any)?.code ? ` | Route: ${(customer.routes as any).code}` : ''}`,
+            subtitle: `Kode: ${customer.customer_code || 'N/A'}${customer.address ? ` | ${customer.address}` : ''}`,
             url: `/customers?highlight=${customer.id}`,
           });
-        });
-      }
-
-      // Search customers by route code
-      const { data: customersByRoute } = await supabase
-        .from('customers')
-        .select(`
-          id, 
-          name, 
-          customer_code, 
-          address,
-          routes!inner(code, name)
-        `)
-        .or(`routes.code.ilike.${searchTerm},routes.name.ilike.${searchTerm}`)
-        .limit(3);
-
-      if (customersByRoute) {
-        customersByRoute.forEach(customer => {
-          // Only add if not already found
-          const exists = results.some(r => r.type === 'customer' && r.id === customer.id);
-          if (!exists) {
-            results.push({
-              id: customer.id,
-              type: 'customer',
-              title: customer.name,
-              subtitle: `Kode: ${customer.customer_code || 'N/A'} | Route: ${(customer.routes as any).code} (${(customer.routes as any).name})`,
-              url: `/customers?highlight=${customer.id}`,
-            });
-          }
-        });
-      }
-
-      // Search Routes
-      const { data: routes } = await supabase
-        .from('routes')
-        .select(`
-          id, 
-          code, 
-          name,
-          sales_agents(name, agent_code)
-        `)
-        .or(`code.ilike.${searchTerm},name.ilike.${searchTerm}`)
-        .limit(5);
-
-      if (routes) {
-        routes.forEach(route => {
-          results.push({
-            id: route.id,
-            type: 'route',
-            title: route.name,
-            subtitle: `Kode: ${route.code}${(route.sales_agents as any)?.agent_code ? ` | Agent: ${(route.sales_agents as any).agent_code}` : ''}`,
-            url: `/routes?highlight=${route.id}`,
-          });
-        });
-      }
-
-      // Search routes by assigned sales agent
-      const { data: routesByAgent } = await supabase
-        .from('routes')
-        .select(`
-          id, 
-          code, 
-          name,
-          sales_agents!inner(name, agent_code)
-        `)
-        .or(`sales_agents.agent_code.ilike.${searchTerm},sales_agents.name.ilike.${searchTerm}`)
-        .limit(3);
-
-      if (routesByAgent) {
-        routesByAgent.forEach(route => {
-          // Only add if not already found
-          const exists = results.some(r => r.type === 'route' && r.id === route.id);
-          if (!exists) {
-            results.push({
-              id: route.id,
-              type: 'route',
-              title: route.name,
-              subtitle: `Kode: ${route.code} | Agent: ${(route.sales_agents as any).agent_code} (${(route.sales_agents as any).name})`,
-              url: `/routes?highlight=${route.id}`,
-            });
-          }
         });
       }
 

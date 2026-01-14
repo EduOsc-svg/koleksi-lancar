@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import {
   LayoutDashboard,
   Users,
-  MapPin,
+  
   UserCircle,
   FileText,
   Wallet,
@@ -35,7 +35,6 @@ const mainItems = [
 
 const masterItems = [
   { titleKey: "nav.salesAgents", url: "/sales-agents", icon: Users },
-  { titleKey: "nav.routes", url: "/routes", icon: MapPin },
   { titleKey: "nav.customers", url: "/customers", icon: UserCircle },
   { titleKey: "nav.contracts", url: "/contracts", icon: FileText },
   { titleKey: "nav.holidays", url: "/holidays", icon: Calendar },

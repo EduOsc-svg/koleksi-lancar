@@ -99,7 +99,7 @@ export default function CustomerHistory() {
                 >
                   <div className="font-medium">{customer.name}</div>
                   <div className="text-xs text-muted-foreground">
-                    Route: {customer.routes?.code} | Agent: {customer.sales_agents?.name || "-"}
+                    Kode: {customer.customer_code || "-"} | Agent: {customer.sales_agents?.name || "-"}
                   </div>
                 </div>
               ))}

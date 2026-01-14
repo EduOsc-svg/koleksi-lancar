@@ -49,7 +49,6 @@ import {
   CustomerWithRelations,
 } from "@/hooks/useCustomers";
 import { useSalesAgents } from "@/hooks/useSalesAgents";
-import { useRoutes } from "@/hooks/useRoutes";
 import { usePagination } from "@/hooks/usePagination";
 import { TablePagination } from "@/components/TablePagination";
 
@@ -59,7 +58,6 @@ export default function Customers() {
   const highlightId = searchParams.get('highlight');
   const { data: customers, isLoading } = useCustomers();
   const { data: agents } = useSalesAgents();
-  const { data: routes } = useRoutes();
   const createCustomer = useCreateCustomer();
   const updateCustomer = useUpdateCustomer();
   const deleteCustomer = useDeleteCustomer();
@@ -76,7 +74,6 @@ export default function Customers() {
     nik: "",
     address: "",
     phone: "",
-    route_id: "",
     assigned_sales_id: null as string | null,
   });
 
@@ -118,7 +115,7 @@ export default function Customers() {
 
   const handleOpenCreate = () => {
     setSelectedCustomer(null);
-    setFormData({ name: "", customer_code: "", nik: "", address: "", phone: "", route_id: "", assigned_sales_id: null });
+    setFormData({ name: "", customer_code: "", nik: "", address: "", phone: "", assigned_sales_id: null });
     setDialogOpen(true);
   };
 
@@ -130,17 +127,12 @@ export default function Customers() {
       nik: customer.nik || "",
       address: customer.address || "",
       phone: customer.phone || "",
-      route_id: customer.route_id,
       assigned_sales_id: customer.assigned_sales_id,
     });
     setDialogOpen(true);
   };
 
   const handleSubmit = async () => {
-    if (!formData.route_id) {
-      toast.error(t("customers.selectRoute"));
-      return;
-    }
     if (!formData.customer_code.trim()) {
       toast.error(t("errors.customerCodeRequired", "Masukkan kode pelanggan"));
       return;
@@ -157,7 +149,7 @@ export default function Customers() {
       const submitData = {
         ...formData,
         customer_code: formData.customer_code.trim() || null,
-        nik: formData.nik.trim(), // NIK is required, no fallback to null
+        nik: formData.nik.trim(),
       };
       if (selectedCustomer) {
         await updateCustomer.mutateAsync({ id: selectedCustomer.id, ...submitData });
@@ -209,7 +201,6 @@ export default function Customers() {
               <TableHead>{t("customers.customerCode")}</TableHead>
               <TableHead>{t("customers.name")}</TableHead>
               <TableHead>{t("customers.nik")}</TableHead>
-              <TableHead>{t("customers.route")}</TableHead>
               <TableHead>{t("customers.salesAgent")}</TableHead>
               <TableHead>{t("customers.phone")}</TableHead>
               <TableHead className="text-right">{t("common.actions")}</TableHead>
@@ -218,11 +209,11 @@ export default function Customers() {
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center">{t("common.loading")}</TableCell>
+                <TableCell colSpan={6} className="text-center">{t("common.loading")}</TableCell>
               </TableRow>
             ) : customers?.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center text-muted-foreground">
+                <TableCell colSpan={6} className="text-center text-muted-foreground">
                   {t("common.noData")}
                 </TableCell>
               </TableRow>
@@ -240,9 +231,6 @@ export default function Customers() {
                   </TableCell>
                   <TableCell className="font-medium">{customer.name}</TableCell>
                   <TableCell>{customer.nik || "-"}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{customer.routes?.code}</Badge>
-                  </TableCell>
                   <TableCell>
                     {customer.sales_agents?.name || "-"}
                   </TableCell>
@@ -329,24 +317,6 @@ export default function Customers() {
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                 placeholder={t("customers.phone")}
               />
-            </div>
-            <div>
-              <Label htmlFor="route">{t("customers.route")} *</Label>
-              <Select
-                value={formData.route_id}
-                onValueChange={(v) => setFormData({ ...formData, route_id: v })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={t("customers.selectRoute")} />
-                </SelectTrigger>
-                <SelectContent>
-                  {routes?.map((route) => (
-                    <SelectItem key={route.id} value={route.id}>
-                      {route.code} - {route.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
             </div>
             <div>
               <Label htmlFor="agent">{t("customers.salesAgent")}</Label>
