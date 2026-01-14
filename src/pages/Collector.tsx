@@ -4,7 +4,6 @@ import { format, startOfMonth, endOfMonth } from "date-fns";
 import { id as localeId } from "date-fns/locale";
 import { Wallet, TrendingUp, Users, Calendar, DollarSign } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -22,7 +21,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useSalesAgents } from "@/hooks/useSalesAgents";
-import { useRoutes } from "@/hooks/useRoutes";
 import { useAggregatedPayments } from "@/hooks/useAggregatedPayments";
 import { usePayments } from "@/hooks/usePayments";
 import { formatRupiah } from "@/lib/format";
@@ -32,7 +30,6 @@ import { usePagination } from "@/hooks/usePagination";
 export default function Collector() {
   const { t } = useTranslation();
   const { data: agents } = useSalesAgents();
-  const { data: routes } = useRoutes();
   
   // Month selection
   const currentDate = new Date();
@@ -58,15 +55,11 @@ export default function Collector() {
     const paymentCount = agentPayments.length;
     const uniqueCustomers = new Set(agentPayments.map(p => p.credit_contracts?.customer_id)).size;
     
-    // Get assigned route
-    const assignedRoute = routes?.find(r => r.default_collector_id === agent.id);
-    
     return {
       ...agent,
       totalCollected,
       paymentCount,
       uniqueCustomers,
-      assignedRoute,
     };
   }).sort((a, b) => b.totalCollected - a.totalCollected) || [];
   
@@ -202,7 +195,6 @@ export default function Collector() {
                 <TableHead>#</TableHead>
                 <TableHead>Kode</TableHead>
                 <TableHead>Nama</TableHead>
-                <TableHead>Rute</TableHead>
                 <TableHead className="text-right">Jumlah Tagihan</TableHead>
                 <TableHead className="text-right">Customer</TableHead>
                 <TableHead className="text-right">Total Tertagih</TableHead>
@@ -211,13 +203,13 @@ export default function Collector() {
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center text-muted-foreground">
+                  <TableCell colSpan={6} className="text-center text-muted-foreground">
                     Memuat data...
                   </TableCell>
                 </TableRow>
               ) : paginatedCollectors.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center text-muted-foreground">
+                  <TableCell colSpan={6} className="text-center text-muted-foreground">
                     Belum ada data kolektor
                   </TableCell>
                 </TableRow>
@@ -229,13 +221,6 @@ export default function Collector() {
                       <Badge variant="outline">{collector.agent_code}</Badge>
                     </TableCell>
                     <TableCell className="font-medium">{collector.name}</TableCell>
-                    <TableCell>
-                      {collector.assignedRoute ? (
-                        <Badge variant="secondary">{collector.assignedRoute.code}</Badge>
-                      ) : (
-                        <span className="text-muted-foreground">-</span>
-                      )}
-                    </TableCell>
                     <TableCell className="text-right">{collector.paymentCount}</TableCell>
                     <TableCell className="text-right">{collector.uniqueCustomers}</TableCell>
                     <TableCell className="text-right font-medium text-primary">

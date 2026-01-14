@@ -26,7 +26,6 @@ import {
 import { toast } from "sonner";
 import { useSalesAgents } from "@/hooks/useSalesAgents";
 import { useCustomers } from "@/hooks/useCustomers";
-import { useRoutes } from "@/hooks/useRoutes";
 import { useContracts } from "@/hooks/useContracts";
 import { useCreatePayment } from "@/hooks/usePayments";
 import { formatRupiah } from "@/lib/format";
@@ -41,13 +40,11 @@ export default function Collection() {
   const { t } = useTranslation();
   const { data: agents } = useSalesAgents();
   const { data: customers } = useCustomers();
-  const { data: routes } = useRoutes();
   const { data: contracts } = useContracts("active");
   const createPayment = useCreatePayment();
   const printRef = useRef<HTMLDivElement>(null);
 
   // Manifest state
-  const [selectedRoute, setSelectedRoute] = useState<string>("");
   const [selectedCustomer, setSelectedCustomer] = useState<string>("");
   const [selectedSales, setSelectedSales] = useState<string>("");
 
@@ -90,12 +87,6 @@ export default function Collection() {
     // Ensure customer data exists
     if (!c.customers) return false;
     
-    // Filter by route
-    if (selectedRoute) {
-      const routeMatch = c.customers.route_id === selectedRoute;
-      if (!routeMatch) return false;
-    }
-    
     // Filter by customer
     if (selectedCustomer) {
       const customerMatch = c.customer_id === selectedCustomer;
@@ -123,7 +114,7 @@ export default function Collection() {
   // Reset pagination when filters change
   useEffect(() => {
     setManifestPage(1);
-  }, [selectedRoute, selectedCustomer, selectedSales]);
+  }, [selectedCustomer, selectedSales]);
 
   const selectedCustomerName = selectedCustomer 
     ? (() => {
@@ -235,25 +226,7 @@ export default function Collection() {
               <CardTitle>{t("collection.filterManifest")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div>
-                  <Label>{t("collection.filterByRoute")}</Label>
-                  <Select value={selectedRoute} onValueChange={(v) => {
-                    setSelectedRoute(v === "all" ? "" : v);
-                  }}>
-                    <SelectTrigger>
-                      <SelectValue placeholder={t("collection.allRoutes")} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">{t("collection.allRoutes")}</SelectItem>
-                      {routes?.map((route) => (
-                        <SelectItem key={route.id} value={route.id}>
-                          {route.name} ({route.code})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <Label>{t("Filter Berdasarkan Pelanggan")}</Label>
                   <Select value={selectedCustomer} onValueChange={(v) => {
@@ -306,7 +279,6 @@ export default function Collection() {
                 <TableRow className="print:break-inside-avoid">
                   <TableHead className="print:text-black print:border print:border-black print:bg-gray-100">#</TableHead>
                   <TableHead className="print:text-black print:border print:border-black print:bg-gray-100">{t("collection.customer")}</TableHead>
-                  <TableHead className="print:text-black print:border print:border-black print:bg-gray-100">{t("routes.title")}</TableHead>
                   <TableHead className="print:text-black print:border print:border-black print:bg-gray-100">{t("contracts.contractRef")}</TableHead>
                   <TableHead className="print:text-black print:border print:border-black print:bg-gray-100">{t("contracts.couponIndex")}</TableHead>
                   <TableHead className="print:text-black print:border print:border-black print:bg-gray-100">{t("contracts.amount")}</TableHead>
@@ -317,13 +289,13 @@ export default function Collection() {
               <TableBody>
                 {!contracts ? (
                   <TableRow className="print:hidden">
-                    <TableCell colSpan={8} className="text-center text-muted-foreground">
+                    <TableCell colSpan={7} className="text-center text-muted-foreground">
                       Loading contracts...
                     </TableCell>
                   </TableRow>
                 ) : manifestContracts.length === 0 ? (
                   <TableRow className="print:hidden">
-                    <TableCell colSpan={8} className="text-center text-muted-foreground">
+                    <TableCell colSpan={7} className="text-center text-muted-foreground">
                       {t("collection.noContracts")}
                     </TableCell>
                   </TableRow>
@@ -332,9 +304,6 @@ export default function Collection() {
                     <TableRow key={contract.id} className="print:break-inside-avoid">
                       <TableCell className="print:text-black print:border print:border-black">{(manifestPage - 1) * 5 + i + 1}</TableCell>
                       <TableCell className="font-medium print:text-black print:border print:border-black">{contract.customers?.name}</TableCell>
-                      <TableCell className="print:text-black print:border print:border-black">
-                        <Badge variant="outline" className="print:border-black print:text-black">{contract.customers?.routes?.code}</Badge>
-                      </TableCell>
                       <TableCell className="print:text-black print:border print:border-black">{contract.contract_ref}</TableCell>
                       <TableCell className="print:text-black print:border print:border-black">
                         <Badge className="print:bg-transparent print:text-black print:border print:border-black">{contract.current_installment_index + 1}</Badge>
@@ -399,6 +368,14 @@ export default function Collection() {
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">{t("collection.customer")}:</span>
                     <span className="font-medium">{selectedContractData.customers?.name}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">{t("contracts.loanAmount")}:</span>
+                    <span className="font-medium">{formatRupiah(selectedContractData.total_loan_amount)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">{t("contracts.installmentAmount")}:</span>
+                    <span className="font-medium">{formatRupiah(selectedContractData.daily_installment_amount)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">{t("contracts.progress")}:</span>
