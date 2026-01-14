@@ -11,9 +11,6 @@ interface PrintA4LandscapeCouponsProps {
     customers?: {
       name: string;
       address?: string | null;
-      routes?: {
-        code: string;
-      } | null;
       sales_agents?: {
         agent_code: string;
         name: string;
