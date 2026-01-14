@@ -1,243 +1,188 @@
-/* ========================================
-   VOUCHER PRINT STYLES - CLEAN VERSION
-   ======================================== */
+/* CSS untuk cetak 100 coupon - Grid layout 3x4 per halaman */
 
-/* Reset standar */
-* { margin: 0; padding: 0; box-sizing: border-box; }
-
-/* Screen mode - hanya untuk control buttons */
-@media screen {
-    .voucher-print-container {
-        display: none !important;
-    }
-    
-    /* Preview container untuk toggle visibility */
-    .voucher-preview-container {
-        display: none; /* Default hidden */
-        margin: 20px auto;
-        padding: 20px;
-        background: #f8f9fa;
-        border-radius: 8px;
-        border: 2px dashed #dee2e6;
-    }
-    
-    .voucher-preview-container.show {
-        display: block !important;
-    }
-    
-    .voucher-preview-grid {
-        display: grid !important;
-        grid-template-columns: repeat(3, 1fr) !important;
-        grid-template-rows: repeat(3, 1fr) !important;
-        gap: 15px !important;
-        justify-items: center !important;
-        align-items: center !important;
-    }
-    
-    /* Voucher preview styling - sesuai class 'voucher' dari VoucherCard */
-    .voucher-preview-grid .voucher {
-        width: 240px !important;
-        height: 150px !important;
-        position: relative !important;
-        background-image: url('/Background with WM.png') !important;
-        background-size: cover !important;
-        background-position: center !important;
-        background-repeat: no-repeat !important;
-        border: 1px solid #ddd !important;
-        border-radius: 4px !important;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
-        font-family: "Times New Roman", Times, serif !important;
-        display: block !important;
-        overflow: hidden !important;
-    }
-    
-    /* Preview data positioning (scaled down for screen) */
-    .voucher-preview-grid .voucher span {
-        position: absolute !important;
-        font-family: "Times New Roman", Times, serif !important;
-        color: #333 !important;
-        font-weight: normal !important;
-        white-space: nowrap !important;
-        display: block !important;
-        visibility: visible !important;
-        font-size: 9px !important;
-    }
-
-    /* Scaled positioning for preview */
-    .voucher-preview-grid .data-faktur { top: 37.5% !important; left: 23% !important; }
-    .voucher-preview-grid .data-nama { top: 45.5% !important; left: 23% !important; }
-    .voucher-preview-grid .data-alamat { top: 53.5% !important; left: 23% !important; font-size: 8px !important; }
-    .voucher-preview-grid .data-jatuh-tempo { top: 61.5% !important; left: 32% !important; }
-    .voucher-preview-grid .data-angsuran-ke { top: 69.5% !important; left: 32% !important; }
-    .voucher-preview-grid .data-besar-angsuran { top: 78% !important; left: 73% !important; font-size: 10px !important; }
-    .voucher-preview-grid .data-kantor { top: 87% !important; left: 45% !important; font-size: 8px !important; }
-    
-    /* Empty voucher preview */
-    .voucher-preview-grid .voucher-empty {
-        background: #f8f8f8 !important;
-        border: 2px dashed #ccc !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        color: #999 !important;
-        font-size: 12px !important;
-    }
-    
-    .voucher-preview-grid .voucher-empty::after {
-        content: "Empty Slot" !important;
-    }
-}
-
-/* Utility classes */
-.print-only { display: none; }
-
-/* Container hanya untuk print */
-.voucher-print-container {
-  display: none !important;
-}
-
-/* Hide A4 landscape container on screen - CRITICAL */
+/* Default: Hide voucher container in normal screen view */
 .print-a4-landscape-container {
-  display: none !important;
-  visibility: hidden !important;
-  position: absolute !important;
-  left: -9999px !important;
-  width: 0 !important;
-  height: 0 !important;
-  overflow: hidden !important;
+  position: absolute;
+  left: -9999px;
+  top: -9999px;
+  visibility: hidden;
 }
 
-/* --- MODE CETAK (PRINT ONLY) --- */
 @media print {
-    .print-only { display: block !important; }
-    
-    @page {
-        size: A4 landscape;
-        margin: 5mm;
-    }
-    
-    /* Reset body */
-    body {
-        margin: 0 !important;
-        padding: 0 !important;
-        background: white !important;
-        font-family: "Times New Roman", serif;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-    }
-    
-    /* Hide ALL elements by default */
-    * {
-        visibility: hidden !important;
-    }
-    
-    /* Show print container and ALL its children */
-    .print-a4-landscape-container,
-    .print-a4-landscape-container *,
-    .voucher-print-container,
-    .voucher-print-container * {
-        visibility: visible !important;
-    }
-    
-    /* Position print container correctly */
-    .print-a4-landscape-container {
-        display: block !important;
-        position: absolute !important;
-        left: 0 !important;
-        top: 0 !important;
-        width: 100% !important;
-        height: auto !important;
-        overflow: visible !important;
-        z-index: 99999 !important;
-    }
-    
-    /* Page styling for A4 landscape container */
-    .print-a4-landscape-container .page {
-        display: grid !important;
-        grid-template-columns: repeat(3, 1fr) !important;
-        grid-template-rows: repeat(4, 1fr) !important;
-        gap: 5mm !important;
-        padding: 10mm !important;
-        page-break-after: always !important;
-        width: 100% !important;
-        height: auto !important;
-        min-height: 190mm !important;
-        background: white !important;
-    }
-    
-    .print-a4-landscape-container .page:last-child {
-        page-break-after: avoid !important;
-    }
-    
-    /* Halaman A4 Landscape */
-    .voucher-page { 
-        background-color: white !important;
-        width: 100% !important;
-        height: auto !important;
-        padding: 15mm !important;
-        margin: 0 !important;
-        display: block !important;
-        page-break-after: always !important;
-    }
-    
-    .voucher-page:last-child {
-        page-break-after: avoid !important;
-    }
-    
-    /* Grid Layout 3x3 */
-    .voucher-grid { 
-        display: grid !important; 
-        grid-template-columns: repeat(3, 1fr) !important;
-        grid-template-rows: repeat(3, 1fr) !important;
-        gap: 10mm !important;
-        justify-items: center !important;
-        align-items: center !important;
-        width: 100% !important;
-        height: auto !important;
-        visibility: visible !important;
-    }
-    
-    /* --- VOUCHER CONTAINER --- */
-    .voucher {
-        width: 80mm !important;
-        height: 50mm !important;
-        position: relative !important;
-        background-image: url('/Background with WM.png') !important;
-        background-size: 100% 100% !important;
-        background-repeat: no-repeat !important;
-        font-family: "Times New Roman", Times, serif !important;
-        color: #333 !important;
-        font-size: 10pt !important;
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
-        display: block !important;
-        visibility: visible !important;
-    }
+  /* Page setup */
+  @page {
+    size: A4 landscape;
+    margin: 0;
+  }
 
-    /* Voucher data positioning - sesuai dengan VoucherCard.tsx */
-    .voucher span {
-        position: absolute !important;
-        font-family: "Times New Roman", Times, serif !important;
-        color: #333 !important;
-        font-weight: normal !important;
-        white-space: nowrap !important;
-        display: block !important;
-        visibility: visible !important;
-        font-size: 9pt !important;
-    }
+  /* Reset positioning for print mode */
+  .print-a4-landscape-container {
+    position: static !important;
+    left: auto !important;
+    top: auto !important;
+    visibility: visible !important;
+  }
 
-    /* Data positioning sesuai backup file */
-    .data-faktur { top: 37.5% !important; left: 23% !important; }  /* NO.Faktur */
-    .data-nama { top: 45.5% !important; left: 23% !important; }  /* Nama */
-    .data-alamat { top: 53.5% !important; left: 23% !important; font-size: 8pt !important; } /* Alamat */
-    .data-jatuh-tempo { top: 61.5% !important; left: 32% !important; }  /* Jatuh Tempo */
-    .data-angsuran-ke { top: 69.5% !important; left: 32% !important; }  /* Angsuran Ke- */
-    .data-besar-angsuran { top: 78% !important; left: 73% !important; font-size: 12pt !important; }  /* Besar Angsuran */
-    .data-kantor { top: 87% !important; left: 45% !important; font-size: 9pt !important; }  /* Info Kantor */
+  body {
+    margin: 0;
+    padding: 0;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
 
-    /* Empty voucher styling */
-    .voucher-empty {
-        background: none !important;
-        border: 1px dashed #ccc !important;
-    }
+  /* Hide everything except print container */
+  body * {
+    visibility: hidden;
+  }
+
+  .print-a4-landscape-container,
+  .print-a4-landscape-container * {
+    visibility: visible !important;
+  }
+
+  .print-a4-landscape-container .page {
+    width: 297mm;
+    height: 210mm;
+    margin: 0;
+    padding: 8mm;
+    page-break-after: always;
+    position: relative;
+    display: grid !important;
+    grid-template-columns: repeat(3, 8cm);
+    grid-template-rows: repeat(4, 5cm);
+    gap: 1mm;
+    justify-content: center;
+    align-content: center;
+  }
+
+  .print-a4-landscape-container .page:last-child {
+    page-break-after: avoid;
+  }
+
+  /* Individual coupon - 8x5cm with aspect ratio and proper positioning */
+  .voucher {
+    position: relative;
+    width: 8cm;
+    height: 5cm;
+    aspect-ratio: 1.6 / 1;
+    font-family: "Times New Roman", Times, serif;
+    color: #000;
+    background-color: #f4f4f4;
+    overflow: hidden;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  /* Background Image - menggunakan img tag seperti template */
+  .voucher-bg {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 0;
+  }
+
+  /* Styling Umum untuk Semua Field Teks */
+  .field-item {
+    position: absolute;
+    white-space: nowrap;
+    z-index: 1;
+  }
+
+  /* --- POSITIONING SESUAI TEMPLATE HTML --- */
+  
+  /* Judul Tengah */
+  .judul-voucer {
+    top: 25%;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 1.2em;
+    font-weight: bold;
+  }
+
+  /* --- Kolom Kiri (Label dan Titik Dua) --- */
+  .label-kiri {
+    font-weight: bold;
+    font-size: 0.9em;
+    left: 4%;
+  }
+  
+  .titik-dua {
+    font-weight: bold;
+    font-size: 0.9em;
+    left: 25%;
+  }
+
+  /* Nilai Field */
+  .nilai-field {
+    font-size: 0.8em;
+    left: 27%;
+    max-width: 65%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* ROW POSITIONS - sesuai template */
+  .row-1 { top: 42%; } /* NO.Faktur */
+  .row-2 { top: 49%; } /* Nama */
+  .row-3 { top: 56%; } /* Alamat */
+  .row-4 { top: 63%; } /* Jatuh Tempo */
+  .row-5 { top: 70%; } /* Angsuran Ke- */
+
+  /* --- Bagian Kanan (Besar Angsuran) --- */
+  .label-besar-angsuran {
+    top: 71%;
+    left: 55%;
+    font-size: 0.9em;
+    font-weight: bold;
+  }
+  
+  .label-rp {
+    top: 78%;
+    left: 58%;
+    font-size: 0.9em;
+    font-weight: bold;
+  }
+  
+  .nilai-angsuran {
+    top: 78%;
+    left: 65%;
+    font-size: 0.9em;
+    font-weight: bold;
+  }
+  
+  .garis-input-rp {
+    position: absolute;
+    top: 82%;
+    left: 65%;
+    width: 30%;
+    height: 1px;
+    background-color: #000;
+    z-index: 1;
+  }
+
+  /* --- Bagian Bawah Tengah --- */
+  .label-kantor {
+    top: 88%;
+    left: 20%;
+    font-size: 0.8em;
+    font-weight: bold;
+  }
+
+  /* Empty vouchers should be invisible */
+  .voucher-empty {
+    background: none !important;
+    border: none !important;
+    visibility: hidden !important;
+  }
+}
+
+/* Screen preview styles (optional) */
+@media screen {
+  .print-a4-landscape-container {
+    /* Hidden by default on screen */
+  }
 }
