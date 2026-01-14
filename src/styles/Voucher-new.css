@@ -1,4 +1,5 @@
-/* CSS untuk cetak 100 coupon - Grid layout 3x4 per halaman */
+/* CSS untuk cetak voucher - Grid layout 3x4 per halaman (12 voucher/page) */
+/* Layout specs: 94px margin (8mm), 12px gap (1mm), 77% coverage */
 
 /* Default: Hide voucher container in normal screen view */
 .print-a4-landscape-container {
@@ -9,7 +10,7 @@
 }
 
 @media print {
-  /* Page setup */
+  /* Page setup - A4 Landscape */
   @page {
     size: A4 landscape;
     margin: 0;
@@ -40,11 +41,12 @@
     visibility: visible !important;
   }
 
+  /* Page layout: 3 columns × 4 rows = 12 vouchers */
   .print-a4-landscape-container .page {
     width: 297mm;
     height: 210mm;
     margin: 0;
-    padding: 8mm;
+    padding: 8mm; /* 94px margin */
     page-break-after: always;
     position: relative;
     display: grid !important;
