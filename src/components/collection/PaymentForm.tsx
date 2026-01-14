@@ -30,15 +30,15 @@ interface Contract {
   customers: { name: string } | null;
 }
 
-interface Agent {
+interface Collector {
   id: string;
-  agent_code: string;
+  collector_code: string;
   name: string;
 }
 
 interface PaymentFormProps {
   contracts: Contract[] | undefined;
-  agents: Agent[] | undefined;
+  collectors: Collector[] | undefined;
   onSubmit: (data: {
     contract_id: string;
     payment_date: string;
@@ -50,13 +50,13 @@ interface PaymentFormProps {
   isSubmitting: boolean;
 }
 
-export function PaymentForm({ contracts, agents, onSubmit, isSubmitting }: PaymentFormProps) {
+export function PaymentForm({ contracts, collectors, onSubmit, isSubmitting }: PaymentFormProps) {
   const { t } = useTranslation();
   
   const [selectedContract, setSelectedContract] = useState("");
   const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split("T")[0]);
   const [paymentAmount, setPaymentAmount] = useState("");
-  const [paymentSales, setPaymentSales] = useState("");
+  const [paymentCollector, setPaymentCollector] = useState("");
   const [paymentNotes, setPaymentNotes] = useState("");
 
   const selectedContractData = contracts?.find((c) => c.id === selectedContract);
@@ -115,7 +115,7 @@ export function PaymentForm({ contracts, agents, onSubmit, isSubmitting }: Payme
         payment_date: paymentDate,
         installment_index: nextCoupon,
         amount_paid: amount,
-        collector_id: paymentSales || null,
+        collector_id: paymentCollector || null,
         notes: finalNotes,
       });
 
@@ -123,7 +123,7 @@ export function PaymentForm({ contracts, agents, onSubmit, isSubmitting }: Payme
       setSelectedContract("");
       setPaymentAmount("");
       setPaymentNotes("");
-      setPaymentSales("");
+      setPaymentCollector("");
     } catch {
       // Error handled by parent
     }
@@ -274,14 +274,14 @@ export function PaymentForm({ contracts, agents, onSubmit, isSubmitting }: Payme
           </div>
           <div className="space-y-2">
             <Label className="text-sm font-medium">{t("collection.collector")}</Label>
-            <Select value={paymentSales} onValueChange={setPaymentSales}>
+            <Select value={paymentCollector} onValueChange={setPaymentCollector}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder={t("collection.selectSales")} />
               </SelectTrigger>
               <SelectContent>
-                {agents?.map((agent) => (
-                  <SelectItem key={agent.id} value={agent.id}>
-                    {agent.agent_code} - {agent.name}
+                {collectors?.map((collector) => (
+                  <SelectItem key={collector.id} value={collector.id}>
+                    {collector.collector_code} - {collector.name}
                   </SelectItem>
                 ))}
               </SelectContent>

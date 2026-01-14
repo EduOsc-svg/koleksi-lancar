@@ -121,6 +121,30 @@ export type Database = {
           },
         ]
       }
+      collectors: {
+        Row: {
+          collector_code: string
+          created_at: string
+          id: string
+          name: string
+          phone: string | null
+        }
+        Insert: {
+          collector_code: string
+          created_at?: string
+          id?: string
+          name: string
+          phone?: string | null
+        }
+        Update: {
+          collector_code?: string
+          created_at?: string
+          id?: string
+          name?: string
+          phone?: string | null
+        }
+        Relationships: []
+      }
       credit_contracts: {
         Row: {
           contract_ref: string
@@ -397,14 +421,7 @@ export type Database = {
             foreignKeyName: "payment_logs_collector_id_fkey"
             columns: ["collector_id"]
             isOneToOne: false
-            referencedRelation: "invoice_details"
-            referencedColumns: ["sales_agent_id"]
-          },
-          {
-            foreignKeyName: "payment_logs_collector_id_fkey"
-            columns: ["collector_id"]
-            isOneToOne: false
-            referencedRelation: "sales_agents"
+            referencedRelation: "collectors"
             referencedColumns: ["id"]
           },
           {
@@ -457,14 +474,7 @@ export type Database = {
             foreignKeyName: "routes_default_collector_id_fkey"
             columns: ["default_collector_id"]
             isOneToOne: false
-            referencedRelation: "invoice_details"
-            referencedColumns: ["sales_agent_id"]
-          },
-          {
-            foreignKeyName: "routes_default_collector_id_fkey"
-            columns: ["default_collector_id"]
-            isOneToOne: false
-            referencedRelation: "sales_agents"
+            referencedRelation: "collectors"
             referencedColumns: ["id"]
           },
         ]

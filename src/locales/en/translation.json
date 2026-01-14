@@ -186,6 +186,25 @@
     "contractDetails": "Contract Details",
     "collected": "Collected"
   },
+  "collector": {
+    "title": "Collectors",
+    "description": "Manage collection agents data",
+    "list": "Collectors List",
+    "add": "Add Collector",
+    "edit": "Edit Collector",
+    "addDescription": "Add a new collector with code K01, K02, etc",
+    "editDescription": "Edit collector data",
+    "code": "Collector Code",
+    "name": "Name",
+    "phone": "Phone",
+    "noData": "No collectors found",
+    "totalCount": "Total {{count}} collectors",
+    "created": "Collector added successfully",
+    "updated": "Collector updated successfully",
+    "deleted": "Collector deleted successfully",
+    "deleteTitle": "Delete Collector",
+    "deleteConfirm": "Are you sure you want to delete collector {{name}} ({{code}})?"
+  },
   "reports": {
     "title": "Reports",
     "collectionReport": "Collection Report",

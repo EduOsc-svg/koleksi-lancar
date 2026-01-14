@@ -6,6 +6,7 @@ import VoucherPage from "@/components/print/VoucherPage";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { useSalesAgents } from "@/hooks/useSalesAgents";
+import { useCollectors } from "@/hooks/useCollectors";
 import { useCustomers } from "@/hooks/useCustomers";
 import { useContracts } from "@/hooks/useContracts";
 import { useCreatePayment } from "@/hooks/usePayments";
@@ -17,6 +18,7 @@ import { PaymentForm } from "@/components/collection/PaymentForm";
 export default function Collection() {
   const { t } = useTranslation();
   const { data: agents } = useSalesAgents();
+  const { data: collectors } = useCollectors();
   const { data: customers } = useCustomers();
   const { data: contracts, isLoading: contractsLoading } = useContracts("active");
   const createPayment = useCreatePayment();
@@ -150,7 +152,7 @@ export default function Collection() {
           <div className="max-w-2xl">
             <PaymentForm
               contracts={contracts}
-              agents={agents}
+              collectors={collectors}
               onSubmit={handleSubmitPayment}
               isSubmitting={createPayment.isPending}
             />

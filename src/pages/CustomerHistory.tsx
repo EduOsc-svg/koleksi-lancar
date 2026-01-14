@@ -204,7 +204,7 @@ export default function CustomerHistory() {
                       <TableHead>Coupon #</TableHead>
                       <TableHead>Date</TableHead>
                       <TableHead className="text-right">Amount</TableHead>
-                      <TableHead>Sales</TableHead>
+                      <TableHead>Kolektor</TableHead>
                       <TableHead>Notes</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -229,7 +229,7 @@ export default function CustomerHistory() {
                           <TableCell className="text-right font-medium">
                             {formatRupiah(Number(payment.amount_paid))}
                           </TableCell>
-                          <TableCell>{payment.sales_agents?.name || "-"}</TableCell>
+                          <TableCell>{payment.collectors?.name || "-"}</TableCell>
                           <TableCell className="text-muted-foreground">
                             {payment.notes || "-"}
                           </TableCell>

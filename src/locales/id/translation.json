@@ -204,6 +204,25 @@
     "contractDetails": "Detail Kontrak",
     "collected": "Terkumpul"
   },
+  "collector": {
+    "title": "Kolektor",
+    "description": "Kelola data kolektor penagihan",
+    "list": "Daftar Kolektor",
+    "add": "Tambah Kolektor",
+    "edit": "Ubah Kolektor",
+    "addDescription": "Tambahkan kolektor baru dengan kode K01, K02, dst",
+    "editDescription": "Ubah data kolektor",
+    "code": "Kode Kolektor",
+    "name": "Nama",
+    "phone": "Telepon",
+    "noData": "Belum ada data kolektor",
+    "totalCount": "Total {{count}} kolektor",
+    "created": "Kolektor berhasil ditambahkan",
+    "updated": "Kolektor berhasil diperbarui",
+    "deleted": "Kolektor berhasil dihapus",
+    "deleteTitle": "Hapus Kolektor",
+    "deleteConfirm": "Apakah Anda yakin ingin menghapus kolektor {{name}} ({{code}})?"
+  },
   "reports": {
     "title": "Laporan",
     "collectionReport": "Laporan Penagihan",
