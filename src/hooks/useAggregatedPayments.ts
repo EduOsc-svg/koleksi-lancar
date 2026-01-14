@@ -31,7 +31,7 @@ export const useAggregatedPayments = (dateFrom?: string, dateTo?: string, collec
             customer_id,
             customers(name)
           ),
-          sales_agents(name)
+          collectors(name, collector_code)
         `)
         .order('payment_date', { ascending: false });
 
@@ -60,7 +60,7 @@ export const useAggregatedPayments = (dateFrom?: string, dateTo?: string, collec
             customer_id: payment.credit_contracts?.customer_id || '',
             customer_name: payment.credit_contracts?.customers?.name || 'Unknown',
             contract_ref: payment.credit_contracts?.contract_ref || '',
-            collector_name: payment.sales_agents?.name || null,
+            collector_name: payment.collectors?.name || null,
             daily_installment_amount: Number(payment.credit_contracts?.daily_installment_amount) || 0,
             coupon_count: 0,
             total_amount: 0,
