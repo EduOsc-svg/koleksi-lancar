@@ -1,482 +1,160 @@
 import { useState, useRef, useEffect } from "react";
-import { CreditCard, FileText, AlertTriangle } from "lucide-react";
+import { FileText, CreditCard } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import "@/styles/Voucher-new.css"; // New voucher styles based on HTML template
+import "@/styles/Voucher-new.css";
 import VoucherPage from "@/components/print/VoucherPage";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { toast } from "sonner";
 import { useSalesAgents } from "@/hooks/useSalesAgents";
 import { useCustomers } from "@/hooks/useCustomers";
 import { useContracts } from "@/hooks/useContracts";
 import { useCreatePayment } from "@/hooks/usePayments";
-import { formatRupiah } from "@/lib/format";
-import { Badge } from "@/components/ui/badge";
-import { useLastPaymentDate, useNextCouponDueDate, calculateLateNoteFromDueDate } from "@/hooks/useLastPaymentDate";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Textarea } from "@/components/ui/textarea";
 import { usePagination } from "@/hooks/usePagination";
-import { TablePagination } from "@/components/TablePagination";
+import { ManifestFilters } from "@/components/collection/ManifestFilters";
+import { ManifestTable } from "@/components/collection/ManifestTable";
+import { PaymentForm } from "@/components/collection/PaymentForm";
 
 export default function Collection() {
   const { t } = useTranslation();
   const { data: agents } = useSalesAgents();
   const { data: customers } = useCustomers();
-  const { data: contracts } = useContracts("active");
+  const { data: contracts, isLoading: contractsLoading } = useContracts("active");
   const createPayment = useCreatePayment();
   const printRef = useRef<HTMLDivElement>(null);
 
   // Manifest state
-  const [selectedCustomer, setSelectedCustomer] = useState<string>("");
-  const [selectedSales, setSelectedSales] = useState<string>("");
+  const [selectedCustomer, setSelectedCustomer] = useState("");
+  const [selectedSales, setSelectedSales] = useState("");
 
-  // Payment state
-  const [selectedContract, setSelectedContract] = useState<string>("");
-  const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split("T")[0]);
-  const [paymentAmount, setPaymentAmount] = useState("");
-  const [paymentSales, setPaymentSales] = useState<string>("");
-  const [paymentNotes, setPaymentNotes] = useState("");
-
-  const selectedContractData = contracts?.find((c) => c.id === selectedContract);
-  const nextCoupon = selectedContractData
-    ? selectedContractData.current_installment_index + 1
-    : 1;
-
-  // Fetch last payment date for display
-  const { data: lastPaymentDate } = useLastPaymentDate(selectedContract || null);
-  
-  // Fetch next coupon due date for late calculation
-  const { data: nextCouponDueDate } = useNextCouponDueDate(selectedContract || null, nextCoupon);
-  
-  const [lateInfo, setLateInfo] = useState<{ isLate: boolean; lateDays: number; note: string | null; dueDate: string | null }>({ 
-    isLate: false, lateDays: 0, note: null, dueDate: null 
-  });
-
-  // Calculate late note when payment date or contract changes
-  useEffect(() => {
-    if (selectedContract && nextCouponDueDate && paymentDate) {
-      const info = calculateLateNoteFromDueDate(nextCouponDueDate, paymentDate);
-      setLateInfo(info);
-      if (info.isLate && info.note && !paymentNotes) {
-        setPaymentNotes(info.note);
-      }
-    } else {
-      setLateInfo({ isLate: false, lateDays: 0, note: null, dueDate: null });
-    }
-  }, [selectedContract, nextCouponDueDate, paymentDate]);
-
+  // Filter contracts for manifest
   const manifestContracts = contracts?.filter((c) => {
-    // Ensure customer data exists
     if (!c.customers) return false;
-    
-    // Filter by customer
-    if (selectedCustomer) {
-      const customerMatch = c.customer_id === selectedCustomer;
-      if (!customerMatch) return false;
-    }
-    
-    // Filter by sales agent
-    if (selectedSales) {
-      const salesMatch = c.customers.assigned_sales_id === selectedSales;
-      if (!salesMatch) return false;
-    }
-    
+    if (selectedCustomer && c.customer_id !== selectedCustomer) return false;
+    if (selectedSales && c.customers.assigned_sales_id !== selectedSales) return false;
     return true;
   }) || [];
 
-  // Pagination for manifest contracts
+  // Pagination for manifest
   const {
     paginatedItems: paginatedManifestContracts,
     currentPage: manifestPage,
     goToPage: setManifestPage,
     totalPages: manifestTotalPages,
-    totalItems: manifestTotalItems
-  } = usePagination(manifestContracts, 5);
+    totalItems: manifestTotalItems,
+  } = usePagination(manifestContracts, 10);
 
   // Reset pagination when filters change
   useEffect(() => {
     setManifestPage(1);
-  }, [selectedCustomer, selectedSales]);
+  }, [selectedCustomer, selectedSales, setManifestPage]);
 
-  const selectedCustomerName = selectedCustomer 
+  // Print info
+  const selectedCustomerName = selectedCustomer
     ? (() => {
-        const customer = customers?.find(c => c.id === selectedCustomer);
-        const code = customer?.customer_code || 'N/A';
-        const name = customer?.name || 'Unknown';
-        return `${code} - ${name}`;
+        const customer = customers?.find((c) => c.id === selectedCustomer);
+        return customer ? `${customer.customer_code} - ${customer.name}` : null;
       })()
     : null;
+
   const selectedSalesName = selectedSales
     ? (() => {
-        const agent = agents?.find(a => a.id === selectedSales);
-        const code = agent?.agent_code || 'N/A';
-        const name = agent?.name || 'Unknown';
-        return `${code} - ${name}`;
+        const agent = agents?.find((a) => a.id === selectedSales);
+        return agent ? `${agent.agent_code} - ${agent.name}` : null;
       })()
     : null;
 
   const handlePrintCoupons = () => {
-    if (!manifestContracts?.length) {
+    if (!manifestContracts.length) {
       toast.error(t("collection.noContracts"));
       return;
     }
-    
-    console.log("Print vouchers with contracts:", manifestContracts.length, manifestContracts);
-    
-    // Langsung buka print dialog
     window.print();
   };
 
-  const formatCurrencyInput = (value: string) => {
-    const numericValue = value.replace(/\D/g, "");
-    if (!numericValue) return "";
-    return new Intl.NumberFormat("id-ID").format(parseInt(numericValue));
-  };
-
-  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formatted = formatCurrencyInput(e.target.value);
-    setPaymentAmount(formatted);
-  };
-
-  const getNumericAmount = () => {
-    return parseFloat(paymentAmount.replace(/\./g, "")) || 0;
-  };
-
-  const handleSubmitPayment = async () => {
-    if (!selectedContract) {
-      toast.error(t("errors.selectContract"));
-      return;
-    }
-    
-    const amount = getNumericAmount() || selectedContractData?.daily_installment_amount || 0;
-    const defaultNote = `Pembayaran ke-${nextCoupon}`;
-    const finalNotes = paymentNotes.trim() || defaultNote;
-    
+  const handleSubmitPayment = async (data: {
+    contract_id: string;
+    payment_date: string;
+    installment_index: number;
+    amount_paid: number;
+    collector_id: string | null;
+    notes: string;
+  }) => {
     try {
-      await createPayment.mutateAsync({
-        contract_id: selectedContract,
-        payment_date: paymentDate,
-        installment_index: nextCoupon,
-        amount_paid: amount,
-        collector_id: paymentSales || null,
-        notes: finalNotes,
-      });
-      
-      toast.success(t("collection.paymentRecorded", { coupon: nextCoupon }));
-      
-      setSelectedContract("");
-      setPaymentAmount("");
-      setPaymentNotes("");
-    } catch (error) {
+      await createPayment.mutateAsync(data);
+      toast.success(t("collection.paymentRecorded", { coupon: data.installment_index }));
+    } catch {
       toast.error(t("errors.saveFailed"));
+      throw new Error("Payment failed");
     }
   };
 
   return (
     <div className="space-y-6 print:space-y-0" ref={printRef}>
-      {/* Print Header - Filter Information */}
+      {/* Print Header */}
       <div className="print:block hidden print:mb-4 print:border-b print:border-black print:pb-2">
         <h1 className="text-xl font-bold text-center">DAFTAR KUPON COLLECTION</h1>
         <div className="text-sm text-center mt-2">
           {selectedCustomerName && <div>Pelanggan: {selectedCustomerName}</div>}
           {selectedSalesName && <div>Sales Agent: {selectedSalesName}</div>}
           {!selectedCustomerName && !selectedSalesName && <div>Semua Pelanggan & Sales Agent</div>}
-          <div className="mt-1">Tanggal Cetak: {new Date().toLocaleDateString('id-ID')}</div>
+          <div className="mt-1">Tanggal Cetak: {new Date().toLocaleDateString("id-ID")}</div>
         </div>
       </div>
-      
-      {/* VoucherPage - will be rendered with voucher-print-container class */}
-      {manifestContracts && <VoucherPage contracts={manifestContracts} />}
 
-      <h2 className="text-2xl font-bold print:hidden">{t("collection.title")}</h2>
+      {/* VoucherPage for print */}
+      {manifestContracts.length > 0 && <VoucherPage contracts={manifestContracts} />}
 
+      {/* Page Header */}
+      <div className="print:hidden">
+        <h1 className="text-2xl font-bold tracking-tight">{t("collection.title")}</h1>
+        <p className="text-muted-foreground">{t("collection.description")}</p>
+      </div>
+
+      {/* Tabs */}
       <Tabs defaultValue="manifest" className="w-full print:block">
         <TabsList className="grid w-full grid-cols-2 max-w-md print:hidden">
-          <TabsTrigger value="manifest">
-            <FileText className="mr-2 h-4 w-4" />
+          <TabsTrigger value="manifest" className="gap-2">
+            <FileText className="h-4 w-4" />
             {t("collection.generateManifest")}
           </TabsTrigger>
-          <TabsTrigger value="payment">
-            <CreditCard className="mr-2 h-4 w-4" />
+          <TabsTrigger value="payment" className="gap-2">
+            <CreditCard className="h-4 w-4" />
             {t("collection.inputPayment")}
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="manifest" className="space-y-4 print:space-y-0 print:block">
-          <Card className="print:hidden">
-            <CardHeader>
-              <CardTitle>{t("collection.filterManifest")}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <Label>{t("Filter Berdasarkan Pelanggan")}</Label>
-                  <Select value={selectedCustomer} onValueChange={(v) => {
-                    setSelectedCustomer(v === "all" ? "" : v);
-                  }}>
-                    <SelectTrigger>
-                      <SelectValue placeholder={t("Semua Pelanggan")} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">{t("Semua Pelanggan")}</SelectItem>
-                      {customers?.map((customer) => (
-                        <SelectItem key={customer.id} value={customer.id}>
-                          {customer.customer_code} - {customer.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label>{t("Filter Berdasarkan Sales")}</Label>
-                  <Select value={selectedSales} onValueChange={(v) => {
-                    setSelectedSales(v === "all" ? "" : v);
-                  }}>
-                    <SelectTrigger>
-                      <SelectValue placeholder={t("Semua Sales")} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">{t("Semua Sales")}</SelectItem>
-                      {agents?.map((agent) => (
-                        <SelectItem key={agent.id} value={agent.id}>
-                          {agent.agent_code} - {agent.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex items-end space-x-2">
-                  <Button onClick={handlePrintCoupons} className="flex-1 print:hidden">
-                    <FileText className="mr-2 h-4 w-4" />
-                    {t("collection.printCoupons")}
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        <TabsContent value="manifest" className="space-y-4 print:space-y-0 print:block mt-6">
+          <ManifestFilters
+            selectedCustomer={selectedCustomer}
+            setSelectedCustomer={setSelectedCustomer}
+            selectedSales={selectedSales}
+            setSelectedSales={setSelectedSales}
+            customers={customers}
+            agents={agents}
+            onPrint={handlePrintCoupons}
+            contractCount={manifestContracts.length}
+          />
 
-          <div className="border rounded-lg print:border-0 print:rounded-none print:w-full print:m-0 print:hidden">
-            <Table className="print:w-full">
-              <TableHeader>
-                <TableRow className="print:break-inside-avoid">
-                  <TableHead className="print:text-black print:border print:border-black print:bg-gray-100">#</TableHead>
-                  <TableHead className="print:text-black print:border print:border-black print:bg-gray-100">{t("collection.customer")}</TableHead>
-                  <TableHead className="print:text-black print:border print:border-black print:bg-gray-100">{t("contracts.contractRef")}</TableHead>
-                  <TableHead className="print:text-black print:border print:border-black print:bg-gray-100">{t("contracts.couponIndex")}</TableHead>
-                  <TableHead className="print:text-black print:border print:border-black print:bg-gray-100">{t("contracts.amount")}</TableHead>
-                  <TableHead className="hidden print:table-cell print:text-black print:border print:border-black print:bg-gray-100">{t("collection.collected", "Terkumpul")}</TableHead>
-                  <TableHead className="hidden print:table-cell print:text-black print:border print:border-black print:bg-gray-100">{t("collection.notes")}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {!contracts ? (
-                  <TableRow className="print:hidden">
-                    <TableCell colSpan={7} className="text-center text-muted-foreground">
-                      Loading contracts...
-                    </TableCell>
-                  </TableRow>
-                ) : manifestContracts.length === 0 ? (
-                  <TableRow className="print:hidden">
-                    <TableCell colSpan={7} className="text-center text-muted-foreground">
-                      {t("collection.noContracts")}
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  paginatedManifestContracts?.map((contract, i) => (
-                    <TableRow key={contract.id} className="print:break-inside-avoid">
-                      <TableCell className="print:text-black print:border print:border-black">{(manifestPage - 1) * 5 + i + 1}</TableCell>
-                      <TableCell className="font-medium print:text-black print:border print:border-black">{contract.customers?.name}</TableCell>
-                      <TableCell className="print:text-black print:border print:border-black">{contract.contract_ref}</TableCell>
-                      <TableCell className="print:text-black print:border print:border-black">
-                        <Badge className="print:bg-transparent print:text-black print:border print:border-black">{contract.current_installment_index + 1}</Badge>
-                      </TableCell>
-                      <TableCell className="print:text-black print:border print:border-black">{formatRupiah(contract.daily_installment_amount)}</TableCell>
-                      <TableCell className="hidden print:table-cell print:text-black print:border print:border-black print:min-w-[80px]"></TableCell>
-                      <TableCell className="hidden print:table-cell print:text-black print:border print:border-black print:min-w-[100px]"></TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
-          
-          {/* Pagination for manifest contracts */}
-          {manifestTotalPages > 1 && (
-            <div className="print:hidden">
-              <TablePagination
-                currentPage={manifestPage}
-                totalPages={manifestTotalPages}
-                onPageChange={setManifestPage}
-                totalItems={manifestTotalItems}
-              />
-            </div>
-          )}
+          <ManifestTable
+            contracts={manifestContracts}
+            paginatedContracts={paginatedManifestContracts}
+            isLoading={contractsLoading}
+            currentPage={manifestPage}
+            totalPages={manifestTotalPages}
+            totalItems={manifestTotalItems}
+            onPageChange={setManifestPage}
+          />
         </TabsContent>
 
-        <TabsContent value="payment" className="space-y-4 print:hidden">
-          <Card>
-            <CardHeader>
-              <CardTitle>{t("collection.recordPayment")}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label>{t("collection.selectContract")}</Label>
-                  <Select value={selectedContract} onValueChange={setSelectedContract}>
-                    <SelectTrigger>
-                      <SelectValue placeholder={t("collection.chooseContract")} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {contracts?.map((contract) => (
-                        <SelectItem key={contract.id} value={contract.id}>
-                          {contract.contract_ref} - {contract.customers?.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label>{t("collection.paymentDate")}</Label>
-                  <Input
-                    type="date"
-                    value={paymentDate}
-                    onChange={(e) => setPaymentDate(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              {selectedContractData && (
-                <div className="p-4 bg-muted rounded-lg space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">{t("collection.customer")}:</span>
-                    <span className="font-medium">{selectedContractData.customers?.name}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">{t("contracts.loanAmount")}:</span>
-                    <span className="font-medium">{formatRupiah(selectedContractData.total_loan_amount)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">{t("contracts.installmentAmount")}:</span>
-                    <span className="font-medium">{formatRupiah(selectedContractData.daily_installment_amount)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">{t("contracts.progress")}:</span>
-                    <span className="font-medium">
-                      {selectedContractData.current_installment_index}/{selectedContractData.tenor_days} {t("contracts.paid")}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">{t("collection.nextCoupon")}:</span>
-                    <Badge className="text-lg">{nextCoupon}</Badge>
-                  </div>
-                  {lastPaymentDate && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">{t("collection.lastPayment")}:</span>
-                      <span className="font-medium">{new Date(lastPaymentDate).toLocaleDateString('id-ID')}</span>
-                    </div>
-                  )}
-                  {nextCouponDueDate && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">{t("collection.dueDate")}:</span>
-                      <span className={`font-medium ${lateInfo.isLate ? 'text-destructive' : ''}`}>
-                        {new Date(nextCouponDueDate).toLocaleDateString('id-ID', {
-                          day: 'numeric',
-                          month: 'long',
-                          year: 'numeric'
-                        })}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {lateInfo.isLate && lateInfo.note && (
-                <Alert variant="destructive">
-                  <AlertTriangle className="h-4 w-4" />
-                  <AlertDescription>
-                    <span className="font-medium">{t("collection.latePayment")}: </span>
-                    {lateInfo.note}
-                  </AlertDescription>
-                </Alert>
-              )}
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label>{t("collection.amount")} (Rp)</Label>
-                  <Input
-                    type="text"
-                    inputMode="numeric"
-                    value={paymentAmount}
-                    onChange={handleAmountChange}
-                    placeholder={selectedContractData ? formatRupiah(selectedContractData.daily_installment_amount).replace("Rp ", "") : "0"}
-                  />
-                  {selectedContractData && (
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {t("collection.expected")}: {formatRupiah(selectedContractData.daily_installment_amount)}
-                    </p>
-                  )}
-                </div>
-                <div>
-                  <Label>{t("collection.collector")}</Label>
-                  <Select value={paymentSales} onValueChange={setPaymentSales}>
-                    <SelectTrigger>
-                      <SelectValue placeholder={t("collection.selectSales")} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {agents?.map((agent) => (
-                        <SelectItem key={agent.id} value={agent.id}>
-                          {agent.agent_code}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div>
-                <Label>{t("collection.notes")}</Label>
-                <Textarea
-                  value={paymentNotes}
-                  onChange={(e) => setPaymentNotes(e.target.value)}
-                  placeholder={lateInfo.isLate ? t("collection.lateNotePlaceholder") : `Default: Pembayaran ke-${nextCoupon}`}
-                  rows={lateInfo.isLate ? 3 : 1}
-                  className={lateInfo.isLate ? "border-destructive" : ""}
-                />
-                {lateInfo.isLate && (
-                  <p className="text-xs text-destructive mt-1">
-                    {t("collection.lateNoteRequired")}
-                  </p>
-                )}
-              </div>
-
-              <Button
-                onClick={handleSubmitPayment}
-                disabled={!selectedContract || createPayment.isPending}
-                className="w-full"
-              >
-                <CreditCard className="mr-2 h-4 w-4" />
-                {t("collection.recordPayment")}
-              </Button>
-            </CardContent>
-          </Card>
+        <TabsContent value="payment" className="print:hidden mt-6">
+          <div className="max-w-2xl">
+            <PaymentForm
+              contracts={contracts}
+              agents={agents}
+              onSubmit={handleSubmitPayment}
+              isSubmitting={createPayment.isPending}
+            />
+          </div>
         </TabsContent>
       </Tabs>
     </div>
