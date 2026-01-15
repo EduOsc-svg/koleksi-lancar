@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Download } from "lucide-react";
+import ExcelJS from "exceljs";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -145,13 +146,83 @@ export default function SalesAgents() {
     }
   };
 
+  const handleExportExcel = async () => {
+    if (!agents || agents.length === 0) {
+      toast.error(t("common.noData"));
+      return;
+    }
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Sales Agents");
+
+    // Define columns
+    worksheet.columns = [
+      { header: t("salesAgents.agentCode"), key: "agent_code", width: 15 },
+      { header: t("salesAgents.name"), key: "name", width: 25 },
+      { header: t("salesAgents.phone"), key: "phone", width: 20 },
+      { header: t("salesAgents.commissionPct", "Komisi %"), key: "commission_percentage", width: 15 },
+      { header: t("salesAgents.totalOmset", "Total Omset"), key: "total_omset", width: 20 },
+      { header: t("salesAgents.totalModal", "Total Modal"), key: "total_modal", width: 20 },
+      { header: t("salesAgents.profit", "Keuntungan"), key: "profit", width: 20 },
+      { header: t("salesAgents.earnings", "Komisi"), key: "total_commission", width: 20 },
+      { header: t("salesAgents.totalContracts", "Jumlah Kontrak"), key: "total_contracts", width: 18 },
+    ];
+
+    // Style header row
+    worksheet.getRow(1).font = { bold: true };
+    worksheet.getRow(1).fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FF4F81BD" },
+    };
+    worksheet.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
+
+    // Add data rows
+    agents.forEach((agent) => {
+      const omsetData = getAgentOmset(agent.id);
+      worksheet.addRow({
+        agent_code: agent.agent_code,
+        name: agent.name,
+        phone: agent.phone || "-",
+        commission_percentage: agent.commission_percentage || 0,
+        total_omset: omsetData?.total_omset || 0,
+        total_modal: omsetData?.total_modal || 0,
+        profit: omsetData?.profit || 0,
+        total_commission: omsetData?.total_commission || 0,
+        total_contracts: omsetData?.total_contracts || 0,
+      });
+    });
+
+    // Format currency columns
+    worksheet.getColumn("total_omset").numFmt = "#,##0";
+    worksheet.getColumn("total_modal").numFmt = "#,##0";
+    worksheet.getColumn("profit").numFmt = "#,##0";
+    worksheet.getColumn("total_commission").numFmt = "#,##0";
+
+    // Generate and download file
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `sales-agents-${new Date().toISOString().split("T")[0]}.xlsx`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(t("common.exportSuccess", "Data berhasil di-export"));
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">{t("salesAgents.title")}</h2>
-        <Button onClick={handleOpenCreate}>
-          <Plus className="mr-2 h-4 w-4" /> {t("salesAgents.newAgent")}
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={handleExportExcel}>
+            <Download className="mr-2 h-4 w-4" /> Export Excel
+          </Button>
+          <Button onClick={handleOpenCreate}>
+            <Plus className="mr-2 h-4 w-4" /> {t("salesAgents.newAgent")}
+          </Button>
+        </div>
       </div>
 
       <div className="border rounded-lg">
