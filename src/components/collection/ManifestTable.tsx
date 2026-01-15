@@ -29,6 +29,7 @@ interface ManifestTableProps {
   totalPages: number;
   totalItems: number;
   onPageChange: (page: number) => void;
+  itemsPerPage?: number;
 }
 
 export function ManifestTable({
@@ -39,6 +40,7 @@ export function ManifestTable({
   totalPages,
   totalItems,
   onPageChange,
+  itemsPerPage = 10,
 }: ManifestTableProps) {
   const { t } = useTranslation();
 
@@ -104,7 +106,7 @@ export function ManifestTable({
             {paginatedContracts.map((contract, i) => (
               <TableRow key={contract.id} className="hover:bg-muted/30 transition-colors">
                 <TableCell className="text-muted-foreground">
-                  {(currentPage - 1) * 5 + i + 1}
+                  {(currentPage - 1) * itemsPerPage + i + 1}
                 </TableCell>
                 <TableCell className="font-medium">{contract.customers?.name}</TableCell>
                 <TableCell className="font-mono text-sm">{contract.contract_ref}</TableCell>
