@@ -1,5 +1,15 @@
 /* ========================================
-   VOUCHER PRINT STYLES - FINAL POSITIONS
+   VOUCHER PRINT STYLES - CONTRACTS PAGE
+   ======================================== 
+   
+   PURPOSE: Pixel-perfect voucher styles for contracts
+   DIMENSIONS: 9.2cm × 6.2cm per voucher (reduced from 9.5cm × 6.5cm)
+   LAYOUT: 3x3 grid layout
+   
+   USED IN: 
+   - Contracts.tsx (Contract management page)
+   
+   NOTE: Different dimensions from Voucher-new.css
    ======================================== */
 
 /* Reset standar */

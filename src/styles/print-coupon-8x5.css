@@ -1,5 +1,15 @@
-/* Print Coupon 8x5 cm - A4 Landscape Layout with Background Image */
-/* Fits 3 columns x 3 rows = 9 coupons per page */
+/* ========================================
+   PRINT COUPON 8x5 STYLES
+   ======================================== 
+   
+   PURPOSE: A4 Landscape Layout with Background Image
+   DIMENSIONS: 8cm × 5cm per coupon
+   LAYOUT: 3 columns × 3 rows = 9 coupons per page
+   
+   USED IN: 
+   - PrintCoupon8x5.tsx (Print coupon component)
+   
+   ======================================== */
 
 /* Hide on screen */
 .print-coupon-8x5-container {

@@ -121,7 +121,7 @@ export default function Reports() {
       'Jumlah Coupon',
       'Nominal Pembayaran',
       'Total',
-      'Sales'
+      'Nama Kolektor'
     ]);
 
     // Style header
@@ -232,7 +232,7 @@ export default function Reports() {
       { width: 16 },  // Jumlah Coupon
       { width: 18 },  // Nominal Pembayaran
       { width: 18 },  // Total
-      { width: 15 },  // Sales
+      { width: 20 },  // Nama Kolektor
     ];
 
     // Generate and download
@@ -356,7 +356,7 @@ export default function Reports() {
               <TableHead className="text-center">Jumlah Coupon</TableHead>
               <TableHead className="text-right">Nominal Pembayaran</TableHead>
               <TableHead className="text-right">Total</TableHead>
-              <TableHead>Sales</TableHead>
+              <TableHead>Kolektor</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
