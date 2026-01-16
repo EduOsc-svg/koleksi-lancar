@@ -63,23 +63,23 @@ export default function Customers() {
   const updateCustomer = useUpdateCustomer();
   const deleteCustomer = useDeleteCustomer();
   
-  // Filter customers based on search query
-  const filteredCustomers = customers?.filter(customer =>
-    customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    customer.customer_code.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    customer.nik?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    customer.phone?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    customer.address?.toLowerCase().includes(searchQuery.toLowerCase())
-  ) || [];
-  
-  const { currentPage, totalPages, paginatedItems, goToPage, totalItems } = usePagination(filteredCustomers, 5);
-
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerWithRelations | null>(null);
   const [highlightedRowId, setHighlightedRowId] = useState<string | null>(null);
   const highlightedRowRef = useRef<HTMLTableRowElement>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  
+  // Filter customers based on search query
+  const filteredCustomers = customers?.filter(customer =>
+    customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (customer.customer_code || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (customer.nik || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (customer.phone || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (customer.address || '').toLowerCase().includes(searchQuery.toLowerCase())
+  ) || [];
+  
+  const { currentPage, totalPages, paginatedItems, goToPage, totalItems } = usePagination(filteredCustomers, 5);
   const [formData, setFormData] = useState({
     name: "",
     customer_code: "",
