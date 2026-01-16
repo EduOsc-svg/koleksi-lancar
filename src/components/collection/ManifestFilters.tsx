@@ -44,9 +44,17 @@ export function ManifestFilters({
       <CardHeader className="pb-3">
         <CardTitle className="text-lg">{t("collection.filterManifest")}</CardTitle>
         <CardDescription>
-          {contractCount > 0 
-            ? t("collection.contractsFound", { count: contractCount })
-            : t("collection.noContractsFound")}
+          {searchQuery ? (
+            <span>
+              {contractCount > 0 
+                ? `Ditemukan ${contractCount} kontrak dengan kata kunci "${searchQuery}"`
+                : `Tidak ada kontrak yang ditemukan dengan kata kunci "${searchQuery}"`}
+            </span>
+          ) : (
+            contractCount > 0 
+              ? t("collection.contractsFound", { count: contractCount })
+              : t("collection.noContractsFound")
+          )}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -65,46 +73,46 @@ export function ManifestFilters({
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
             <div className="flex-1 space-y-2">
               <Label className="text-sm font-medium">{t("collection.filterByCustomer")}</Label>
-            <Select value={selectedCustomer} onValueChange={(v) => setSelectedCustomer(v === "all" ? "" : v)}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder={t("collection.allCustomers")} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t("collection.allCustomers")}</SelectItem>
-                {customers?.map((customer) => (
-                  <SelectItem key={customer.id} value={customer.id}>
-                    {customer.customer_code} - {customer.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div className="flex-1 space-y-2">
-            <Label className="text-sm font-medium">{t("collection.filterBySales")}</Label>
-            <Select value={selectedSales} onValueChange={(v) => setSelectedSales(v === "all" ? "" : v)}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder={t("collection.allSales")} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t("collection.allSales")}</SelectItem>
-                {agents?.map((agent) => (
-                  <SelectItem key={agent.id} value={agent.id}>
-                    {agent.agent_code} - {agent.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+              <Select value={selectedCustomer} onValueChange={(v) => setSelectedCustomer(v === "all" ? "" : v)}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder={t("collection.allCustomers")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t("collection.allCustomers")}</SelectItem>
+                  {customers?.map((customer) => (
+                    <SelectItem key={customer.id} value={customer.id}>
+                      {customer.customer_code} - {customer.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="flex-1 space-y-2">
+              <Label className="text-sm font-medium">{t("collection.filterBySales")}</Label>
+              <Select value={selectedSales} onValueChange={(v) => setSelectedSales(v === "all" ? "" : v)}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder={t("collection.allSales")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t("collection.allSales")}</SelectItem>
+                  {agents?.map((agent) => (
+                    <SelectItem key={agent.id} value={agent.id}>
+                      {agent.agent_code} - {agent.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-          <Button 
-            onClick={onPrint} 
-            className="w-full sm:w-auto"
-            disabled={contractCount === 0}
-          >
-            <FileText className="mr-2 h-4 w-4" />
-            {t("collection.printCoupons")} ({contractCount})
-          </Button>
+            <Button 
+              onClick={onPrint} 
+              className="w-full sm:w-auto"
+              disabled={contractCount === 0}
+            >
+              <FileText className="mr-2 h-4 w-4" />
+              {t("collection.printCoupons")} ({contractCount})
+            </Button>
           </div>
         </div>
       </CardContent>

@@ -35,13 +35,15 @@ export default function Collection() {
     if (selectedCustomer && c.customer_id !== selectedCustomer) return false;
     if (selectedSales && c.customers.assigned_sales_id !== selectedSales) return false;
     if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      return (
-        c.contract_ref.toLowerCase().includes(query) ||
-        c.customers.name.toLowerCase().includes(query) ||
-        c.customers.customer_code?.toLowerCase().includes(query) ||
-        c.product_type.toLowerCase().includes(query)
-      );
+      const query = searchQuery.toLowerCase().trim();
+      if (query) {
+        return (
+          c.contract_ref.toLowerCase().includes(query) ||
+          c.customers.name.toLowerCase().includes(query) ||
+          c.customers.customer_code?.toLowerCase().includes(query) ||
+          c.product_type.toLowerCase().includes(query)
+        );
+      }
     }
     return true;
   }) || [];
@@ -157,6 +159,7 @@ export default function Collection() {
             totalPages={manifestTotalPages}
             totalItems={manifestTotalItems}
             onPageChange={setManifestPage}
+            searchQuery={searchQuery}
           />
         </TabsContent>
 

@@ -30,6 +30,7 @@ interface ManifestTableProps {
   totalItems: number;
   onPageChange: (page: number) => void;
   itemsPerPage?: number;
+  searchQuery?: string;
 }
 
 export function ManifestTable({
@@ -41,6 +42,7 @@ export function ManifestTable({
   totalItems,
   onPageChange,
   itemsPerPage = 10,
+  searchQuery,
 }: ManifestTableProps) {
   const { t } = useTranslation();
 
@@ -80,9 +82,14 @@ export function ManifestTable({
           <div className="rounded-full bg-muted p-4 mb-4">
             <FileX className="h-8 w-8 text-muted-foreground" />
           </div>
-          <h3 className="font-semibold text-lg mb-1">{t("collection.noContracts")}</h3>
+          <h3 className="font-semibold text-lg mb-1">
+            {searchQuery ? "Tidak Ada Hasil" : t("collection.noContracts")}
+          </h3>
           <p className="text-muted-foreground text-sm max-w-sm">
-            {t("collection.noContractsDescription")}
+            {searchQuery 
+              ? `Tidak ada kontrak yang ditemukan dengan kata kunci "${searchQuery}". Coba kata kunci lain atau hapus filter pencarian.`
+              : t("collection.noContractsDescription")
+            }
           </p>
         </div>
       </div>
@@ -91,6 +98,14 @@ export function ManifestTable({
 
   return (
     <div className="print:hidden">
+      {searchQuery && (
+        <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <p className="text-sm text-blue-700">
+            <span className="font-medium">Hasil pencarian:</span> Menampilkan {totalItems} kontrak yang mengandung "{searchQuery}"
+          </p>
+        </div>
+      )}
+      
       <div className="border rounded-lg overflow-hidden">
         <Table>
           <TableHeader>
