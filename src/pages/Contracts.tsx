@@ -70,11 +70,10 @@ export default function Contracts() {
   const [searchQuery, setSearchQuery] = useState("");
   
   // Filter contracts based on search query
+  // Only search by contract_ref and customer name to avoid confusion
   const filteredContracts = contracts?.filter(contract =>
     contract.contract_ref.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    contract.customers?.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    contract.customers?.customer_code.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    contract.product_type.toLowerCase().includes(searchQuery.toLowerCase())
+    contract.customers?.name.toLowerCase().includes(searchQuery.toLowerCase())
   ) || [];
   
   const ITEMS_PER_PAGE = 5;
