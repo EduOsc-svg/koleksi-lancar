@@ -405,15 +405,28 @@ export default function Reports() {
             ) : (
               <>
                 {paginatedItems.map((payment, idx) => {
-                  const globalIndex = (currentPage - 1) * ITEMS_PER_PAGE + idx;
-                  const codeCoupon = `A${String(globalIndex + 1).padStart(3, '0')}`;
                   const nominalPerCoupon = Math.round(payment.total_amount / payment.coupon_count);
+                  // Format coupon indices as readable string (e.g., "1, 2, 3" or "1-5")
+                  const formatCouponIndices = (indices: number[]) => {
+                    if (indices.length === 0) return '-';
+                    if (indices.length === 1) return String(indices[0]);
+                    
+                    // Check if indices are consecutive
+                    const isConsecutive = indices.every((val, i) => 
+                      i === 0 || val === indices[i - 1] + 1
+                    );
+                    
+                    if (isConsecutive && indices.length > 2) {
+                      return `${indices[0]}-${indices[indices.length - 1]}`;
+                    }
+                    return indices.join(', ');
+                  };
                   
                   return (
-                    <TableRow key={`${payment.customer_id}-${payment.payment_date}-${idx}`}>
+                    <TableRow key={`${payment.customer_id}-${payment.payment_date}-${payment.contract_ref}`}>
                       <TableCell>{formatDate(payment.payment_date)}</TableCell>
                       <TableCell>{payment.customer_name}</TableCell>
-                      <TableCell className="font-mono text-center">{codeCoupon}</TableCell>
+                      <TableCell className="font-mono text-center">{formatCouponIndices(payment.coupon_indices)}</TableCell>
                       <TableCell className="text-center">
                         <span className="font-medium">{payment.coupon_count}</span>
                       </TableCell>
