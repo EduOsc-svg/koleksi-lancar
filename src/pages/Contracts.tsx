@@ -319,7 +319,7 @@ export default function Contracts() {
       </div>
 
       {/* Search Input */}
-      <div className="flex justify-between items-center gap-4 print:hidden">
+      <div className="space-y-4">
         <SearchInput
           value={searchQuery}
           onChange={setSearchQuery}

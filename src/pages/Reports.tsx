@@ -132,7 +132,7 @@ export default function Reports() {
     const headerRow = worksheet.addRow([
       'Tanggal',
       'Pelanggan',
-      'Code Coupon',
+      'Kupon #',
       'Jumlah Coupon',
       'Nominal Pembayaran',
       'Total',
@@ -161,8 +161,8 @@ export default function Reports() {
     filteredPayments.forEach((p, index) => {
       const rowNumber = index + 6; // Starting from row 6 (after headers and filter info)
       
-      // Generate code coupon (A001, A002, etc.)
-      const codeCoupon = `A${String(index + 1).padStart(3, '0')}`;
+      // Use customer code as coupon code, fallback to contract ref or customer ID
+      const couponCode = p.customer_code || p.contract_ref || `${p.customer_id.slice(-4)}`;
       
       // Calculate nominal per coupon (total amount divided by coupon count)
       const nominalPerCoupon = Math.round(p.total_amount / p.coupon_count);
@@ -170,7 +170,7 @@ export default function Reports() {
       const row = worksheet.addRow([
         p.payment_date,
         p.customer_name,
-        codeCoupon,
+        couponCode,
         p.coupon_count,
         nominalPerCoupon,
         { formula: `D${rowNumber}*E${rowNumber}` }, // Jumlah Coupon × Nominal Pembayaran
@@ -246,7 +246,7 @@ export default function Reports() {
     worksheet.columns = [
       { width: 12 },  // Tanggal
       { width: 25 },  // Pelanggan
-      { width: 15 },  // Code Coupon
+      { width: 15 },  // Kupon #
       { width: 16 },  // Jumlah Coupon
       { width: 18 },  // Nominal Pembayaran
       { width: 18 },  // Total
@@ -384,7 +384,7 @@ export default function Reports() {
             <TableRow>
               <TableHead>{t("reports.date", "Tanggal")}</TableHead>
               <TableHead>{t("customers.title")}</TableHead>
-              <TableHead>Code Coupon</TableHead>
+              <TableHead>Kupon #</TableHead>
               <TableHead className="text-center">Jumlah Coupon</TableHead>
               <TableHead className="text-right">Nominal Pembayaran</TableHead>
               <TableHead className="text-right">Total</TableHead>
@@ -405,6 +405,8 @@ export default function Reports() {
             ) : (
               <>
                 {paginatedItems.map((payment, idx) => {
+                  // Use customer code as coupon code, fallback to contract ref
+                  const couponCode = payment.customer_code || payment.contract_ref || `${payment.customer_id.slice(-4)}`;
                   const nominalPerCoupon = Math.round(payment.total_amount / payment.coupon_count);
                   // Format coupon indices as readable string (e.g., "1, 2, 3" or "1-5")
                   const formatCouponIndices = (indices: number[]) => {
@@ -426,7 +428,7 @@ export default function Reports() {
                     <TableRow key={`${payment.customer_id}-${payment.payment_date}-${payment.contract_ref}`}>
                       <TableCell>{formatDate(payment.payment_date)}</TableCell>
                       <TableCell>{payment.customer_name}</TableCell>
-                      <TableCell className="font-mono text-center">{formatCouponIndices(payment.coupon_indices)}</TableCell>
+                      <TableCell className="font-mono text-center font-semibold">{couponCode}</TableCell>
                       <TableCell className="text-center">
                         <span className="font-medium">{payment.coupon_count}</span>
                       </TableCell>

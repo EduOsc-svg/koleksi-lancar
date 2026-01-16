@@ -240,12 +240,12 @@ export default function Customers() {
       </div>
 
       {/* Search Input */}
-      <div className="flex justify-between items-center gap-4">
+      <div className="space-y-4">
         <SearchInput
           value={searchQuery}
           onChange={setSearchQuery}
           placeholder="Cari customer berdasarkan nama, kode, NIK, telepon, atau alamat..."
-          className="max-w-lg"
+          className="mt-1"
           onClear={() => setSearchQuery("")}
         />
         <div className="text-sm text-gray-500">
