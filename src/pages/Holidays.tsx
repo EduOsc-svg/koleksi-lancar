@@ -41,6 +41,7 @@ import { useHolidays, useCreateHoliday, useUpdateHoliday, useDeleteHoliday, Holi
 import { usePagination } from "@/hooks/usePagination";
 import { TablePagination } from "@/components/TablePagination";
 import { Badge } from "@/components/ui/badge";
+import { SearchInput } from "@/components/ui/search-input";
 
 type HolidayType = 'specific_date' | 'recurring_weekday';
 
@@ -50,7 +51,18 @@ export default function Holidays() {
   const createHoliday = useCreateHoliday();
   const updateHoliday = useUpdateHoliday();
   const deleteHoliday = useDeleteHoliday();
-  const { currentPage, totalPages, paginatedItems, goToPage, totalItems } = usePagination(holidays);
+  
+  // Search state
+  const [searchQuery, setSearchQuery] = useState("");
+  
+  // Filter holidays based on search query
+  const filteredHolidays = holidays?.filter(holiday =>
+    holiday.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (holiday.holiday_date && holiday.holiday_date.includes(searchQuery)) ||
+    (holiday.day_of_week !== null && DAY_NAMES[holiday.day_of_week].toLowerCase().includes(searchQuery.toLowerCase()))
+  ) || [];
+  
+  const { currentPage, totalPages, paginatedItems, goToPage, totalItems } = usePagination(filteredHolidays);
 
   const DAY_NAMES = [
     t("holidays.sunday"),
@@ -174,6 +186,19 @@ export default function Holidays() {
         </Button>
       </div>
 
+      {/* Search Input */}
+      <div className="flex justify-between items-center gap-4">
+        <SearchInput
+          value={searchQuery}
+          onChange={setSearchQuery}
+          placeholder="Cari holiday berdasarkan deskripsi, tanggal, atau hari..."
+          className="max-w-md"
+        />
+        <div className="text-sm text-gray-500">
+          Menampilkan {totalItems} dari {holidays?.length || 0} holiday
+        </div>
+      </div>
+
       <div className="border rounded-lg">
         <Table>
           <TableHeader>
@@ -189,10 +214,10 @@ export default function Holidays() {
               <TableRow>
                 <TableCell colSpan={4} className="text-center">{t("common.loading")}</TableCell>
               </TableRow>
-            ) : holidays?.length === 0 ? (
+            ) : filteredHolidays?.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={4} className="text-center text-muted-foreground">
-                  {t("common.noData")}
+                  {searchQuery ? `Tidak ada holiday yang ditemukan dengan kata kunci "${searchQuery}"` : t("common.noData")}
                 </TableCell>
               </TableRow>
             ) : (

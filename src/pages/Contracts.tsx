@@ -48,6 +48,7 @@ import { formatRupiah } from "@/lib/format";
 import { usePagination } from "@/hooks/usePagination";
 import { TablePagination } from "@/components/TablePagination";
 import { useCouponsByContract, useGenerateCoupons, InstallmentCoupon } from "@/hooks/useInstallmentCoupons";
+import { SearchInput } from "@/components/ui/search-input";
 import VoucherPage from "@/components/print/VoucherPage";
 import "@/styles/Voucher-final.css"; // Pixel-perfect voucher styles (9.5cm x 6.5cm)
 import { CurrencyInput } from "@/components/ui/currency-input";
@@ -64,7 +65,19 @@ export default function Contracts() {
   const updateContract = useUpdateContract();
   const deleteContract = useDeleteContract();
   const generateCoupons = useGenerateCoupons();
-  const { currentPage, totalPages, paginatedItems, goToPage, totalItems } = usePagination(contracts, 5);
+  
+  // Search state
+  const [searchQuery, setSearchQuery] = useState("");
+  
+  // Filter contracts based on search query
+  const filteredContracts = contracts?.filter(contract =>
+    contract.contract_ref.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    contract.customers?.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    contract.customers?.customer_code.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    contract.product_type.toLowerCase().includes(searchQuery.toLowerCase())
+  ) || [];
+  
+  const { currentPage, totalPages, paginatedItems, goToPage, totalItems } = usePagination(filteredContracts, 5);
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -305,6 +318,19 @@ export default function Contracts() {
         </Button>
       </div>
 
+      {/* Search Input */}
+      <div className="flex justify-between items-center gap-4 print:hidden">
+        <SearchInput
+          value={searchQuery}
+          onChange={setSearchQuery}
+          placeholder="Cari kontrak berdasarkan nomor kontrak, nama customer, kode customer, atau jenis produk..."
+          className="max-w-lg"
+        />
+        <div className="text-sm text-gray-500">
+          Menampilkan {totalItems} dari {contracts?.length || 0} kontrak
+        </div>
+      </div>
+
       <div className="border rounded-lg print:hidden">
         <Table>
           <TableHeader>
@@ -326,10 +352,10 @@ export default function Contracts() {
               <TableRow>
                 <TableCell colSpan={10} className="text-center">Loading...</TableCell>
               </TableRow>
-            ) : contracts?.length === 0 ? (
+            ) : filteredContracts?.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={10} className="text-center text-muted-foreground">
-                  No contracts found
+                  {searchQuery ? `Tidak ada kontrak yang ditemukan dengan kata kunci "${searchQuery}"` : "No contracts found"}
                 </TableCell>
               </TableRow>
             ) : (

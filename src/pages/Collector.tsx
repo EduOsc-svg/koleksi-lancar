@@ -26,6 +26,7 @@ import { usePayments } from "@/hooks/usePayments";
 import { formatRupiah } from "@/lib/format";
 import { TablePagination } from "@/components/TablePagination";
 import { usePagination } from "@/hooks/usePagination";
+import { SearchInput } from "@/components/ui/search-input";
 
 export default function Collector() {
   const { t } = useTranslation();
@@ -37,6 +38,9 @@ export default function Collector() {
   
   // Filter by collector
   const [selectedCollector, setSelectedCollector] = useState<string>("");
+  
+  // Search state
+  const [searchQuery, setSearchQuery] = useState("");
   
   // Calculate date range from selected month
   const monthStart = startOfMonth(new Date(selectedMonth + "-01"));
@@ -61,6 +65,14 @@ export default function Collector() {
       paymentCount,
       uniqueCustomers,
     };
+  }).filter(collector => {
+    if (!searchQuery) return true;
+    const query = searchQuery.toLowerCase();
+    return (
+      collector.name.toLowerCase().includes(query) ||
+      collector.collector_code.toLowerCase().includes(query) ||
+      collector.phone?.toLowerCase().includes(query)
+    );
   }).sort((a, b) => b.totalCollected - a.totalCollected) || [];
   
   // Pagination for collector stats
@@ -131,6 +143,19 @@ export default function Collector() {
               ))}
             </SelectContent>
           </Select>
+        </div>
+      </div>
+
+      {/* Search Input */}
+      <div className="flex justify-between items-center gap-4">
+        <SearchInput
+          value={searchQuery}
+          onChange={setSearchQuery}
+          placeholder="Cari kolektor berdasarkan nama, kode, atau telepon..."
+          className="max-w-md"
+        />
+        <div className="text-sm text-gray-500">
+          Menampilkan {collectorTotalItems} dari {collectors?.length || 0} kolektor
         </div>
       </div>
 
@@ -210,7 +235,7 @@ export default function Collector() {
               ) : paginatedCollectors.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center text-muted-foreground">
-                    Belum ada data kolektor
+                    {searchQuery ? `Tidak ada kolektor yang ditemukan dengan kata kunci "${searchQuery}"` : "Belum ada data kolektor"}
                   </TableCell>
                 </TableRow>
               ) : (

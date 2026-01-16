@@ -26,6 +26,7 @@ import { useCustomers } from "@/hooks/useCustomers";
 import { formatRupiah, formatDate } from "@/lib/format";
 import { usePagination } from "@/hooks/usePagination";
 import { TablePagination } from "@/components/TablePagination";
+import { SearchInput } from "@/components/ui/search-input";
 
 export default function Reports() {
   const { t } = useTranslation();
@@ -37,6 +38,7 @@ export default function Reports() {
   const [dateTo, setDateTo] = useState(new Date().toISOString().split("T")[0]);
   const [collectorId, setSalesId] = useState<string>("");
   const [customerId, setCustomerId] = useState<string>("");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const { data: payments, isLoading } = useAggregatedPayments(
     dateFrom,
@@ -44,10 +46,19 @@ export default function Reports() {
     collectorId || undefined
   );
 
-  // Client-side filtering untuk customer
+  // Client-side filtering untuk customer dan pencarian
   const filteredPayments = payments?.filter(payment => {
-    if (!customerId) return true; // Jika tidak ada filter customer, tampilkan semua
-    return payment.customer_id === customerId;
+    if (customerId && payment.customer_id !== customerId) return false;
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      return (
+        payment.customer_name.toLowerCase().includes(query) ||
+        payment.contract_ref.toLowerCase().includes(query) ||
+        payment.sales_agent_name?.toLowerCase().includes(query) ||
+        payment.collector_name?.toLowerCase().includes(query)
+      );
+    }
+    return true;
   });
 
   const { currentPage, totalPages, paginatedItems, goToPage, totalItems } = usePagination(filteredPayments, 5);
@@ -69,14 +80,14 @@ export default function Reports() {
     });
 
     // Title row
-    worksheet.mergeCells('A1:G1');
+    worksheet.mergeCells('A1:H1');
     const titleCell = worksheet.getCell('A1');
     titleCell.value = 'LAPORAN PEMBAYARAN';
     titleCell.font = { bold: true, size: 16 };
     titleCell.alignment = { horizontal: 'center' };
 
     // Period row
-    worksheet.mergeCells('A2:G2');
+    worksheet.mergeCells('A2:H2');
     const periodCell = worksheet.getCell('A2');
     periodCell.value = `Periode: ${formatDate(dateFrom)} - ${formatDate(dateTo)}`;
     periodCell.font = { size: 12 };
@@ -90,7 +101,7 @@ export default function Reports() {
       ? agents?.find(a => a.id === collectorId) 
       : null;
     
-    worksheet.mergeCells('A3:G3');
+    worksheet.mergeCells('A3:H3');
     const filterCell = worksheet.getCell('A3');
     let filterText = 'Filter: ';
     if (selectedCustomerInfo) {
@@ -121,7 +132,8 @@ export default function Reports() {
       'Jumlah Coupon',
       'Nominal Pembayaran',
       'Total',
-      'Nama Kolektor'
+      'Nama Kolektor',
+      'Nama Sales'
     ]);
 
     // Style header
@@ -158,7 +170,8 @@ export default function Reports() {
         p.coupon_count,
         nominalPerCoupon,
         { formula: `D${rowNumber}*E${rowNumber}` }, // Jumlah Coupon × Nominal Pembayaran
-        p.collector_name || '-'
+        p.collector_name || '-',
+        p.sales_agent_name || '-'
       ]);
 
       row.eachCell((cell, colNumber) => {
@@ -188,7 +201,8 @@ export default function Reports() {
       { formula: `SUM(D6:D${5 + filteredPayments.length})` }, // Total Jumlah Coupon
       'TOTAL:',
       { formula: `SUM(F6:F${5 + filteredPayments.length})` }, // Total Amount
-      ''
+      '',  // Nama Kolektor
+      ''   // Nama Sales
     ]);
 
     totalRow.eachCell((cell, colNumber) => {
@@ -233,6 +247,7 @@ export default function Reports() {
       { width: 18 },  // Nominal Pembayaran
       { width: 18 },  // Total
       { width: 20 },  // Nama Kolektor
+      { width: 20 },  // Nama Sales
     ];
 
     // Generate and download
@@ -259,7 +274,19 @@ export default function Reports() {
           <CardTitle>{t("reports.filter", "Filter")}</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="space-y-4">
+            {/* Search Input */}
+            <div>
+              <Label>Pencarian</Label>
+              <SearchInput
+                value={searchQuery}
+                onChange={setSearchQuery}
+                placeholder="Cari berdasarkan nama customer, kode customer, kontrak, sales, atau kolektor..."
+                className="mt-1"
+              />
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div>
               <Label>{t("reports.fromDate", "Dari Tanggal")}</Label>
               <Input
@@ -313,6 +340,7 @@ export default function Reports() {
                 <FileSpreadsheet className="mr-2 h-4 w-4" />
                 {t("reports.exportExcel", "Export Excel")}
               </Button>
+            </div>
             </div>
           </div>
         </CardContent>

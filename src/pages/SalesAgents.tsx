@@ -44,6 +44,7 @@ import { useAgentOmset } from "@/hooks/useAgentOmset";
 import { usePagination } from "@/hooks/usePagination";
 import { TablePagination } from "@/components/TablePagination";
 import { formatRupiah } from "@/lib/format";
+import { SearchInput } from "@/components/ui/search-input";
 
 export default function SalesAgents() {
   const { t } = useTranslation();
@@ -54,7 +55,18 @@ export default function SalesAgents() {
   const createAgent = useCreateSalesAgent();
   const updateAgent = useUpdateSalesAgent();
   const deleteAgent = useDeleteSalesAgent();
-  const { currentPage, totalPages, paginatedItems, goToPage, totalItems } = usePagination(agents, 5);
+  
+  // Search state
+  const [searchQuery, setSearchQuery] = useState("");
+  
+  // Filter agents based on search query
+  const filteredAgents = agents?.filter(agent =>
+    agent.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    agent.agent_code.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    agent.phone?.toLowerCase().includes(searchQuery.toLowerCase())
+  ) || [];
+  
+  const { currentPage, totalPages, paginatedItems, goToPage, totalItems } = usePagination(filteredAgents, 5);
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -225,6 +237,19 @@ export default function SalesAgents() {
         </div>
       </div>
 
+      {/* Search Input */}
+      <div className="flex justify-between items-center gap-4">
+        <SearchInput
+          value={searchQuery}
+          onChange={setSearchQuery}
+          placeholder="Cari sales agent berdasarkan nama, kode, atau telepon..."
+          className="max-w-md"
+        />
+        <div className="text-sm text-gray-500">
+          Menampilkan {totalItems} dari {agents?.length || 0} sales agent
+        </div>
+      </div>
+
       <div className="border rounded-lg">
         <Table>
           <TableHeader>
@@ -244,10 +269,10 @@ export default function SalesAgents() {
               <TableRow>
                 <TableCell colSpan={8} className="text-center">{t("common.loading")}</TableCell>
               </TableRow>
-            ) : agents?.length === 0 ? (
+            ) : filteredAgents?.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={8} className="text-center text-muted-foreground">
-                  {t("common.noData")}
+                  {searchQuery ? `Tidak ada sales agent yang ditemukan dengan kata kunci "${searchQuery}"` : t("common.noData")}
                 </TableCell>
               </TableRow>
             ) : (

@@ -27,12 +27,22 @@ export default function Collection() {
   // Manifest state
   const [selectedCustomer, setSelectedCustomer] = useState("");
   const [selectedSales, setSelectedSales] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Filter contracts for manifest
   const manifestContracts = contracts?.filter((c) => {
     if (!c.customers) return false;
     if (selectedCustomer && c.customer_id !== selectedCustomer) return false;
     if (selectedSales && c.customers.assigned_sales_id !== selectedSales) return false;
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      return (
+        c.contract_ref.toLowerCase().includes(query) ||
+        c.customers.name.toLowerCase().includes(query) ||
+        c.customers.customer_code?.toLowerCase().includes(query) ||
+        c.product_type.toLowerCase().includes(query)
+      );
+    }
     return true;
   }) || [];
 
@@ -48,7 +58,7 @@ export default function Collection() {
   // Reset pagination when filters change
   useEffect(() => {
     setManifestPage(1);
-  }, [selectedCustomer, selectedSales, setManifestPage]);
+  }, [selectedCustomer, selectedSales, searchQuery, setManifestPage]);
 
   // Print info
   const selectedCustomerName = selectedCustomer
@@ -131,6 +141,8 @@ export default function Collection() {
             setSelectedCustomer={setSelectedCustomer}
             selectedSales={selectedSales}
             setSelectedSales={setSelectedSales}
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
             customers={customers}
             agents={agents}
             onPrint={handlePrintCoupons}

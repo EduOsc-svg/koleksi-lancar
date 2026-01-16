@@ -25,6 +25,7 @@ import { TablePagination } from "@/components/TablePagination";
 import { formatAuditDetails } from "@/lib/formatAuditDetails";
 import { translateAuditDescription } from "@/lib/translateAuditDescription";
 import { Search, Shield, Info, Eye } from "lucide-react";
+import { SearchInput } from "@/components/ui/search-input";
 
 // Format currency values in description text
 const formatDescriptionWithCurrency = (description: string): string => {
@@ -101,15 +102,12 @@ export default function AuditLog() {
         <CardContent>
           <div className="mb-4">
             <Label>{t("common.search")}</Label>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder={t("auditLog.searchPlaceholder")}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9"
-              />
-            </div>
+            <SearchInput
+              value={searchTerm}
+              onChange={setSearchTerm}
+              placeholder={t("auditLog.searchPlaceholder")}
+              className="mt-1"
+            />
           </div>
 
           <div className="border rounded-lg">

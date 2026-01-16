@@ -10,12 +10,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { SearchInput } from "@/components/ui/search-input";
 
 interface ManifestFiltersProps {
   selectedCustomer: string;
   setSelectedCustomer: (value: string) => void;
   selectedSales: string;
   setSelectedSales: (value: string) => void;
+  searchQuery: string;
+  setSearchQuery: (value: string) => void;
   customers: Array<{ id: string; customer_code: string | null; name: string }> | undefined;
   agents: Array<{ id: string; agent_code: string; name: string }> | undefined;
   onPrint: () => void;
@@ -27,6 +30,8 @@ export function ManifestFilters({
   setSelectedCustomer,
   selectedSales,
   setSelectedSales,
+  searchQuery,
+  setSearchQuery,
   customers,
   agents,
   onPrint,
@@ -45,9 +50,21 @@ export function ManifestFilters({
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
-          <div className="flex-1 space-y-2">
-            <Label className="text-sm font-medium">{t("collection.filterByCustomer")}</Label>
+        <div className="space-y-4">
+          {/* Search Input */}
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">Pencarian</Label>
+            <SearchInput
+              value={searchQuery}
+              onChange={setSearchQuery}
+              placeholder="Cari berdasarkan nomor kontrak, nama customer, atau jenis produk..."
+              className="w-full"
+            />
+          </div>
+          
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
+            <div className="flex-1 space-y-2">
+              <Label className="text-sm font-medium">{t("collection.filterByCustomer")}</Label>
             <Select value={selectedCustomer} onValueChange={(v) => setSelectedCustomer(v === "all" ? "" : v)}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder={t("collection.allCustomers")} />
@@ -88,6 +105,7 @@ export function ManifestFilters({
             <FileText className="mr-2 h-4 w-4" />
             {t("collection.printCoupons")} ({contractCount})
           </Button>
+          </div>
         </div>
       </CardContent>
     </Card>
