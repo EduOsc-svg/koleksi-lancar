@@ -46,8 +46,11 @@ export default function CustomerHistory() {
     selectedContractId
   );
 
+  // Pagination constants
+  const ITEMS_PER_PAGE = 5;
+  
   // Add pagination for payments
-  const { currentPage, totalPages, paginatedItems: paginatedPayments, goToPage, totalItems } = usePagination(payments, 5);
+  const { currentPage, totalPages, paginatedItems: paginatedPayments, goToPage, totalItems } = usePagination(payments, ITEMS_PER_PAGE);
 
   // Add pagination for customer list
   const displayCustomers = searchTerm ? filteredCustomers : customers;
@@ -57,7 +60,7 @@ export default function CustomerHistory() {
     paginatedItems: paginatedCustomers, 
     goToPage: goToCustomerPage,
     totalItems: totalCustomers 
-  } = usePagination(displayCustomers, 5);
+  } = usePagination(displayCustomers, ITEMS_PER_PAGE);
 
   const selectedContract = contracts?.find((c) => c.id === selectedContractId);
   const progress = selectedContract

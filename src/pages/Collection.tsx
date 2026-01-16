@@ -49,13 +49,14 @@ export default function Collection() {
   }) || [];
 
   // Pagination for manifest
+  const MANIFEST_ITEMS_PER_PAGE = 10;
   const {
     paginatedItems: paginatedManifestContracts,
     currentPage: manifestPage,
     goToPage: setManifestPage,
     totalPages: manifestTotalPages,
     totalItems: manifestTotalItems,
-  } = usePagination(manifestContracts, 10);
+  } = usePagination(manifestContracts, MANIFEST_ITEMS_PER_PAGE);
 
   // Reset pagination when filters change
   useEffect(() => {

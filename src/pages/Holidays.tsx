@@ -62,7 +62,8 @@ export default function Holidays() {
     (holiday.day_of_week !== null && DAY_NAMES[holiday.day_of_week].toLowerCase().includes(searchQuery.toLowerCase()))
   ) || [];
   
-  const { currentPage, totalPages, paginatedItems, goToPage, totalItems } = usePagination(filteredHolidays);
+  const ITEMS_PER_PAGE = 10;
+  const { currentPage, totalPages, paginatedItems, goToPage, totalItems } = usePagination(filteredHolidays, ITEMS_PER_PAGE);
 
   const DAY_NAMES = [
     t("holidays.sunday"),
