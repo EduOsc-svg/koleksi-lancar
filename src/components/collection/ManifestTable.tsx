@@ -18,7 +18,7 @@ interface Contract {
   contract_ref: string;
   current_installment_index: number;
   daily_installment_amount: number;
-  customers: { name: string } | null;
+  customers: { name: string; customer_code: string | null } | null;
 }
 
 interface ManifestTableProps {
@@ -53,6 +53,7 @@ export function ManifestTable({
           <TableHeader>
             <TableRow>
               <TableHead className="w-12">#</TableHead>
+              <TableHead>{t("customers.customerCode")}</TableHead>
               <TableHead>{t("collection.customer")}</TableHead>
               <TableHead>{t("contracts.contractRef")}</TableHead>
               <TableHead className="text-center">{t("contracts.couponIndex")}</TableHead>
@@ -63,6 +64,7 @@ export function ManifestTable({
             {[...Array(5)].map((_, i) => (
               <TableRow key={i}>
                 <TableCell><Skeleton className="h-4 w-6" /></TableCell>
+                <TableCell><Skeleton className="h-4 w-16" /></TableCell>
                 <TableCell><Skeleton className="h-4 w-32" /></TableCell>
                 <TableCell><Skeleton className="h-4 w-24" /></TableCell>
                 <TableCell className="text-center"><Skeleton className="h-6 w-8 mx-auto" /></TableCell>
@@ -111,6 +113,7 @@ export function ManifestTable({
           <TableHeader>
             <TableRow className="bg-muted/50">
               <TableHead className="w-12 font-semibold">#</TableHead>
+              <TableHead className="font-semibold">{t("customers.customerCode")}</TableHead>
               <TableHead className="font-semibold">{t("collection.customer")}</TableHead>
               <TableHead className="font-semibold">{t("contracts.contractRef")}</TableHead>
               <TableHead className="font-semibold text-center">{t("contracts.couponIndex")}</TableHead>
@@ -122,6 +125,11 @@ export function ManifestTable({
               <TableRow key={contract.id} className="hover:bg-muted/30 transition-colors">
                 <TableCell className="text-muted-foreground">
                   {(currentPage - 1) * itemsPerPage + i + 1}
+                </TableCell>
+                <TableCell>
+                  <Badge variant="outline" className="font-mono">
+                    {contract.customers?.customer_code || "-"}
+                  </Badge>
                 </TableCell>
                 <TableCell className="font-medium">{contract.customers?.name}</TableCell>
                 <TableCell className="font-mono text-sm">{contract.contract_ref}</TableCell>
