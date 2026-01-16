@@ -77,7 +77,8 @@ export default function Contracts() {
     contract.product_type.toLowerCase().includes(searchQuery.toLowerCase())
   ) || [];
   
-  const { currentPage, totalPages, paginatedItems, goToPage, totalItems } = usePagination(filteredContracts, 5);
+  const ITEMS_PER_PAGE = 5;
+  const { currentPage, totalPages, paginatedItems, goToPage, totalItems } = usePagination(filteredContracts, ITEMS_PER_PAGE);
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);

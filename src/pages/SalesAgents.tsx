@@ -66,7 +66,8 @@ export default function SalesAgents() {
     agent.phone?.toLowerCase().includes(searchQuery.toLowerCase())
   ) || [];
   
-  const { currentPage, totalPages, paginatedItems, goToPage, totalItems } = usePagination(filteredAgents, 5);
+  const ITEMS_PER_PAGE = 5;
+  const { currentPage, totalPages, paginatedItems, goToPage, totalItems } = usePagination(filteredAgents, ITEMS_PER_PAGE);
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);

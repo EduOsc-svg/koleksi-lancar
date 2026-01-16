@@ -61,8 +61,9 @@ export default function Dashboard() {
   const { createExpense, deleteExpense } = useOperationalExpenseMutations();
   
   // Pagination for contract history
+  const HISTORY_ITEMS_PER_PAGE = 5;
   const paginatedHistoryData = useMemo(() => historyData || [], [historyData]);
-  const { currentPage, totalPages, paginatedItems: paginatedHistory, goToPage, totalItems } = usePagination(paginatedHistoryData, 5);
+  const { currentPage, totalPages, paginatedItems: paginatedHistory, goToPage, totalItems } = usePagination(paginatedHistoryData, HISTORY_ITEMS_PER_PAGE);
 
   // Calculate totals with operational expenses
   const totalExpenses = useMemo(() => {
@@ -581,7 +582,7 @@ export default function Dashboard() {
                   </TableBody>
                 </Table>
 
-                {totalItems > 5 && (
+                {totalItems > HISTORY_ITEMS_PER_PAGE && (
                   <div className="mt-4">
                     <TablePagination
                       currentPage={currentPage}

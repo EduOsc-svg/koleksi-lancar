@@ -75,6 +75,10 @@ export default function Collector() {
     );
   }).sort((a, b) => b.totalCollected - a.totalCollected) || [];
   
+  // Pagination constants
+  const COLLECTOR_ITEMS_PER_PAGE = 5;
+  const PAYMENT_ITEMS_PER_PAGE = 10;
+  
   // Pagination for collector stats
   const {
     paginatedItems: paginatedCollectors,
@@ -82,7 +86,7 @@ export default function Collector() {
     goToPage: setCollectorPage,
     totalPages: collectorTotalPages,
     totalItems: collectorTotalItems
-  } = usePagination(collectorStats, 5);
+  } = usePagination(collectorStats, COLLECTOR_ITEMS_PER_PAGE);
   
   // Pagination for payment history
   const {
@@ -91,7 +95,7 @@ export default function Collector() {
     goToPage: setPaymentPage,
     totalPages: paymentTotalPages,
     totalItems: paymentTotalItems
-  } = usePagination(aggregatedPayments || [], 10);
+  } = usePagination(aggregatedPayments || [], PAYMENT_ITEMS_PER_PAGE);
   
   // Summary totals
   const totalCollectedThisMonth = payments?.reduce((sum, p) => sum + Number(p.amount_paid), 0) || 0;
@@ -241,7 +245,7 @@ export default function Collector() {
               ) : (
                 paginatedCollectors.map((collector, i) => (
                   <TableRow key={collector.id}>
-                    <TableCell>{(collectorPage - 1) * 5 + i + 1}</TableCell>
+                    <TableCell>{(collectorPage - 1) * COLLECTOR_ITEMS_PER_PAGE + i + 1}</TableCell>
                     <TableCell>
                       <Badge variant="outline">{collector.collector_code}</Badge>
                     </TableCell>

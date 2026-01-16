@@ -79,7 +79,8 @@ export default function Customers() {
     (customer.address || '').toLowerCase().includes(searchQuery.toLowerCase())
   ) || [];
   
-  const { currentPage, totalPages, paginatedItems, goToPage, totalItems } = usePagination(filteredCustomers, 5);
+  const ITEMS_PER_PAGE = 5;
+  const { currentPage, totalPages, paginatedItems, goToPage, totalItems } = usePagination(filteredCustomers, ITEMS_PER_PAGE);
   const [formData, setFormData] = useState({
     name: "",
     customer_code: "",

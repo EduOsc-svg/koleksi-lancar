@@ -74,7 +74,8 @@ export default function AuditLog() {
     );
   });
 
-  const { currentPage, totalPages, paginatedItems, goToPage, totalItems } = usePagination(filteredLogs);
+  const ITEMS_PER_PAGE = 10;
+  const { currentPage, totalPages, paginatedItems, goToPage, totalItems } = usePagination(filteredLogs, ITEMS_PER_PAGE);
 
   const handleViewDetails = (log: ActivityLog) => {
     setSelectedLog(log);
