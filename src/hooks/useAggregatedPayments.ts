@@ -52,11 +52,12 @@ export const useAggregatedPayments = (dateFrom?: string, dateTo?: string, collec
       const { data, error } = await query;
       if (error) throw error;
 
-      // Group by customer_id + payment_date
+      // Group by customer_id + payment_date + contract_ref (more precise grouping)
       const grouped = new Map<string, AggregatedPayment>();
 
       (data || []).forEach((payment) => {
-        const key = `${payment.credit_contracts?.customer_id}-${payment.payment_date}`;
+        // Include contract_ref in the key to prevent mixing different contracts
+        const key = `${payment.credit_contracts?.customer_id}-${payment.payment_date}-${payment.credit_contracts?.contract_ref}`;
         
         if (!grouped.has(key)) {
           grouped.set(key, {
