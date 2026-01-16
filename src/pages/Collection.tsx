@@ -37,11 +37,11 @@ export default function Collection() {
     if (searchQuery) {
       const query = searchQuery.toLowerCase().trim();
       if (query) {
+        // Only search by contract_ref and customer name, not customer_code
+        // to avoid confusion when searching for contract references
         return (
           c.contract_ref.toLowerCase().includes(query) ||
-          c.customers.name.toLowerCase().includes(query) ||
-          c.customers.customer_code?.toLowerCase().includes(query) ||
-          c.product_type.toLowerCase().includes(query)
+          c.customers.name.toLowerCase().includes(query)
         );
       }
     }
