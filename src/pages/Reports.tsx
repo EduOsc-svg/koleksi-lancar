@@ -132,7 +132,7 @@ export default function Reports() {
     const headerRow = worksheet.addRow([
       'Tanggal',
       'Pelanggan',
-      'Kupon #',
+      'Kode Customer',
       'Jumlah Coupon',
       'Nominal Pembayaran',
       'Total',
@@ -192,7 +192,7 @@ export default function Reports() {
           cell.alignment = { horizontal: 'right' };
         }
         
-        // Center align for Jumlah Coupon and Code Coupon
+        // Center align for Jumlah Coupon and Kode Customer
         if (colNumber === 3 || colNumber === 4) {
           cell.alignment = { horizontal: 'center' };
         }
@@ -246,7 +246,7 @@ export default function Reports() {
     worksheet.columns = [
       { width: 12 },  // Tanggal
       { width: 25 },  // Pelanggan
-      { width: 15 },  // Kupon #
+      { width: 15 },  // Kode Customer
       { width: 16 },  // Jumlah Coupon
       { width: 18 },  // Nominal Pembayaran
       { width: 18 },  // Total
@@ -384,7 +384,7 @@ export default function Reports() {
             <TableRow>
               <TableHead>{t("reports.date", "Tanggal")}</TableHead>
               <TableHead>{t("customers.title")}</TableHead>
-              <TableHead>Kupon #</TableHead>
+              <TableHead>Kode Customer</TableHead>
               <TableHead className="text-center">Jumlah Coupon</TableHead>
               <TableHead className="text-right">Nominal Pembayaran</TableHead>
               <TableHead className="text-right">Total</TableHead>
