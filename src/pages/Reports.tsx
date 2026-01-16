@@ -61,7 +61,11 @@ export default function Reports() {
     return true;
   });
 
-  const { currentPage, totalPages, paginatedItems, goToPage, totalItems } = usePagination(filteredPayments, 5);
+  const ITEMS_PER_PAGE = 5;
+  const { currentPage, totalPages, paginatedItems, goToPage, totalItems } = usePagination(
+    filteredPayments,
+    ITEMS_PER_PAGE,
+  );
   const totalAmount = filteredPayments?.reduce((sum, p) => sum + p.total_amount, 0) ?? 0;
 
   const handleExportExcel = async () => {
@@ -401,7 +405,7 @@ export default function Reports() {
             ) : (
               <>
                 {paginatedItems.map((payment, idx) => {
-                  const globalIndex = (currentPage - 1) * 10 + idx;
+                  const globalIndex = (currentPage - 1) * ITEMS_PER_PAGE + idx;
                   const codeCoupon = `A${String(globalIndex + 1).padStart(3, '0')}`;
                   const nominalPerCoupon = Math.round(payment.total_amount / payment.coupon_count);
                   
