@@ -169,35 +169,101 @@ export default function Collectors() {
     }
 
     const workbook = new ExcelJS.Workbook();
+    workbook.creator = "Credit Management System";
+    workbook.created = new Date();
+    
     const worksheet = workbook.addWorksheet("Kolektor");
 
+    // Define columns with formulas support
+    // A: No, B: Kode Kolektor, C: Nama, D: No. Telepon, E: Tanggal Dibuat
     worksheet.columns = [
-      { header: "No", key: "no", width: 5 },
-      { header: "Kode Kolektor", key: "collector_code", width: 15 },
+      { header: "No", key: "no", width: 6 },
+      { header: "Kode Kolektor", key: "collector_code", width: 18 },
       { header: "Nama", key: "name", width: 30 },
       { header: "No. Telepon", key: "phone", width: 20 },
       { header: "Tanggal Dibuat", key: "created_at", width: 20 },
     ];
 
-    // Style header
+    // Style header row
     worksheet.getRow(1).eachCell((cell) => {
-      cell.font = { bold: true };
+      cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
       cell.fill = {
         type: "pattern",
         pattern: "solid",
-        fgColor: { argb: "FFE0E0E0" },
+        fgColor: { argb: "FF4F81BD" },
+      };
+      cell.alignment = { horizontal: "center", vertical: "middle" };
+      cell.border = {
+        top: { style: "thin" },
+        left: { style: "thin" },
+        bottom: { style: "thin" },
+        right: { style: "thin" },
       };
     });
 
+    // Add data rows with ROW formula for auto-numbering
     collectors.forEach((collector, index) => {
-      worksheet.addRow({
-        no: index + 1,
+      const rowNumber = index + 2; // Row 1 is header, data starts from row 2
+      
+      const row = worksheet.addRow({
+        no: null, // Will be set as formula
         collector_code: collector.collector_code,
         name: collector.name,
         phone: collector.phone || "-",
-        created_at: new Date(collector.created_at).toLocaleDateString("id-ID"),
+        created_at: new Date(collector.created_at),
+      });
+      
+      // Formula for auto-numbering: =ROW()-1 (so row 2 becomes 1, row 3 becomes 2, etc.)
+      worksheet.getCell(`A${rowNumber}`).value = { formula: `ROW()-1` };
+      
+      // Style each row
+      row.eachCell((cell) => {
+        cell.border = {
+          top: { style: "thin" },
+          left: { style: "thin" },
+          bottom: { style: "thin" },
+          right: { style: "thin" },
+        };
       });
     });
+
+    // Add summary row with formulas
+    const lastDataRow = collectors.length + 1;
+    const summaryRowNumber = lastDataRow + 2; // Skip one row
+    
+    // Add empty row
+    worksheet.addRow({});
+    
+    // Add summary row with COUNTA formula
+    const summaryRow = worksheet.addRow({
+      no: "TOTAL",
+      collector_code: null,
+      name: null,
+      phone: null,
+      created_at: null,
+    });
+    
+    // Formula to count all collectors: =COUNTA(B2:B{lastDataRow})
+    worksheet.getCell(`B${summaryRowNumber}`).value = { formula: `COUNTA(B2:B${lastDataRow})&" kolektor"` };
+    
+    // Style summary row
+    summaryRow.font = { bold: true };
+    summaryRow.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FFE2EFDA" },
+    };
+    summaryRow.eachCell((cell) => {
+      cell.border = {
+        top: { style: "thin" },
+        left: { style: "thin" },
+        bottom: { style: "thin" },
+        right: { style: "thin" },
+      };
+    });
+
+    // Format date column
+    worksheet.getColumn("created_at").numFmt = "DD/MM/YYYY";
 
     const buffer = await workbook.xlsx.writeBuffer();
     const blob = new Blob([buffer], {
