@@ -14,11 +14,12 @@ import NotFound from "./pages/NotFound";
 // Lazy imports for large pages
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const SalesAgents = lazy(() => import("./pages/SalesAgents"));
+const Collectors = lazy(() => import("./pages/Collectors"));
 
 const Customers = lazy(() => import("./pages/Customers"));
 const Contracts = lazy(() => import("./pages/Contracts"));
 const Collection = lazy(() => import("./pages/Collection"));
-const Collector = lazy(() => import("./pages/Collector"));
+const CollectorPerformance = lazy(() => import("./pages/Collector"));
 const Reports = lazy(() => import("./pages/Reports"));
 const CustomerHistory = lazy(() => import("./pages/CustomerHistory"));
 const AuditLog = lazy(() => import("./pages/AuditLog"));
@@ -81,12 +82,12 @@ const AppRoutes = () => {
                 <Routes>
                   <Route path="/" element={<Dashboard />} />
                   <Route path="/sales-agents" element={<SalesAgents />} />
-                  
+                  <Route path="/collectors" element={<Collectors />} />
                   <Route path="/customers" element={<Customers />} />
                   <Route path="/contracts" element={<Contracts />} />
                   <Route path="/holidays" element={<Holidays />} />
                   <Route path="/collection" element={<Collection />} />
-                  <Route path="/collector" element={<Collector />} />
+                  <Route path="/collector" element={<CollectorPerformance />} />
                   <Route path="/reports" element={<Reports />} />
                   <Route path="/history" element={<CustomerHistory />} />
                   <Route path="/audit-log" element={<AuditLog />} />
