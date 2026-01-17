@@ -35,6 +35,7 @@ const mainItems = [
 
 const masterItems = [
   { titleKey: "nav.salesAgents", url: "/sales-agents", icon: Users },
+  { titleKey: "nav.collectors", url: "/collectors", icon: Users },
   { titleKey: "nav.customers", url: "/customers", icon: UserCircle },
   { titleKey: "nav.contracts", url: "/contracts", icon: FileText },
   { titleKey: "nav.holidays", url: "/holidays", icon: Calendar },
@@ -42,7 +43,7 @@ const masterItems = [
 
 const operationItems = [
   { titleKey: "nav.collection", url: "/collection", icon: Wallet },
-  { titleKey: "nav.collector", url: "/collector", icon: Users },
+  { titleKey: "nav.collectorPerformance", url: "/collector", icon: BarChart3 },
   { titleKey: "nav.reports", url: "/reports", icon: BarChart3 },
   { titleKey: "nav.customerHistory", url: "/history", icon: History },
 ];
