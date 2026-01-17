@@ -168,7 +168,8 @@ export default function SalesAgents() {
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Sales Agents");
 
-    // Define columns
+    // Define columns with keys
+    // A: Kode Agent, B: Nama, C: Telepon, D: Komisi %, E: Total Omset, F: Total Modal, G: Profit, H: Komisi, I: Jumlah Kontrak
     worksheet.columns = [
       { header: t("salesAgents.agentCode"), key: "agent_code", width: 15 },
       { header: t("salesAgents.name"), key: "name", width: 25 },
@@ -190,23 +191,64 @@ export default function SalesAgents() {
     };
     worksheet.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
 
-    // Add data rows
-    agents.forEach((agent) => {
+    // Add data rows with formulas
+    agents.forEach((agent, index) => {
       const omsetData = getAgentOmset(agent.id);
+      const rowNumber = index + 2; // Row 1 is header, data starts from row 2
+      
       worksheet.addRow({
         agent_code: agent.agent_code,
         name: agent.name,
         phone: agent.phone || "-",
-        commission_percentage: agent.commission_percentage || 0,
+        commission_percentage: (agent.commission_percentage || 0) / 100, // Store as decimal for formula
         total_omset: omsetData?.total_omset || 0,
         total_modal: omsetData?.total_modal || 0,
-        profit: omsetData?.profit || 0,
-        total_commission: omsetData?.total_commission || 0,
+        profit: null, // Will be set as formula
+        total_commission: null, // Will be set as formula
         total_contracts: omsetData?.total_contracts || 0,
       });
+      
+      // Set dynamic formulas
+      // Profit = Total Omset - Total Modal (Column E - Column F)
+      worksheet.getCell(`G${rowNumber}`).value = { formula: `E${rowNumber}-F${rowNumber}` };
+      
+      // Komisi = Profit * Komisi % (Column G * Column D)
+      worksheet.getCell(`H${rowNumber}`).value = { formula: `G${rowNumber}*D${rowNumber}` };
     });
 
-    // Format currency columns
+    // Add total row with SUM formulas
+    const lastDataRow = agents.length + 1;
+    const totalRowNumber = lastDataRow + 1;
+    
+    const totalRow = worksheet.addRow({
+      agent_code: "TOTAL",
+      name: "",
+      phone: "",
+      commission_percentage: null,
+      total_omset: null,
+      total_modal: null,
+      profit: null,
+      total_commission: null,
+      total_contracts: null,
+    });
+    
+    // Set SUM formulas for total row
+    worksheet.getCell(`E${totalRowNumber}`).value = { formula: `SUM(E2:E${lastDataRow})` };
+    worksheet.getCell(`F${totalRowNumber}`).value = { formula: `SUM(F2:F${lastDataRow})` };
+    worksheet.getCell(`G${totalRowNumber}`).value = { formula: `SUM(G2:G${lastDataRow})` };
+    worksheet.getCell(`H${totalRowNumber}`).value = { formula: `SUM(H2:H${lastDataRow})` };
+    worksheet.getCell(`I${totalRowNumber}`).value = { formula: `SUM(I2:I${lastDataRow})` };
+    
+    // Style total row
+    totalRow.font = { bold: true };
+    totalRow.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FFE2EFDA" },
+    };
+
+    // Format columns
+    worksheet.getColumn("commission_percentage").numFmt = "0.00%"; // Display as percentage
     worksheet.getColumn("total_omset").numFmt = "#,##0";
     worksheet.getColumn("total_modal").numFmt = "#,##0";
     worksheet.getColumn("profit").numFmt = "#,##0";
