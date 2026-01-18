@@ -135,27 +135,24 @@ export default function Dashboard() {
         <StatCard
           icon={DollarSign}
           iconColor="text-blue-500"
-          label={t("dashboard.totalModal", "Total Modal")}
+          label="Total Modal"
           value={monthlyData?.total_modal ?? 0}
-          onDetailClick={() => toast.info("Fitur detail modal sedang dikembangkan")}
         />
         
         <StatCard
           icon={Wallet}
           iconColor="text-indigo-500"
-          label={t("dashboard.omset", "Omset")}
+          label="Omset"
           value={monthlyData?.total_omset ?? 0}
-          onDetailClick={() => toast.info("Fitur detail omset sedang dikembangkan")}
         />
 
         <StatCard
           icon={TrendingUp}
           iconColor="text-green-500"
-          label={t("dashboard.profit", "Keuntungan")}
+          label="Keuntungan"
           value={monthlyData?.total_profit ?? 0}
           valueColor="text-green-600"
           subtitle="Sebelum operasional"
-          onDetailClick={() => toast.info("Fitur detail keuntungan sedang dikembangkan")}
         />
 
         <StatCard
@@ -171,20 +168,18 @@ export default function Dashboard() {
         <StatCard
           icon={Percent}
           iconColor="text-purple-500"
-          label={t("dashboard.totalCommission", "Total Komisi")}
+          label="Total Komisi"
           value={monthlyData?.total_commission ?? 0}
           valueColor="text-purple-600"
-          onDetailClick={() => toast.info("Fitur detail komisi sedang dikembangkan")}
         />
 
         <StatCard
           icon={Percent}
           iconColor="text-emerald-500"
-          label={t("dashboard.profitMargin", "Margin")}
+          label="Margin"
           value={monthlyData?.profit_margin ?? 0}
           valueColor="text-emerald-600"
           isPercentage
-          onDetailClick={() => toast.info("Fitur detail margin sedang dikembangkan")}
         />
       </div>
 
