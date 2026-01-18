@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from "react";
-import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
 import { Plus, Pencil, Trash2, Eye, Printer } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -54,7 +53,6 @@ import "@/styles/Voucher-final.css"; // Pixel-perfect voucher styles (9.5cm x 6.
 import { CurrencyInput } from "@/components/ui/currency-input";
 
 export default function Contracts() {
-  const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const highlightId = searchParams.get('highlight');
   const { data: contracts, isLoading } = useContracts();
@@ -186,11 +184,11 @@ export default function Contracts() {
 
   const handleSubmit = async () => {
     if (!formData.customer_id) {
-      toast.error(t("errors.selectCustomer"));
+      toast.error("Pilih pelanggan terlebih dahulu");
       return;
     }
     if (!formData.start_date) {
-      toast.error(t("errors.selectStartDate"));
+      toast.error("Pilih tanggal mulai terlebih dahulu");
       return;
     }
     try {
@@ -211,7 +209,7 @@ export default function Contracts() {
           status: formData.status,
           omset: formData.modal || 0,
         } as any);
-        toast.success(t("contracts.updatedSuccess"));
+        toast.success("Kontrak berhasil diperbarui");
       } else {
         const { data: newContract } = await createContract.mutateAsync({
           contract_ref: formData.contract_ref,
@@ -234,15 +232,15 @@ export default function Contracts() {
             tenorDays: tenorDays,
             dailyAmount: dailyAmount,
           });
-          toast.success(t("contracts.createdWithCoupons", { count: tenorDays }));
+          toast.success(`Kontrak dibuat dengan ${tenorDays} kupon`);
         } else {
-          toast.success(t("contracts.createdSuccess"));
+          toast.success("Kontrak berhasil dibuat");
         }
       }
       setDialogOpen(false);
     } catch (error) {
       console.error(error);
-      toast.error(t("errors.saveFailed"));
+      toast.error("Gagal menyimpan data");
     }
   };
 
@@ -250,17 +248,17 @@ export default function Contracts() {
     if (!selectedContract) return;
     try {
       await deleteContract.mutateAsync(selectedContract.id);
-      toast.success(t("contracts.deletedSuccess"));
+      toast.success("Kontrak berhasil dihapus");
       setDeleteDialogOpen(false);
       setSelectedContract(null);
     } catch (error) {
-      toast.error(t("contracts.deleteFailed"));
+      toast.error("Gagal menghapus kontrak");
     }
   };
 
   const handlePrintAllCoupons = () => {
     if (!selectedContractCoupons?.length) {
-      toast.error(t("contracts.noCoupons"));
+      toast.error("Tidak ada kupon untuk dicetak");
       return;
     }
     setPrintMode(true);
@@ -304,9 +302,9 @@ export default function Contracts() {
       )}
 
       <div className="flex justify-between items-center print:hidden">
-        <h2 className="text-2xl font-bold">Credit Contracts</h2>
+        <h2 className="text-2xl font-bold">Kontrak Kredit</h2>
         <Button onClick={handleOpenCreate}>
-          <Plus className="mr-2 h-4 w-4" /> New Contract
+          <Plus className="mr-2 h-4 w-4" /> Kontrak Baru
         </Button>
       </div>
 
@@ -315,10 +313,10 @@ export default function Contracts() {
         <SearchInput
           value={searchQuery}
           onChange={setSearchQuery}
-          placeholder="Cari kontrak berdasarkan nomor kontrak, nama customer, kode customer, atau jenis produk..."
+          placeholder="Cari kontrak berdasarkan nomor kontrak atau nama pelanggan..."
           className="max-w-lg"
         />
-        <div className="text-sm text-gray-500">
+        <div className="text-sm text-muted-foreground">
           Menampilkan {totalItems} dari {contracts?.length || 0} kontrak
         </div>
       </div>
@@ -327,23 +325,23 @@ export default function Contracts() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Contract Ref</TableHead>
-              <TableHead>Customer</TableHead>
+              <TableHead>Kode Kontrak</TableHead>
+              <TableHead>Pelanggan</TableHead>
               <TableHead>Sales Agent</TableHead>
               <TableHead>Progress</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead className="text-right">Aksi</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center">Loading...</TableCell>
+                    <TableCell colSpan={6} className="text-center">Memuat...</TableCell>
                   </TableRow>
             ) : filteredContracts?.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="text-center text-muted-foreground">
-                  {searchQuery ? `Tidak ada kontrak yang ditemukan dengan kata kunci "${searchQuery}"` : "No contracts found"}
+                  {searchQuery ? `Tidak ada kontrak yang ditemukan dengan kata kunci "${searchQuery}"` : "Tidak ada data kontrak"}
                 </TableCell>
               </TableRow>
             ) : (
@@ -364,7 +362,7 @@ export default function Contracts() {
                 let statusLabel = "Lancar";
                 if (contract.status !== "active") {
                   statusVariant = "secondary";
-                  statusLabel = "Completed";
+                  statusLabel = "Selesai";
                 } else if (daysPerDueNum <= 1.2) {
                   statusVariant = "default";
                   statusLabel = "Lancar";
@@ -401,7 +399,7 @@ export default function Contracts() {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="icon" onClick={() => handleOpenDetail(contract)} title="View Details">
+                      <Button variant="ghost" size="icon" onClick={() => handleOpenDetail(contract)} title="Lihat Detail">
                         <Eye className="h-4 w-4" />
                       </Button>
                       <Button variant="ghost" size="icon" onClick={() => handleOpenEdit(contract)}>
@@ -436,27 +434,27 @@ export default function Contracts() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>{selectedContract ? "Edit Contract" : "New Credit Contract"}</DialogTitle>
+            <DialogTitle>{selectedContract ? "Edit Kontrak" : "Kontrak Kredit Baru"}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="contract_ref">Contract Ref</Label>
+                <Label htmlFor="contract_ref">Kode Kontrak</Label>
                 <Input
                   id="contract_ref"
                   value={formData.contract_ref}
                   onChange={(e) => setFormData({ ...formData, contract_ref: e.target.value })}
-                  placeholder="e.g., A4146"
+                  placeholder="Contoh: A4146"
                 />
               </div>
               <div>
-                <Label htmlFor="customer">Customer</Label>
+                <Label htmlFor="customer">Pelanggan</Label>
                 <Select
                   value={formData.customer_id}
                   onValueChange={(v) => setFormData({ ...formData, customer_id: v })}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select customer" />
+                    <SelectValue placeholder="Pilih pelanggan" />
                   </SelectTrigger>
                   <SelectContent>
                     {customers?.map((customer) => (
@@ -491,7 +489,7 @@ export default function Contracts() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="start_date">Start Date</Label>
+                <Label htmlFor="start_date">Tanggal Mulai</Label>
                 <Input
                   id="start_date"
                   type="date"
@@ -499,7 +497,7 @@ export default function Contracts() {
                   onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
                 />
                 <p className="text-xs text-muted-foreground mt-1">
-                  Coupons will be generated from this date
+                  Kupon akan dibuat mulai dari tanggal ini
                 </p>
               </div>
               <div>
@@ -512,37 +510,37 @@ export default function Contracts() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="completed">Completed</SelectItem>
-                    <SelectItem value="cancelled">Cancelled</SelectItem>
+                    <SelectItem value="active">Aktif</SelectItem>
+                    <SelectItem value="completed">Selesai</SelectItem>
+                    <SelectItem value="cancelled">Dibatalkan</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="product_type">Product Type</Label>
+                <Label htmlFor="product_type">Jenis Produk</Label>
                 <Input
                   id="product_type"
                   value={formData.product_type}
                   onChange={(e) => setFormData({ ...formData, product_type: e.target.value })}
-                  placeholder="e.g., Electronics"
+                  placeholder="Contoh: Elektronik"
                 />
               </div>
               <div>
-                <Label htmlFor="tenor_days">Tenor (Days)</Label>
+                <Label htmlFor="tenor_days">Tenor (Hari)</Label>
                 <Input
                   id="tenor_days"
                   type="number"
                   value={formData.tenor_days}
                   onChange={(e) => setFormData({ ...formData, tenor_days: e.target.value })}
-                  placeholder="e.g., 100"
+                  placeholder="Contoh: 100"
                 />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="total_loan_amount">{t("contracts.totalLoanAmount")}</Label>
+                <Label htmlFor="total_loan_amount">Total Pinjaman</Label>
                 <CurrencyInput
                   id="total_loan_amount"
                   value={formData.total_loan_amount}
@@ -551,20 +549,20 @@ export default function Contracts() {
                 />
               </div>
               <div>
-                <Label htmlFor="daily_installment_amount">{t("contracts.dailyInstallment")}</Label>
+                <Label htmlFor="daily_installment_amount">Cicilan Harian</Label>
                 <CurrencyInput
                   id="daily_installment_amount"
                   value={formData.daily_installment_amount || calculateInstallment()}
                   onValueChange={(val) => setFormData({ ...formData, daily_installment_amount: val || 0 })}
-                  placeholder="Auto"
+                  placeholder="Otomatis"
                 />
                 <p className="text-xs text-muted-foreground mt-1">
-                  Auto: {formatRupiah(calculateInstallment())}
+                  Otomatis: {formatRupiah(calculateInstallment())}
                 </p>
               </div>
             </div>
             <div>
-              <Label htmlFor="modal">{t("contracts.modal", "Modal")}</Label>
+              <Label htmlFor="modal">Modal</Label>
               <CurrencyInput
                 id="modal"
                 value={formData.modal}
@@ -572,14 +570,14 @@ export default function Contracts() {
                 placeholder="Rp 0"
               />
               <p className="text-xs text-muted-foreground mt-1">
-                {t("contracts.modalHint", "Modal awal untuk kontrak ini")}
+                Modal awal untuk kontrak ini
               </p>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>Batal</Button>
             <Button onClick={handleSubmit} disabled={createContract.isPending || updateContract.isPending || generateCoupons.isPending}>
-              {selectedContract ? "Update" : "Create & Generate Coupons"}
+              {selectedContract ? "Perbarui" : "Buat & Generate Kupon"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -607,7 +605,7 @@ export default function Contracts() {
                 {/* Customer & Contract Info */}
                 <div className="grid grid-cols-2 gap-4 p-4 bg-muted rounded-lg">
                   <div>
-                    <p className="text-sm text-muted-foreground">Customer</p>
+                    <p className="text-sm text-muted-foreground">Pelanggan</p>
                     <p className="font-medium">{selectedContract.customers?.name}</p>
                   </div>
                   <div>
@@ -688,7 +686,7 @@ export default function Contracts() {
                   </div>
                   <Button onClick={handlePrintAllCoupons} disabled={!selectedContractCoupons?.length}>
                     <Printer className="mr-2 h-4 w-4" />
-                    Print Kupon (A4)
+                    Cetak Kupon (A4)
                   </Button>
                 </div>
               </div>
@@ -704,14 +702,14 @@ export default function Contracts() {
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Contract?</AlertDialogTitle>
+            <AlertDialogTitle>Hapus Kontrak?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. All generated coupons will also be deleted.
+              Tindakan ini tidak dapat dibatalkan. Semua kupon yang terkait juga akan dihapus.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+            <AlertDialogCancel>Batal</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete}>Hapus</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
