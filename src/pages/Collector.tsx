@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { format, startOfMonth, endOfMonth } from "date-fns";
 import { id as localeId } from "date-fns/locale";
-import { Wallet, TrendingUp, Users, Calendar, DollarSign, Download } from "lucide-react";
+import { Wallet, TrendingUp, Users, CalendarIcon, DollarSign, Download } from "lucide-react";
 import { toast } from "sonner";
 import ExcelJS from "exceljs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,6 +23,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
 import { useCollectors } from "@/hooks/useCollectors";
 import { useAggregatedPayments } from "@/hooks/useAggregatedPayments";
 import { usePayments } from "@/hooks/usePayments";
@@ -35,9 +42,8 @@ export default function Collector() {
   const { t } = useTranslation();
   const { data: collectors } = useCollectors();
   
-  // Month selection
-  const currentDate = new Date();
-  const [selectedMonth, setSelectedMonth] = useState(format(currentDate, "yyyy-MM"));
+  // Month selection - use Date object for dynamic calendar
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   
   // Filter by collector
   const [selectedCollector, setSelectedCollector] = useState<string>("");
@@ -45,9 +51,9 @@ export default function Collector() {
   // Search state
   const [searchQuery, setSearchQuery] = useState("");
   
-  // Calculate date range from selected month
-  const monthStart = startOfMonth(new Date(selectedMonth + "-01"));
-  const monthEnd = endOfMonth(monthStart);
+  // Calculate date range from selected date
+  const monthStart = startOfMonth(selectedDate);
+  const monthEnd = endOfMonth(selectedDate);
   const dateFrom = format(monthStart, "yyyy-MM-dd");
   const dateTo = format(monthEnd, "yyyy-MM-dd");
   
@@ -106,15 +112,12 @@ export default function Collector() {
   const uniqueCustomersThisMonth = new Set(payments?.map(p => p.credit_contracts?.customer_id)).size;
   const activeCollectors = new Set(payments?.map(p => p.collector_id)).size;
   
-  // Generate month options (last 12 months)
-  const monthOptions = [];
-  for (let i = 0; i < 12; i++) {
-    const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
-    monthOptions.push({
-      value: format(date, "yyyy-MM"),
-      label: format(date, "MMMM yyyy", { locale: localeId }),
-    });
-  }
+  // Handle date selection from calendar
+  const handleDateSelect = (date: Date | undefined) => {
+    if (date) {
+      setSelectedDate(date);
+    }
+  };
 
   // Export to Excel with dynamic formulas
   const handleExportExcel = async () => {
@@ -232,7 +235,7 @@ export default function Collector() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `performa_kolektor_${selectedMonth}.xlsx`;
+    a.download = `performa_kolektor_${format(selectedDate, "yyyy-MM")}.xlsx`;
     a.click();
     URL.revokeObjectURL(url);
     toast.success("Data berhasil diekspor");
@@ -249,19 +252,30 @@ export default function Collector() {
             Export Excel
           </Button>
           
-          <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-            <SelectTrigger className="w-[180px]">
-              <Calendar className="mr-2 h-4 w-4" />
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {monthOptions.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(
+                  "w-[200px] justify-start text-left font-normal",
+                  !selectedDate && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {format(selectedDate, "MMMM yyyy", { locale: localeId })}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="end">
+              <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={handleDateSelect}
+                defaultMonth={selectedDate}
+                locale={localeId}
+                className="pointer-events-auto"
+              />
+            </PopoverContent>
+          </Popover>
           
           <Select value={selectedCollector} onValueChange={(v) => setSelectedCollector(v === "all" ? "" : v)}>
             <SelectTrigger className="w-[200px]">
