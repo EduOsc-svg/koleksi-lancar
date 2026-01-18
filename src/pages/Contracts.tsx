@@ -101,14 +101,6 @@ export default function Contracts() {
   // Fetch coupons for selected contract (for detail view and printing)
   const { data: selectedContractCoupons } = useCouponsByContract(selectedContract?.id || null);
   
-  // Add pagination for coupons in detail dialog
-  const { 
-    currentPage: couponsPage, 
-    totalPages: couponsTotalPages, 
-    paginatedItems: paginatedCoupons, 
-    goToPage: goToCouponsPage,
-    totalItems: totalCoupons 
-  } = usePagination(selectedContractCoupons, 5);
   const [printMode, setPrintMode] = useState(false);
 
   // Handle highlighting item from global search
@@ -336,12 +328,8 @@ export default function Contracts() {
           <TableHeader>
             <TableRow>
               <TableHead>Contract Ref</TableHead>
-              <TableHead>No. Faktur</TableHead>
               <TableHead>Customer</TableHead>
               <TableHead>Sales Agent</TableHead>
-              <TableHead>Start Date</TableHead>
-              <TableHead>Loan Amount</TableHead>
-              <TableHead>Modal</TableHead>
               <TableHead>Progress</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Actions</TableHead>
@@ -349,12 +337,12 @@ export default function Contracts() {
           </TableHeader>
           <TableBody>
             {isLoading ? (
-              <TableRow>
-                <TableCell colSpan={10} className="text-center">Loading...</TableCell>
-              </TableRow>
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center">Loading...</TableCell>
+                  </TableRow>
             ) : filteredContracts?.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={10} className="text-center text-muted-foreground">
+                <TableCell colSpan={6} className="text-center text-muted-foreground">
                   {searchQuery ? `Tidak ada kontrak yang ditemukan dengan kata kunci "${searchQuery}"` : "No contracts found"}
                 </TableCell>
               </TableRow>
@@ -397,37 +385,23 @@ export default function Contracts() {
                     )}
                   >
                     <TableCell className="font-medium">{contract.contract_ref}</TableCell>
-                    <TableCell className="font-mono text-xs">{getNoFaktur(contract.id)}</TableCell>
                     <TableCell>{contract.customers?.name}</TableCell>
                     <TableCell>{salesAgents?.find(a => a.id === contract.sales_agent_id)?.name || "-"}</TableCell>
-                    <TableCell>{contract.start_date ? formatDate(contract.start_date) : "-"}</TableCell>
-                    <TableCell>{formatRupiah(contract.total_loan_amount)}</TableCell>
-                    <TableCell>{formatRupiah(contract.omset || 0)}</TableCell>
                     <TableCell>
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <Progress value={progress} className="w-20 h-2" />
-                          <span className="text-xs text-muted-foreground">
-                            {contract.current_installment_index}/{contract.tenor_days}
-                          </span>
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          Terbayar: {formatRupiah(paidAmount)} | Sisa: {formatRupiah(remainingAmount)}
-                        </div>
+                      <div className="flex items-center gap-2">
+                        <Progress value={progress} className="w-16 h-2" />
+                        <span className="text-xs text-muted-foreground">
+                          {contract.current_installment_index}/{contract.tenor_days}
+                        </span>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="space-y-1">
-                        <Badge variant={statusVariant}>
-                          {statusLabel}
-                        </Badge>
-                        <div className="text-xs text-muted-foreground">
-                          {daysPerDue} hari/cicilan
-                        </div>
-                      </div>
+                      <Badge variant={statusVariant}>
+                        {statusLabel}
+                      </Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="icon" onClick={() => handleOpenDetail(contract)} title="View & Print Coupons">
+                      <Button variant="ghost" size="icon" onClick={() => handleOpenDetail(contract)} title="View Details">
                         <Eye className="h-4 w-4" />
                       </Button>
                       <Button variant="ghost" size="icon" onClick={() => handleOpenEdit(contract)}>
@@ -611,90 +585,117 @@ export default function Contracts() {
         </DialogContent>
       </Dialog>
 
-      {/* Contract Detail Dialog with Print Option */}
+      {/* Contract Detail Dialog - Progress & Info */}
       <Dialog open={detailDialogOpen} onOpenChange={setDetailDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Contract Details: {selectedContract?.contract_ref}</DialogTitle>
+            <DialogTitle>Detail Kontrak: {selectedContract?.contract_ref}</DialogTitle>
           </DialogHeader>
-          {selectedContract && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4 p-4 bg-muted rounded-lg">
-                <div>
-                  <p className="text-sm text-muted-foreground">Customer</p>
-                  <p className="font-medium">{selectedContract.customers?.name}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Start Date</p>
-                  <p className="font-medium">{(selectedContract as any).start_date ? formatDate((selectedContract as any).start_date) : "-"}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Loan Amount</p>
-                  <p className="font-medium">{formatRupiah(selectedContract.total_loan_amount)}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Installment</p>
-                  <p className="font-medium">{formatRupiah(selectedContract.daily_installment_amount)} × {selectedContract.tenor_days} days</p>
-                </div>
-              </div>
+          {selectedContract && (() => {
+            const progress = (selectedContract.current_installment_index / selectedContract.tenor_days) * 100;
+            const paidAmount = selectedContract.current_installment_index * selectedContract.daily_installment_amount;
+            const remainingAmount = (selectedContract.tenor_days - selectedContract.current_installment_index) * selectedContract.daily_installment_amount;
+            const createdAt = new Date(selectedContract.created_at);
+            const today = new Date();
+            const daysElapsed = Math.max(1, Math.floor((today.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24)));
+            const daysPerDue = selectedContract.current_installment_index > 0 
+              ? (daysElapsed / selectedContract.current_installment_index).toFixed(1) 
+              : "0";
 
-              <div className="flex justify-between items-center">
-                <h4 className="font-semibold">Generated Coupons ({selectedContractCoupons?.length || 0})</h4>
-                <Button onClick={handlePrintAllCoupons} disabled={!selectedContractCoupons?.length}>
-                  <Printer className="mr-2 h-4 w-4" />
-                  Print All Coupons (A4)
-                </Button>
-              </div>
-
-              <div className="border rounded-lg max-h-64 overflow-y-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>No.</TableHead>
-                      <TableHead>Due Date</TableHead>
-                      <TableHead>Amount</TableHead>
-                      <TableHead>Status</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {paginatedCoupons?.map((coupon) => (
-                      <TableRow key={coupon.id}>
-                        <TableCell className="font-medium">Ke-{coupon.installment_index}</TableCell>
-                        <TableCell>{formatDate(coupon.due_date)}</TableCell>
-                        <TableCell>{formatRupiah(coupon.amount)}</TableCell>
-                        <TableCell>
-                          <Badge variant={coupon.status === "paid" ? "default" : "outline"}>
-                            {coupon.status === "paid" ? "Paid" : "Unpaid"}
-                          </Badge>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                    {(!selectedContractCoupons || selectedContractCoupons.length === 0) && (
-                      <TableRow>
-                        <TableCell colSpan={4} className="text-center text-muted-foreground">
-                          No coupons generated yet
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-              
-              {/* Coupons pagination */}
-              {couponsTotalPages > 1 && (
-                <div className="mt-2">
-                  <TablePagination
-                    currentPage={couponsPage}
-                    totalPages={couponsTotalPages}
-                    onPageChange={goToCouponsPage}
-                    totalItems={totalCoupons}
-                  />
+            return (
+              <div className="space-y-6">
+                {/* Customer & Contract Info */}
+                <div className="grid grid-cols-2 gap-4 p-4 bg-muted rounded-lg">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Customer</p>
+                    <p className="font-medium">{selectedContract.customers?.name}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">No. Faktur</p>
+                    <p className="font-medium font-mono">{getNoFaktur(selectedContract.id)}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Sales Agent</p>
+                    <p className="font-medium">{salesAgents?.find(a => a.id === selectedContract.sales_agent_id)?.name || "-"}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Tanggal Mulai</p>
+                    <p className="font-medium">{selectedContract.start_date ? formatDate(selectedContract.start_date) : "-"}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Jenis Produk</p>
+                    <p className="font-medium">{selectedContract.product_type || "-"}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Status</p>
+                    <Badge variant={selectedContract.status === "active" ? "default" : "secondary"}>
+                      {selectedContract.status === "active" ? "Aktif" : selectedContract.status}
+                    </Badge>
+                  </div>
                 </div>
-              )}
-            </div>
-          )}
+
+                {/* Financial Info */}
+                <div className="grid grid-cols-2 gap-4 p-4 border rounded-lg">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Total Pinjaman</p>
+                    <p className="font-semibold text-lg">{formatRupiah(selectedContract.total_loan_amount)}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Modal</p>
+                    <p className="font-semibold text-lg">{formatRupiah(selectedContract.omset || 0)}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Cicilan Harian</p>
+                    <p className="font-medium">{formatRupiah(selectedContract.daily_installment_amount)}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Tenor</p>
+                    <p className="font-medium">{selectedContract.tenor_days} hari</p>
+                  </div>
+                </div>
+
+                {/* Progress Section */}
+                <div className="p-4 border rounded-lg space-y-4">
+                  <h4 className="font-semibold">Progress Pembayaran</h4>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>Cicilan ke-{selectedContract.current_installment_index} dari {selectedContract.tenor_days}</span>
+                      <span className="font-medium">{progress.toFixed(1)}%</span>
+                    </div>
+                    <Progress value={progress} className="h-3" />
+                  </div>
+                  <div className="grid grid-cols-3 gap-4 pt-2">
+                    <div className="text-center p-3 bg-green-50 dark:bg-green-950 rounded-lg">
+                      <p className="text-xs text-muted-foreground">Terbayar</p>
+                      <p className="font-semibold text-green-600 dark:text-green-400">{formatRupiah(paidAmount)}</p>
+                    </div>
+                    <div className="text-center p-3 bg-orange-50 dark:bg-orange-950 rounded-lg">
+                      <p className="text-xs text-muted-foreground">Sisa</p>
+                      <p className="font-semibold text-orange-600 dark:text-orange-400">{formatRupiah(remainingAmount)}</p>
+                    </div>
+                    <div className="text-center p-3 bg-blue-50 dark:bg-blue-950 rounded-lg">
+                      <p className="text-xs text-muted-foreground">Rata-rata</p>
+                      <p className="font-semibold text-blue-600 dark:text-blue-400">{daysPerDue} hari/cicilan</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Print Coupons Section */}
+                <div className="flex justify-between items-center p-4 border rounded-lg">
+                  <div>
+                    <h4 className="font-semibold">Cetak Kupon</h4>
+                    <p className="text-sm text-muted-foreground">{selectedContractCoupons?.length || 0} kupon tersedia</p>
+                  </div>
+                  <Button onClick={handlePrintAllCoupons} disabled={!selectedContractCoupons?.length}>
+                    <Printer className="mr-2 h-4 w-4" />
+                    Print Kupon (A4)
+                  </Button>
+                </div>
+              </div>
+            );
+          })()}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDetailDialogOpen(false)}>Close</Button>
+            <Button variant="outline" onClick={() => setDetailDialogOpen(false)}>Tutup</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
