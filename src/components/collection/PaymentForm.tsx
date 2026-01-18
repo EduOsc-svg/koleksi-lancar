@@ -3,6 +3,7 @@ import { CreditCard, AlertTriangle, CheckCircle2, Info } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -55,7 +56,7 @@ export function PaymentForm({ contracts, collectors, onSubmit, isSubmitting }: P
   
   const [selectedContract, setSelectedContract] = useState("");
   const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split("T")[0]);
-  const [paymentAmount, setPaymentAmount] = useState("");
+  const [paymentAmount, setPaymentAmount] = useState<number | undefined>(undefined);
   const [paymentCollector, setPaymentCollector] = useState("");
   const [paymentNotes, setPaymentNotes] = useState("");
 
@@ -84,19 +85,12 @@ export function PaymentForm({ contracts, collectors, onSubmit, isSubmitting }: P
     }
   }, [selectedContract, nextCouponDueDate, paymentDate]);
 
-  const formatCurrencyInput = (value: string) => {
-    const numericValue = value.replace(/\D/g, "");
-    if (!numericValue) return "";
-    return new Intl.NumberFormat("id-ID").format(parseInt(numericValue));
-  };
-
-  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formatted = formatCurrencyInput(e.target.value);
-    setPaymentAmount(formatted);
+  const handleAmountChange = (value: number | undefined) => {
+    setPaymentAmount(value);
   };
 
   const getNumericAmount = () => {
-    return parseFloat(paymentAmount.replace(/\./g, "")) || 0;
+    return paymentAmount || 0;
   };
 
   const handleSubmit = async () => {
@@ -121,7 +115,7 @@ export function PaymentForm({ contracts, collectors, onSubmit, isSubmitting }: P
 
       // Reset form
       setSelectedContract("");
-      setPaymentAmount("");
+      setPaymentAmount(undefined);
       setPaymentNotes("");
       setPaymentCollector("");
     } catch {
@@ -253,16 +247,14 @@ export function PaymentForm({ contracts, collectors, onSubmit, isSubmitting }: P
         {/* Payment Details */}
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
-            <Label className="text-sm font-medium">{t("collection.amount")} (Rp)</Label>
-            <Input
-              type="text"
-              inputMode="numeric"
+            <Label className="text-sm font-medium">Jumlah Bayar</Label>
+            <CurrencyInput
               value={paymentAmount}
-              onChange={handleAmountChange}
+              onValueChange={handleAmountChange}
               placeholder={
                 selectedContractData
-                  ? formatRupiah(selectedContractData.daily_installment_amount).replace("Rp ", "")
-                  : "0"
+                  ? formatRupiah(selectedContractData.daily_installment_amount)
+                  : "Rp 0"
               }
             />
             {selectedContractData && (
