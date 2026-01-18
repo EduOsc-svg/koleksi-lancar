@@ -69,17 +69,17 @@ export default function CustomerHistory() {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold">Customer History</h2>
+      <h2 className="text-2xl font-bold">Riwayat Pelanggan</h2>
 
       <Card>
         <CardHeader>
-          <CardTitle>Search Customer</CardTitle>
+          <CardTitle>Cari Pelanggan</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search by customer name..."
+              placeholder="Cari berdasarkan nama pelanggan..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
@@ -108,7 +108,7 @@ export default function CustomerHistory() {
               ))}
               {(!paginatedCustomers || paginatedCustomers.length === 0) && (
                 <div className="p-3 text-center text-muted-foreground">
-                  No customers found
+                  Pelanggan tidak ditemukan
                 </div>
               )}
             </div>
@@ -131,7 +131,7 @@ export default function CustomerHistory() {
                 onValueChange={setSelectedContractId}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select a contract" />
+                  <SelectValue placeholder="Pilih kontrak" />
                 </SelectTrigger>
                 <SelectContent>
                   {customerContracts?.map((contract) => (
@@ -150,17 +150,17 @@ export default function CustomerHistory() {
         <>
           <Card>
             <CardHeader>
-              <CardTitle>Loan Progress</CardTitle>
+              <CardTitle>Progress Pinjaman</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <div>
-                    <p className="text-sm text-muted-foreground">Contract</p>
+                    <p className="text-sm text-muted-foreground">Kontrak</p>
                     <p className="font-medium">{selectedContract.contract_ref}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm text-muted-foreground">Total Loan</p>
+                    <p className="text-sm text-muted-foreground">Total Pinjaman</p>
                     <p className="font-medium">{formatRupiah(selectedContract.total_loan_amount)}</p>
                   </div>
                 </div>
@@ -169,23 +169,23 @@ export default function CustomerHistory() {
                   <div className="flex justify-between text-sm">
                     <span>Progress</span>
                     <span className="font-medium">
-                      {selectedContract.current_installment_index} / {selectedContract.tenor_days} paid
+                      {selectedContract.current_installment_index} / {selectedContract.tenor_days} terbayar
                     </span>
                   </div>
                   <Progress value={progress} className="h-4" />
                   <div className="flex justify-between text-xs text-muted-foreground">
                     <span>
-                      Paid: {formatRupiah(selectedContract.current_installment_index * selectedContract.daily_installment_amount)}
+                      Terbayar: {formatRupiah(selectedContract.current_installment_index * selectedContract.daily_installment_amount)}
                     </span>
                     <span>
-                      Remaining: {formatRupiah((selectedContract.tenor_days - selectedContract.current_installment_index) * selectedContract.daily_installment_amount)}
+                      Sisa: {formatRupiah((selectedContract.tenor_days - selectedContract.current_installment_index) * selectedContract.daily_installment_amount)}
                     </span>
                   </div>
                 </div>
 
                 <div className="flex gap-2">
                   <Badge variant={selectedContract.status === "active" ? "default" : "secondary"}>
-                    {selectedContract.status === "active" ? "Lancar" : "Completed"}
+                    {selectedContract.status === "active" ? "Lancar" : "Selesai"}
                   </Badge>
                   <Badge variant="outline">
                     {selectedContract.product_type || "N/A"}
@@ -197,29 +197,29 @@ export default function CustomerHistory() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Payment History</CardTitle>
+              <CardTitle>Riwayat Pembayaran</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="border rounded-lg">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Coupon #</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead className="text-right">Amount</TableHead>
+                      <TableHead>Kupon #</TableHead>
+                      <TableHead>Tanggal</TableHead>
+                      <TableHead className="text-right">Jumlah</TableHead>
                       <TableHead>Kolektor</TableHead>
-                      <TableHead>Notes</TableHead>
+                      <TableHead>Catatan</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {loadingPayments ? (
                       <TableRow>
-                        <TableCell colSpan={5} className="text-center">Loading...</TableCell>
+                        <TableCell colSpan={5} className="text-center">Memuat...</TableCell>
                       </TableRow>
                     ) : paginatedPayments?.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={5} className="text-center text-muted-foreground">
-                          No payments yet
+                          Belum ada pembayaran
                         </TableCell>
                       </TableRow>
                     ) : (
@@ -261,7 +261,7 @@ export default function CustomerHistory() {
 
       {!selectedCustomerId && customers && customers.length > 0 && (
         <div className="text-center py-6 text-muted-foreground">
-          Select a customer from the list above to view their loan history
+          Pilih pelanggan dari daftar di atas untuk melihat riwayat pinjaman
         </div>
       )}
     </div>
