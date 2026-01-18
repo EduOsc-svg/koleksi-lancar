@@ -513,7 +513,7 @@ export default function Dashboard() {
 
       {/* Agent Contract History Dialog */}
       <Dialog open={!!selectedAgent} onOpenChange={() => setSelectedAgent(null)}>
-        <DialogContent className="max-w-3xl">
+        <DialogContent className="max-w-5xl w-[95vw]">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Button variant="ghost" size="icon" onClick={() => setSelectedAgent(null)}>
