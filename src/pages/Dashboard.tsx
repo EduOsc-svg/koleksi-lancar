@@ -19,6 +19,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { TrendingUp, Users, ChevronRight, ArrowLeft, DollarSign, Target, Wallet, Percent, Calendar, Plus, Trash2, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Table,
@@ -357,11 +358,10 @@ export default function Dashboard() {
                   </div>
                   <div>
                     <label className="text-sm font-medium">Jumlah</label>
-                    <Input
-                      type="number"
-                      placeholder="0"
-                      value={newExpense.amount || ''}
-                      onChange={(e) => setNewExpense({ ...newExpense, amount: Number(e.target.value) })}
+                    <CurrencyInput
+                      placeholder="Rp 0"
+                      value={newExpense.amount || 0}
+                      onValueChange={(val) => setNewExpense({ ...newExpense, amount: val || 0 })}
                     />
                   </div>
                   <div>
