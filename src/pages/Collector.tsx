@@ -2,9 +2,12 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { format, startOfMonth, endOfMonth } from "date-fns";
 import { id as localeId } from "date-fns/locale";
-import { Wallet, TrendingUp, Users, Calendar, DollarSign } from "lucide-react";
+import { Wallet, TrendingUp, Users, Calendar, DollarSign, Download } from "lucide-react";
+import { toast } from "sonner";
+import ExcelJS from "exceljs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -113,12 +116,139 @@ export default function Collector() {
     });
   }
 
+  // Export to Excel with dynamic formulas
+  const handleExportExcel = async () => {
+    if (collectorStats.length === 0) {
+      toast.error("Tidak ada data untuk diekspor");
+      return;
+    }
+
+    const workbook = new ExcelJS.Workbook();
+    workbook.creator = "Credit Management System";
+    workbook.created = new Date();
+    
+    const worksheet = workbook.addWorksheet("Performa Kolektor");
+
+    // Define columns
+    // A: No, B: Kode, C: Nama, D: Jumlah Tagihan, E: Customer, F: Total Tertagih
+    worksheet.columns = [
+      { header: "No", key: "no", width: 6 },
+      { header: "Kode Kolektor", key: "collector_code", width: 18 },
+      { header: "Nama", key: "name", width: 30 },
+      { header: "Jumlah Tagihan", key: "payment_count", width: 18 },
+      { header: "Customer", key: "unique_customers", width: 15 },
+      { header: "Total Tertagih", key: "total_collected", width: 22 },
+    ];
+
+    // Style header row
+    worksheet.getRow(1).eachCell((cell) => {
+      cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
+      cell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FF4F81BD" },
+      };
+      cell.alignment = { horizontal: "center", vertical: "middle" };
+      cell.border = {
+        top: { style: "thin" },
+        left: { style: "thin" },
+        bottom: { style: "thin" },
+        right: { style: "thin" },
+      };
+    });
+
+    // Add data rows
+    collectorStats.forEach((collector, index) => {
+      const rowNumber = index + 2;
+      
+      const row = worksheet.addRow({
+        no: null,
+        collector_code: collector.collector_code,
+        name: collector.name,
+        payment_count: collector.paymentCount,
+        unique_customers: collector.uniqueCustomers,
+        total_collected: collector.totalCollected,
+      });
+      
+      // Formula for auto-numbering: =ROW()-1
+      worksheet.getCell(`A${rowNumber}`).value = { formula: `ROW()-1` };
+      
+      // Style each row
+      row.eachCell((cell) => {
+        cell.border = {
+          top: { style: "thin" },
+          left: { style: "thin" },
+          bottom: { style: "thin" },
+          right: { style: "thin" },
+        };
+      });
+    });
+
+    // Add summary row with SUM formulas
+    const lastDataRow = collectorStats.length + 1;
+    const summaryRowNumber = lastDataRow + 2;
+    
+    worksheet.addRow({});
+    
+    const summaryRow = worksheet.addRow({
+      no: "TOTAL",
+      collector_code: null,
+      name: null,
+      payment_count: null,
+      unique_customers: null,
+      total_collected: null,
+    });
+    
+    // Dynamic SUM formulas
+    worksheet.getCell(`D${summaryRowNumber}`).value = { formula: `SUM(D2:D${lastDataRow})` };
+    worksheet.getCell(`E${summaryRowNumber}`).value = { formula: `SUM(E2:E${lastDataRow})` };
+    worksheet.getCell(`F${summaryRowNumber}`).value = { formula: `SUM(F2:F${lastDataRow})` };
+    
+    // Style summary row
+    summaryRow.font = { bold: true };
+    summaryRow.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FFE2EFDA" },
+    };
+    summaryRow.eachCell((cell) => {
+      cell.border = {
+        top: { style: "thin" },
+        left: { style: "thin" },
+        bottom: { style: "thin" },
+        right: { style: "thin" },
+      };
+    });
+
+    // Format number columns
+    worksheet.getColumn("payment_count").numFmt = "#,##0";
+    worksheet.getColumn("unique_customers").numFmt = "#,##0";
+    worksheet.getColumn("total_collected").numFmt = "#,##0";
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `performa_kolektor_${selectedMonth}.xlsx`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Data berhasil diekspor");
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">{t("Kolektor", "Kolektor")}</h2>
+        <h2 className="text-2xl font-bold">{t("Performa Kolektor", "Performa Kolektor")}</h2>
         
         <div className="flex gap-4">
+          <Button variant="outline" onClick={handleExportExcel}>
+            <Download className="mr-2 h-4 w-4" />
+            Export Excel
+          </Button>
+          
           <Select value={selectedMonth} onValueChange={setSelectedMonth}>
             <SelectTrigger className="w-[180px]">
               <Calendar className="mr-2 h-4 w-4" />
