@@ -1,9 +1,7 @@
 import { useLocation } from "react-router-dom";
-import { useTranslation } from "react-i18next";
 import {
   LayoutDashboard,
   Users,
-  
   UserCircle,
   FileText,
   Wallet,
@@ -27,34 +25,32 @@ import {
   SidebarMenuItem,
   SidebarFooter,
 } from "@/components/ui/sidebar";
-import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 const mainItems = [
-  { titleKey: "nav.dashboard", url: "/", icon: LayoutDashboard },
+  { title: "Dashboard", url: "/", icon: LayoutDashboard },
 ];
 
 const masterItems = [
-  { titleKey: "nav.salesAgents", url: "/sales-agents", icon: Users },
-  { titleKey: "nav.collectors", url: "/collectors", icon: Users },
-  { titleKey: "nav.customers", url: "/customers", icon: UserCircle },
-  { titleKey: "nav.contracts", url: "/contracts", icon: FileText },
-  { titleKey: "nav.holidays", url: "/holidays", icon: Calendar },
+  { title: "Agen Sales", url: "/sales-agents", icon: Users },
+  { title: "Kolektor", url: "/collectors", icon: Users },
+  { title: "Pelanggan", url: "/customers", icon: UserCircle },
+  { title: "Kontrak", url: "/contracts", icon: FileText },
+  { title: "Hari Libur", url: "/holidays", icon: Calendar },
 ];
 
 const operationItems = [
-  { titleKey: "nav.collection", url: "/collection", icon: Wallet },
-  { titleKey: "nav.collectorPerformance", url: "/collector", icon: BarChart3 },
-  { titleKey: "nav.reports", url: "/reports", icon: BarChart3 },
-  { titleKey: "nav.customerHistory", url: "/history", icon: History },
+  { title: "Penagihan", url: "/collection", icon: Wallet },
+  { title: "Performa Kolektor", url: "/collector", icon: BarChart3 },
+  { title: "Laporan", url: "/reports", icon: BarChart3 },
+  { title: "Riwayat Pelanggan", url: "/history", icon: History },
 ];
 
 const systemItems = [
-  { titleKey: "nav.auditLog", url: "/audit-log", icon: Shield },
+  { title: "Log Audit", url: "/audit-log", icon: Shield },
 ];
 
 export function AppSidebar() {
   const location = useLocation();
-  const { t } = useTranslation();
   const { user, signOut } = useAuth();
   const isActive = (path: string) => location.pathname === path;
 
@@ -63,16 +59,16 @@ export function AppSidebar() {
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            {t("nav.main")}
+            Utama
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {mainItems.map((item) => (
-                <SidebarMenuItem key={item.titleKey}>
+                <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild isActive={isActive(item.url)}>
                     <NavLink to={item.url}>
                       <item.icon className="mr-2 h-4 w-4" />
-                      <span>{t(item.titleKey)}</span>
+                      <span>{item.title}</span>
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -83,16 +79,16 @@ export function AppSidebar() {
 
         <SidebarGroup>
           <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            {t("nav.masterData")}
+            Master Data
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {masterItems.map((item) => (
-                <SidebarMenuItem key={item.titleKey}>
+                <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild isActive={isActive(item.url)}>
                     <NavLink to={item.url}>
                       <item.icon className="mr-2 h-4 w-4" />
-                      <span>{t(item.titleKey)}</span>
+                      <span>{item.title}</span>
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -103,16 +99,16 @@ export function AppSidebar() {
 
         <SidebarGroup>
           <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            {t("nav.operations")}
+            Operasi
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {operationItems.map((item) => (
-                <SidebarMenuItem key={item.titleKey}>
+                <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild isActive={isActive(item.url)}>
                     <NavLink to={item.url}>
                       <item.icon className="mr-2 h-4 w-4" />
-                      <span>{t(item.titleKey)}</span>
+                      <span>{item.title}</span>
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -123,16 +119,16 @@ export function AppSidebar() {
 
         <SidebarGroup>
           <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            {t("nav.system")}
+            Sistem
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {systemItems.map((item) => (
-                <SidebarMenuItem key={item.titleKey}>
+                <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild isActive={isActive(item.url)}>
                     <NavLink to={item.url}>
                       <item.icon className="mr-2 h-4 w-4" />
-                      <span>{t(item.titleKey)}</span>
+                      <span>{item.title}</span>
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -144,7 +140,6 @@ export function AppSidebar() {
 
       <SidebarFooter className="border-t p-4">
         <div className="flex flex-col gap-3">
-          <LanguageSwitcher />
           <p className="text-xs text-muted-foreground truncate">
             {user?.email}
           </p>
@@ -155,7 +150,7 @@ export function AppSidebar() {
             className="w-full"
           >
             <LogOut className="mr-2 h-4 w-4" />
-            {t("common.logout")}
+            Keluar
           </Button>
         </div>
       </SidebarFooter>
