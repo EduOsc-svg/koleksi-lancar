@@ -1,6 +1,4 @@
-import { FileText } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import {
@@ -18,7 +16,6 @@ interface ManifestFiltersProps {
   searchQuery: string;
   setSearchQuery: (value: string) => void;
   customers: Array<{ id: string; customer_code: string | null; name: string }> | undefined;
-  onPrint: () => void;
   contractCount: number;
 }
 
@@ -28,7 +25,6 @@ export function ManifestFilters({
   searchQuery,
   setSearchQuery,
   customers,
-  onPrint,
   contractCount,
 }: ManifestFiltersProps) {
   const { t } = useTranslation();
@@ -64,33 +60,21 @@ export function ManifestFilters({
             />
           </div>
           
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
-            <div className="flex-1 space-y-2">
-              <Label className="text-sm font-medium">{t("collection.filterByCustomer")}</Label>
-              <Select value={selectedCustomer} onValueChange={(v) => setSelectedCustomer(v === "all" ? "" : v)}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder={t("collection.allCustomers")} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{t("collection.allCustomers")}</SelectItem>
-                  {customers?.map((customer) => (
-                    <SelectItem key={customer.id} value={customer.id}>
-                      {customer.customer_code} - {customer.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-
-            <Button 
-              onClick={onPrint} 
-              className="w-full sm:w-auto"
-              disabled={contractCount === 0}
-            >
-              <FileText className="mr-2 h-4 w-4" />
-              {t("collection.printCoupons")} ({contractCount})
-            </Button>
+          <div className="flex-1 space-y-2">
+            <Label className="text-sm font-medium">{t("collection.filterByCustomer")}</Label>
+            <Select value={selectedCustomer} onValueChange={(v) => setSelectedCustomer(v === "all" ? "" : v)}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder={t("collection.allCustomers")} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t("collection.allCustomers")}</SelectItem>
+                {customers?.map((customer) => (
+                  <SelectItem key={customer.id} value={customer.id}>
+                    {customer.customer_code} - {customer.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </CardContent>
