@@ -1,21 +1,15 @@
 /* ========================================
-   PRINT COUPON VOUCHER - A4 LANDSCAPE HIGH PRECISION
+   PRINT COUPON VOUCHER - A4 LANDSCAPE
    ======================================== 
    
-   PURPOSE: A4 Landscape Layout dengan presisi tinggi
+   PURPOSE: A4 Landscape Layout untuk cetak kupon angsuran
    PAPER SIZE: A4 Landscape (297mm x 210mm)
    GRID: 3 Kolom x 3 Baris = 9 Voucher per halaman
    VOUCHER SIZE: 9.3cm x 6.3cm per voucher
    GAP: 1mm antar voucher
    MARGIN: 5mm (safe area printer)
    
-   FEATURES:
-   - Cut lines (garis potong putus-putus) di tengah gap
-   - Mode preview untuk screen
-   - Mode print dengan presisi tinggi
-   
-   USED IN: 
-   - PrintCoupon8x5.tsx (Print coupon component)
+   NOTE: Tanpa header/kop surat (dicetak di kertas pre-printed)
    
    ======================================== */
 
@@ -23,7 +17,6 @@
    MODE SCREEN - PREVIEW SIMULASI KERTAS A4
    ========================================== */
 .print-coupon-8x5-container {
-  /* Simulasi kertas A4 di tengah layar */
   display: block;
   width: 297mm;
   height: 210mm;
@@ -32,8 +25,6 @@
   box-shadow: 0 4px 20px rgba(0,0,0,0.15);
   border-radius: 4px;
   position: relative;
-  
-  /* Background abu-abu untuk kontras */
   background-color: #f8f9fa;
   border: 1px solid #dee2e6;
 }
@@ -57,40 +48,33 @@
    ========================================== */
 .coupon-8x5-grid {
   display: grid;
-  grid-template-columns: repeat(3, 93mm); /* 9.3cm per kolom */
-  grid-template-rows: repeat(3, 63mm);    /* 6.3cm per baris */
-  gap: 1mm; /* Gap 1mm antar voucher */
-  
-  /* Posisi grid dengan margin 5mm */
+  grid-template-columns: repeat(3, 93mm);
+  grid-template-rows: repeat(3, 63mm);
+  gap: 1mm;
   position: absolute;
   top: 5mm;
   left: 5mm;
   z-index: 1;
-  
-  /* Kalkulasi ukuran total grid */
-  width: calc(3 * 93mm + 2 * 1mm); /* 281mm total width */
-  height: calc(3 * 63mm + 2 * 1mm); /* 191mm total height */
+  width: calc(3 * 93mm + 2 * 1mm);
+  height: calc(3 * 63mm + 2 * 1mm);
 }
 
 /* ==========================================
-   VOUCHER CARD DENGAN CUT LINES
+   VOUCHER CARD
    ========================================== */
 .coupon-8x5-card {
-  /* Ukuran voucher presisi */
-  width: 93mm;   /* 9.3cm */
-  height: 63mm;  /* 6.3cm */
-  
+  width: 93mm;
+  height: 63mm;
   position: relative;
   background: white;
   border: none;
   
-  /* Background image voucher */
+  /* Background image voucher (pre-printed template) */
   background-image: url('/Background with WM.png');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
   
-  /* Overflow visible untuk cut lines */
   overflow: visible;
 }
 
@@ -98,12 +82,10 @@
 .coupon-8x5-card::after {
   content: '';
   position: absolute;
-  right: -1.5mm; /* Geser ke tengah gap (1mm ÷ 2 + offset) */
+  right: -1.5mm;
   top: -1mm;
   bottom: -1mm;
   width: 1px;
-  
-  /* Garis putus-putus */
   background: repeating-linear-gradient(
     to bottom,
     #999 0,
@@ -111,7 +93,6 @@
     transparent 2mm,
     transparent 4mm
   );
-  
   z-index: 10;
 }
 
@@ -119,12 +100,10 @@
 .coupon-8x5-card::before {
   content: '';
   position: absolute;
-  bottom: -1.5mm; /* Geser ke tengah gap */
+  bottom: -1.5mm;
   left: -1mm;
   right: -1mm;
   height: 1px;
-  
-  /* Garis putus-putus */
   background: repeating-linear-gradient(
     to right,
     #999 0,
@@ -132,82 +111,59 @@
     transparent 2mm,
     transparent 4mm
   );
-  
   z-index: 10;
 }
 
-/* Clean Up - Hilangkan garis di tepi kanan (kolom ke-3) */
+/* Hilangkan garis di tepi kanan (kolom ke-3) */
 .coupon-8x5-card:nth-child(3n)::after {
   display: none;
 }
 
-/* Clean Up - Hilangkan garis di tepi bawah (baris ke-3) */
+/* Hilangkan garis di tepi bawah (baris ke-3) */
 .coupon-8x5-card:nth-child(n+7)::before {
-  display: none; /* Card 7, 8, 9 (baris terakhir) */
+  display: none;
 }
 
 /* ==========================================
    CONTENT POSITIONING - DATA VOUCHER
-   Format sesuai dengan gambar voucher asli
+   Tanpa header, langsung konten data
    ========================================== */
 .coupon-8x5-data {
   position: absolute;
-  font-family: 'Arial', 'Times New Roman', sans-serif;
+  font-family: 'Arial', sans-serif;
   font-size: 10pt;
-  line-height: 1.2;
+  line-height: 1.3;
   color: #000;
-  font-weight: normal;
+  font-weight: bold;
   z-index: 5;
   white-space: nowrap;
 }
 
-/* Header - Company Info (Static, akan ditambah via HTML) */
-.coupon-8x5-header {
-  top: 2mm;
-  left: 3mm;
-  right: 3mm;
-  text-align: center;
-  font-size: 10pt;
-  font-weight: bold;
-  white-space: normal;
-}
-
-.coupon-8x5-title {
-  top: 12mm;
-  left: 3mm;
-  right: 3mm;
-  text-align: center;
-  font-size: 14pt;
-  font-weight: bold;
-  color: #CC0000; /* Merah untuk "VOUCER ANGSURAN" */
-}
-
-/* Data Fields - Bagian Kiri (sesuai gambar) */
-
-/* NO.Faktur */
+/* NO.Faktur - Posisi atas kiri */
 .coupon-8x5-faktur {
-  top: 22mm;
+  top: 18mm;
   left: 5mm;
-  width: 45mm;
-  font-weight: bold;
+  width: 50mm;
   font-size: 9pt;
 }
 
 /* Nama Customer */
 .coupon-8x5-nama {
-  top: 28mm;
+  top: 25mm;
   left: 5mm;
-  width: 45mm;
-  font-weight: bold;
+  width: 50mm;
   font-size: 9pt;
 }
 
-/* Alamat Customer */
+/* Alamat Usaha */
 .coupon-8x5-alamat {
-  top: 34mm;
+  top: 32mm;
   left: 5mm;
-  width: 45mm;
+  width: 55mm;
   font-size: 8pt;
+  font-weight: normal;
+  white-space: normal;
+  line-height: 1.2;
 }
 
 /* Tanggal Jatuh Tempo */
@@ -220,60 +176,26 @@
 
 /* Angsuran Ke- */
 .coupon-8x5-angsuran-ke {
-  top: 46mm;
+  top: 47mm;
   left: 5mm;
-  width: 45mm;
+  width: 40mm;
   font-size: 9pt;
 }
 
-/* Bagian Kanan - Besar Angsuran */
-.coupon-8x5-label-besar {
-  top: 24mm;
-  right: 5mm;
-  width: 30mm;
-  text-align: center;
-  font-size: 10pt;
-  font-weight: bold;
-  color: #CC0000; /* Merah untuk "Besar Angsuran" */
-}
-
-/* Rp. Label */
-.coupon-8x5-rp-label {
-  top: 32mm;
-  right: 22mm;
-  width: 10mm;
-  font-size: 10pt;
-  font-weight: bold;
-}
-
-/* Nominal Angsuran dengan garis bawah */
+/* Nominal Angsuran - Bagian kanan bawah */
 .coupon-8x5-nominal {
-  top: 32mm;
+  top: 30mm;
   right: 5mm;
-  width: 20mm;
+  width: 28mm;
   text-align: right;
   font-size: 12pt;
   font-weight: bold;
-  border-bottom: 1px solid #000;
-  padding-bottom: 1mm;
   color: #000;
-}
-
-/* Info Kantor - Bottom */
-.coupon-8x5-kantor {
-  bottom: 5mm;
-  left: 5mm;
-  width: 45mm;
-  font-size: 8pt;
-  font-weight: bold;
-  color: #CC0000;
 }
 
 /* ==========================================
    RESPONSIVE ADJUSTMENTS
    ========================================== */
-
-/* Mode Screen - Responsif untuk layar kecil */
 @media screen and (max-width: 1200px) {
   .print-coupon-8x5-container {
     transform: scale(0.7);
@@ -291,14 +213,12 @@
    MODE PRINT - PRESISI TINGGI
    ========================================== */
 @media print {
-  /* Reset semua elemen */
   * {
     box-sizing: border-box;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
 
-  /* Page setup - A4 Landscape tanpa margin */
   @page {
     size: A4 landscape;
     margin: 0;
@@ -313,13 +233,11 @@
     overflow: hidden !important;
   }
 
-  /* Hide semua kecuali print container */
   body > *:not(.print-coupon-8x5-container) {
     display: none !important;
   }
 
   .print-coupon-8x5-container {
-    /* Reset untuk print */
     display: block !important;
     position: fixed !important;
     top: 0 !important;
@@ -337,7 +255,7 @@
   }
 
   .print-coupon-8x5-container::before {
-    display: none !important; /* Hide preview border di print mode */
+    display: none !important;
   }
 
   .coupon-8x5-grid {
@@ -362,12 +280,10 @@
     print-color-adjust: exact !important;
   }
   
-  /* Force page break antar container halaman */
   .print-coupon-8x5-container {
     page-break-after: always !important;
   }
   
-  /* Jangan page break di halaman terakhir */
   .print-coupon-8x5-container:last-child {
     page-break-after: auto !important;
   }

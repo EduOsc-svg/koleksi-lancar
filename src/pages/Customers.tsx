@@ -86,6 +86,7 @@ export default function Customers() {
     customer_code: "",
     nik: "",
     address: "",
+    business_address: "",
     phone: "",
     assigned_sales_id: null as string | null,
   });
@@ -138,7 +139,7 @@ export default function Customers() {
 
   const handleOpenCreate = () => {
     setSelectedCustomer(null);
-    setFormData({ name: "", customer_code: "", nik: "", address: "", phone: "", assigned_sales_id: null });
+    setFormData({ name: "", customer_code: "", nik: "", address: "", business_address: "", phone: "", assigned_sales_id: null });
     setDialogOpen(true);
   };
 
@@ -149,6 +150,7 @@ export default function Customers() {
       customer_code: customer.customer_code || "",
       nik: customer.nik || "",
       address: customer.address || "",
+      business_address: (customer as any).business_address || "",
       phone: customer.phone || "",
       assigned_sales_id: customer.assigned_sales_id,
     });
@@ -193,6 +195,7 @@ export default function Customers() {
         name: formData.name.trim(),
         nik: formData.nik.trim(),
         address: formData.address.trim() || null,
+        business_address: formData.business_address.trim() || null,
         phone: formData.phone.trim() || null,
       };
       
@@ -449,15 +452,29 @@ export default function Customers() {
               </Select>
             </div>
             <div className="col-span-2">
-              <Label htmlFor="address">{t("customers.address")}</Label>
+              <Label htmlFor="address">{t("customers.address")} (Alamat Tinggal)</Label>
               <Textarea
                 id="address"
                 value={formData.address}
                 onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                placeholder="Masukkan alamat lengkap customer..."
-                rows={3}
+                placeholder="Masukkan alamat tinggal customer..."
+                rows={2}
                 className="resize-none"
               />
+            </div>
+            <div className="col-span-2">
+              <Label htmlFor="business_address">Alamat Usaha *</Label>
+              <Textarea
+                id="business_address"
+                value={formData.business_address}
+                onChange={(e) => setFormData({ ...formData, business_address: e.target.value })}
+                placeholder="Masukkan alamat lokasi usaha (akan ditampilkan di kupon)..."
+                rows={2}
+                className="resize-none"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Alamat ini akan ditampilkan pada kupon angsuran
+              </p>
             </div>
           </div>
           <DialogFooter className="gap-2">
