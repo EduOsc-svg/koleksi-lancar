@@ -49,91 +49,7 @@
   background: white;
   border: 1px dashed #ccc;
   pointer-events: none;
-}
-
-/* ==========================================
-   MODE PRINT - A4 LANDSCAPE OTOMATIS
-   ========================================== */
-@media print {
-  /* Reset semua elemen */
-  * {
-    box-sizing: border-box;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-  }
-
-  /* FORCE A4 LANDSCAPE - Multiple declarations untuk kompatibilitas */
-  @page {
-    size: A4 landscape;
-    margin: 0mm;
-    orientation: landscape;
-  }
-
-  @page :first {
-    size: A4 landscape;
-    margin: 0mm;
-  }
-
-  @page :left {
-    size: A4 landscape;
-    margin: 0mm;
-  }
-
-  @page :right {
-    size: A4 landscape;
-    margin: 0mm;
-  }
-
-  /* HTML dan Body setup untuk landscape */
-  html {
-    width: 297mm !important;
-    height: 210mm !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    background: white !important;
-    overflow: hidden !important;
-  }
-
-  body {
-    width: 297mm !important;
-    height: 210mm !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    background: white !important;
-    overflow: hidden !important;
-    transform: none !important;
-  }
-
-  /* Hide semua kecuali print container */
-  body * {
-    visibility: hidden !important;
-  }
-
-  .print-coupon-8x5-container,
-  .print-coupon-8x5-container * {
-    visibility: visible !important;
-  }
-
-  .print-coupon-8x5-container {
-    /* Reset untuk print */
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 297mm !important;
-    height: 210mm !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    background: white !important;
-    box-shadow: none !important;
-    border: none !important;
-    border-radius: 0 !important;
-    transform: none !important;
-    overflow: hidden !important;
-  }
-
-  .print-coupon-8x5-container::before {
-    display: none !important; /* Hide preview border di print mode */
-  }
+  z-index: 0;
 }
 
 /* ==========================================
@@ -149,21 +65,11 @@
   position: absolute;
   top: 5mm;
   left: 5mm;
+  z-index: 1;
   
   /* Kalkulasi ukuran total grid */
   width: calc(3 * 93mm + 2 * 1mm); /* 281mm total width */
   height: calc(3 * 63mm + 2 * 1mm); /* 191mm total height */
-}
-
-/* Print mode adjustments */
-@media print {
-  .coupon-8x5-grid {
-    position: absolute !important;
-    top: 5mm !important;
-    left: 5mm !important;
-    width: calc(3 * 93mm + 2 * 1mm) !important;
-    height: calc(3 * 63mm + 2 * 1mm) !important;
-  }
 }
 
 /* ==========================================
@@ -247,29 +153,31 @@
 .coupon-8x5-data {
   position: absolute;
   font-family: 'Arial', 'Times New Roman', sans-serif;
-  font-size: 17pt; /* Font size 17pt sesuai permintaan */
+  font-size: 10pt;
   line-height: 1.2;
   color: #000;
   font-weight: normal;
   z-index: 5;
+  white-space: nowrap;
 }
 
 /* Header - Company Info (Static, akan ditambah via HTML) */
 .coupon-8x5-header {
   top: 2mm;
-  left: 5mm;
-  right: 5mm;
+  left: 3mm;
+  right: 3mm;
   text-align: center;
-  font-size: 14pt;
+  font-size: 10pt;
   font-weight: bold;
+  white-space: normal;
 }
 
 .coupon-8x5-title {
   top: 12mm;
-  left: 5mm;
-  right: 5mm;
+  left: 3mm;
+  right: 3mm;
   text-align: center;
-  font-size: 20pt;
+  font-size: 14pt;
   font-weight: bold;
   color: #CC0000; /* Merah untuk "VOUCER ANGSURAN" */
 }
@@ -279,85 +187,84 @@
 /* NO.Faktur */
 .coupon-8x5-faktur {
   top: 22mm;
-  left: 8mm;
-  width: 50mm;
+  left: 5mm;
+  width: 45mm;
   font-weight: bold;
-  color: #CC0000; /* Merah untuk no faktur */
-  font-size: 17pt;
+  font-size: 9pt;
 }
 
 /* Nama Customer */
 .coupon-8x5-nama {
   top: 28mm;
-  left: 8mm;
-  width: 50mm;
+  left: 5mm;
+  width: 45mm;
   font-weight: bold;
-  font-size: 17pt;
+  font-size: 9pt;
 }
 
 /* Alamat Customer */
 .coupon-8x5-alamat {
   top: 34mm;
-  left: 8mm;
-  width: 50mm;
-  font-size: 15pt; /* Sedikit lebih kecil untuk alamat */
+  left: 5mm;
+  width: 45mm;
+  font-size: 8pt;
 }
 
 /* Tanggal Jatuh Tempo */
 .coupon-8x5-jatuhtempo {
   top: 40mm;
-  left: 8mm;
-  width: 50mm;
-  font-size: 17pt;
+  left: 5mm;
+  width: 45mm;
+  font-size: 9pt;
 }
 
 /* Angsuran Ke- */
 .coupon-8x5-angsuran-ke {
   top: 46mm;
-  left: 8mm;
-  width: 50mm;
-  font-size: 17pt;
+  left: 5mm;
+  width: 45mm;
+  font-size: 9pt;
 }
 
 /* Bagian Kanan - Besar Angsuran */
 .coupon-8x5-label-besar {
-  top: 30mm;
-  right: 8mm;
-  width: 25mm;
+  top: 24mm;
+  right: 5mm;
+  width: 30mm;
   text-align: center;
-  font-size: 18pt;
+  font-size: 10pt;
   font-weight: bold;
   color: #CC0000; /* Merah untuk "Besar Angsuran" */
 }
 
 /* Rp. Label */
 .coupon-8x5-rp-label {
-  top: 38mm;
-  right: 20mm;
-  width: 15mm;
-  font-size: 17pt;
+  top: 32mm;
+  right: 22mm;
+  width: 10mm;
+  font-size: 10pt;
   font-weight: bold;
 }
 
 /* Nominal Angsuran dengan garis bawah */
 .coupon-8x5-nominal {
-  top: 42mm;
-  right: 8mm;
-  width: 25mm;
-  text-align: center;
-  font-size: 20pt;
+  top: 32mm;
+  right: 5mm;
+  width: 20mm;
+  text-align: right;
+  font-size: 12pt;
   font-weight: bold;
-  border-bottom: 2px solid #000;
-  padding-bottom: 2mm;
+  border-bottom: 1px solid #000;
+  padding-bottom: 1mm;
   color: #000;
 }
 
 /* Info Kantor - Bottom */
 .coupon-8x5-kantor {
-  bottom: 8mm;
-  left: 8mm;
-  width: 40mm;
-  font-size: 15pt;
+  bottom: 5mm;
+  left: 5mm;
+  width: 45mm;
+  font-size: 8pt;
   font-weight: bold;
   color: #CC0000;
 }
@@ -380,17 +287,73 @@
   }
 }
 
-/* Print Optimizations dengan font yang konsisten */
+/* ==========================================
+   MODE PRINT - PRESISI TINGGI
+   ========================================== */
 @media print {
-  /* Force landscape orientation */
-  @page {
-    size: 297mm 210mm; /* Explicit A4 landscape dimensions */
-    margin: 0 !important;
+  /* Reset semua elemen */
+  * {
+    box-sizing: border-box;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
-  
+
+  /* Page setup - A4 Landscape tanpa margin */
+  @page {
+    size: A4 landscape;
+    margin: 0;
+  }
+
+  html, body {
+    width: 297mm !important;
+    height: 210mm !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+    overflow: hidden !important;
+  }
+
+  /* Hide semua kecuali print container */
+  body > *:not(.print-coupon-8x5-container) {
+    display: none !important;
+  }
+
+  .print-coupon-8x5-container {
+    /* Reset untuk print */
+    display: block !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 297mm !important;
+    height: 210mm !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    z-index: 9999 !important;
+    transform: none !important;
+  }
+
+  .print-coupon-8x5-container::before {
+    display: none !important; /* Hide preview border di print mode */
+  }
+
+  .coupon-8x5-grid {
+    position: absolute !important;
+    top: 5mm !important;
+    left: 5mm !important;
+    width: calc(3 * 93mm + 2 * 1mm) !important;
+    height: calc(3 * 63mm + 2 * 1mm) !important;
+    z-index: 1 !important;
+  }
+
   .coupon-8x5-card {
     page-break-inside: avoid !important;
     break-inside: avoid !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
   
   .coupon-8x5-data {
@@ -407,19 +370,5 @@
   /* Jangan page break di halaman terakhir */
   .print-coupon-8x5-container:last-child {
     page-break-after: auto !important;
-  }
-  
-  /* Prevent orphans di print */
-  .coupon-8x5-data {
-    orphans: 2;
-    widows: 2;
-  }
-  
-  /* Backup landscape enforcement */
-  body {
-    width: 297mm !important;
-    height: 210mm !important;
-    margin: 0 !important;
-    padding: 0 !important;
   }
 }
