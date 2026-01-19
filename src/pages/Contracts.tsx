@@ -48,9 +48,7 @@ import { usePagination } from "@/hooks/usePagination";
 import { TablePagination } from "@/components/TablePagination";
 import { useCouponsByContract, useGenerateCoupons, InstallmentCoupon } from "@/hooks/useInstallmentCoupons";
 import { SearchInput } from "@/components/ui/search-input";
-import VoucherPage from "@/components/print/VoucherPage";
 import { PrintCoupon8x5 } from "@/components/print/PrintCoupon8x5";
-import "@/styles/Voucher-new.css"; // Voucher print styles
 import { CurrencyInput } from "@/components/ui/currency-input";
 
 export default function Contracts() {
@@ -328,7 +326,6 @@ export default function Contracts() {
             customers: selectedContract.customers ? {
               name: selectedContract.customers.name,
               address: selectedContract.customers.address || null,
-              customer_code: selectedContract.customers.customer_code || null,
               sales_agents: selectedContract.customers.sales_agents || null,
             } : null,
           }}

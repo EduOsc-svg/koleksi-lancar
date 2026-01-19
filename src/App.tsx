@@ -24,7 +24,6 @@ const Reports = lazy(() => import("./pages/Reports"));
 const CustomerHistory = lazy(() => import("./pages/CustomerHistory"));
 const AuditLog = lazy(() => import("./pages/AuditLog"));
 const Holidays = lazy(() => import("./pages/Holidays"));
-const VoucherDemo = lazy(() => import("./components/VoucherDemo"));
 
 const queryClient = new QueryClient();
 
@@ -91,7 +90,6 @@ const AppRoutes = () => {
                   <Route path="/reports" element={<Reports />} />
                   <Route path="/history" element={<CustomerHistory />} />
                   <Route path="/audit-log" element={<AuditLog />} />
-                  <Route path="/voucher-demo" element={<VoucherDemo />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </Suspense>
