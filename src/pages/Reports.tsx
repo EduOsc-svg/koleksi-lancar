@@ -21,7 +21,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useAggregatedPayments } from "@/hooks/useAggregatedPayments";
-import { useSalesAgents } from "@/hooks/useSalesAgents";
 import { useCustomers } from "@/hooks/useCustomers";
 import { formatRupiah, formatDate } from "@/lib/format";
 import { usePagination } from "@/hooks/usePagination";
@@ -30,20 +29,17 @@ import { SearchInput } from "@/components/ui/search-input";
 
 export default function Reports() {
   const { t } = useTranslation();
-  const { data: agents } = useSalesAgents();
   const { data: customers } = useCustomers();
   const [dateFrom, setDateFrom] = useState(
     new Date(new Date().setDate(1)).toISOString().split("T")[0]
   );
   const [dateTo, setDateTo] = useState(new Date().toISOString().split("T")[0]);
-  const [collectorId, setSalesId] = useState<string>("");
   const [customerId, setCustomerId] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState("");
 
   const { data: payments, isLoading } = useAggregatedPayments(
     dateFrom,
-    dateTo,
-    collectorId || undefined
+    dateTo
   );
 
   // Client-side filtering untuk customer dan pencarian
@@ -101,29 +97,18 @@ export default function Reports() {
     const selectedCustomerInfo = customerId 
       ? customers?.find(c => c.id === customerId)
       : null;
-    const selectedSalesInfo = collectorId
-      ? agents?.find(a => a.id === collectorId) 
-      : null;
     
     worksheet.mergeCells('A3:H3');
     const filterCell = worksheet.getCell('A3');
     let filterText = 'Filter: ';
     if (selectedCustomerInfo) {
       filterText += `Customer: ${selectedCustomerInfo.customer_code} - ${selectedCustomerInfo.name}`;
-    }
-    if (selectedSalesInfo) {
-      if (selectedCustomerInfo) filterText += ' | ';
-      filterText += `Sales: ${selectedSalesInfo.agent_code} - ${selectedSalesInfo.name}`;
-    }
-    if (!selectedCustomerInfo && !selectedSalesInfo) {
-      filterText += 'Semua Customer & Sales';
+    } else {
+      filterText += 'Semua Customer';
     }
     filterCell.value = filterText;
     filterCell.font = { size: 11 };
     filterCell.alignment = { horizontal: 'center' };
-    periodCell.value = `Periode: ${formatDate(dateFrom)} - ${formatDate(dateTo)}`;
-    periodCell.font = { size: 12 };
-    periodCell.alignment = { horizontal: 'center' };
 
     // Empty row
     worksheet.addRow([]);
@@ -323,22 +308,6 @@ export default function Reports() {
                 </SelectContent>
               </Select>
             </div>
-            <div>
-              <Label>{t("Filter Berdasarkan Sales (Kode)")}</Label>
-              <Select value={collectorId} onValueChange={(v) => setSalesId(v === "all" ? "" : v)}>
-                <SelectTrigger>
-                  <SelectValue placeholder={t("Semua Sales")} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{t("Semua Sales")}</SelectItem>
-                  {agents?.map((agent) => (
-                    <SelectItem key={agent.id} value={agent.id}>
-                      {agent.agent_code} - {agent.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
             <div className="flex items-end md:col-span-2 lg:col-span-1">
               <Button onClick={handleExportExcel} variant="outline" className="w-full">
                 <FileSpreadsheet className="mr-2 h-4 w-4" />
@@ -361,11 +330,8 @@ export default function Reports() {
                 {customerId && (
                   <div>👤 Customer: {customers?.find(c => c.id === customerId)?.customer_code} - {customers?.find(c => c.id === customerId)?.name}</div>
                 )}
-                {collectorId && (
-                  <div>🏢 Sales: {agents?.find(a => a.id === collectorId)?.agent_code} - {agents?.find(a => a.id === collectorId)?.name}</div>
-                )}
-                {!customerId && !collectorId && (
-                  <div>🌍 Menampilkan: Semua Customer & Sales</div>
+                {!customerId && (
+                  <div>🌍 Menampilkan: Semua Customer</div>
                 )}
               </div>
             </div>
