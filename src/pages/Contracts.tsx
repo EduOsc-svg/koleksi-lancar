@@ -49,7 +49,7 @@ import { TablePagination } from "@/components/TablePagination";
 import { useCouponsByContract, useGenerateCoupons, InstallmentCoupon } from "@/hooks/useInstallmentCoupons";
 import { SearchInput } from "@/components/ui/search-input";
 import VoucherPage from "@/components/print/VoucherPage";
-import "@/styles/Voucher-final.css"; // Pixel-perfect voucher styles (9.5cm x 6.5cm)
+import "@/styles/Voucher-new.css"; // Voucher print styles
 import { CurrencyInput } from "@/components/ui/currency-input";
 
 export default function Contracts() {
