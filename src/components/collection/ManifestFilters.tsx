@@ -15,12 +15,9 @@ import { SearchInput } from "@/components/ui/search-input";
 interface ManifestFiltersProps {
   selectedCustomer: string;
   setSelectedCustomer: (value: string) => void;
-  selectedSales: string;
-  setSelectedSales: (value: string) => void;
   searchQuery: string;
   setSearchQuery: (value: string) => void;
   customers: Array<{ id: string; customer_code: string | null; name: string }> | undefined;
-  agents: Array<{ id: string; agent_code: string; name: string }> | undefined;
   onPrint: () => void;
   contractCount: number;
 }
@@ -28,12 +25,9 @@ interface ManifestFiltersProps {
 export function ManifestFilters({
   selectedCustomer,
   setSelectedCustomer,
-  selectedSales,
-  setSelectedSales,
   searchQuery,
   setSearchQuery,
   customers,
-  agents,
   onPrint,
   contractCount,
 }: ManifestFiltersProps) {
@@ -88,22 +82,6 @@ export function ManifestFilters({
               </Select>
             </div>
             
-            <div className="flex-1 space-y-2">
-              <Label className="text-sm font-medium">{t("collection.filterBySales")}</Label>
-              <Select value={selectedSales} onValueChange={(v) => setSelectedSales(v === "all" ? "" : v)}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder={t("collection.allSales")} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{t("collection.allSales")}</SelectItem>
-                  {agents?.map((agent) => (
-                    <SelectItem key={agent.id} value={agent.id}>
-                      {agent.agent_code} - {agent.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
 
             <Button 
               onClick={onPrint} 
