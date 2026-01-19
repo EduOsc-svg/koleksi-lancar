@@ -54,6 +54,16 @@ export default function Holidays() {
   
   // Search state
   const [searchQuery, setSearchQuery] = useState("");
+
+  const DAY_NAMES = [
+    t("holidays.sunday"),
+    t("holidays.monday"),
+    t("holidays.tuesday"),
+    t("holidays.wednesday"),
+    t("holidays.thursday"),
+    t("holidays.friday"),
+    t("holidays.saturday"),
+  ];
   
   // Filter holidays based on search query
   const filteredHolidays = holidays?.filter(holiday => {
@@ -66,16 +76,6 @@ export default function Holidays() {
   
   const ITEMS_PER_PAGE = 10;
   const { currentPage, totalPages, paginatedItems, goToPage, totalItems } = usePagination(filteredHolidays, ITEMS_PER_PAGE);
-
-  const DAY_NAMES = [
-    t("holidays.sunday"),
-    t("holidays.monday"),
-    t("holidays.tuesday"),
-    t("holidays.wednesday"),
-    t("holidays.thursday"),
-    t("holidays.friday"),
-    t("holidays.saturday"),
-  ];
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
