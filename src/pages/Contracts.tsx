@@ -49,6 +49,7 @@ import { TablePagination } from "@/components/TablePagination";
 import { useCouponsByContract, useGenerateCoupons, InstallmentCoupon } from "@/hooks/useInstallmentCoupons";
 import { SearchInput } from "@/components/ui/search-input";
 import VoucherPage from "@/components/print/VoucherPage";
+import { PrintCoupon8x5 } from "@/components/print/PrintCoupon8x5";
 import "@/styles/Voucher-new.css"; // Voucher print styles
 import { CurrencyInput } from "@/components/ui/currency-input";
 
@@ -261,11 +262,16 @@ export default function Contracts() {
       toast.error("Tidak ada kupon untuk dicetak");
       return;
     }
+    
+    console.log("Starting print mode with", selectedContractCoupons.length, "coupons");
     setPrintMode(true);
+    
+    // Give more time for the component to render
     setTimeout(() => {
+      console.log("Triggering print dialog");
       window.print();
       setPrintMode(false);
-    }, 100);
+    }, 500);
   };
 
   const getNoFaktur = (contractId: string) => {
@@ -283,28 +289,20 @@ export default function Contracts() {
 
   return (
     <div className="space-y-6">
-      {/* Print Mode: Voucher Print System */}
+      {/* Print Mode: High Precision Coupon Print System */}
       {printMode && selectedContract && selectedContractCoupons && (
-        <VoucherPage 
-          contracts={[{
-            id: selectedContract.id,
+        <PrintCoupon8x5 
+          coupons={selectedContractCoupons}
+          contract={{
             contract_ref: selectedContract.contract_ref,
-            current_installment_index: selectedContract.current_installment_index,
-            daily_installment_amount: selectedContract.daily_installment_amount,
             tenor_days: selectedContract.tenor_days,
+            daily_installment_amount: selectedContract.daily_installment_amount,
             customers: selectedContract.customers ? {
               name: selectedContract.customers.name,
               address: selectedContract.customers.address || null,
               sales_agents: selectedContract.customers.sales_agents || null,
             } : null,
-          }]}
-          coupons={selectedContractCoupons.map(c => ({
-            id: c.id,
-            installment_index: c.installment_index,
-            due_date: c.due_date,
-            amount: c.amount,
-            status: c.status,
-          }))}
+          }}
         />
       )}
 

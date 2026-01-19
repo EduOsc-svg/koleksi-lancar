@@ -58,16 +58,18 @@
   /* Reset semua elemen */
   * {
     box-sizing: border-box;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
   /* Hide semua kecuali print container */
   body * {
-    visibility: hidden;
+    visibility: hidden !important;
   }
 
   .print-coupon-8x5-container,
   .print-coupon-8x5-container * {
-    visibility: visible;
+    visibility: visible !important;
   }
 
   /* Page setup - A4 Landscape tanpa margin */
@@ -76,26 +78,29 @@
     margin: 0;
   }
 
-  body {
+  html, body {
+    width: 297mm;
+    height: 210mm;
     margin: 0;
     padding: 0;
     background: white !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
+    overflow: hidden;
   }
 
   .print-coupon-8x5-container {
     /* Reset untuk print */
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 297mm;
-    height: 210mm;
-    margin: 0;
-    background: white;
-    box-shadow: none;
-    border: none;
-    border-radius: 0;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 297mm !important;
+    height: 210mm !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    z-index: 9999 !important;
   }
 
   .print-coupon-8x5-container::before {
@@ -120,6 +125,17 @@
   /* Kalkulasi ukuran total grid */
   width: calc(3 * 93mm + 2 * 1mm); /* 281mm total width */
   height: calc(3 * 63mm + 2 * 1mm); /* 191mm total height */
+}
+
+/* Print mode adjustments */
+@media print {
+  .coupon-8x5-grid {
+    position: absolute !important;
+    top: 5mm !important;
+    left: 5mm !important;
+    width: calc(3 * 93mm + 2 * 1mm) !important;
+    height: calc(3 * 63mm + 2 * 1mm) !important;
+  }
 }
 
 /* ==========================================

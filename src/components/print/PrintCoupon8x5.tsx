@@ -1,5 +1,4 @@
 import { InstallmentCoupon } from "@/hooks/useInstallmentCoupons";
-import couponBg from "@/assets/coupon-logo.png";
 import "@/styles/print-coupon-8x5.css";
 
 interface ContractInfo {
@@ -39,14 +38,26 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
   // Generate No. Faktur format: tenor/agent_code/agent_name
   const noFaktur = `${contract.tenor_days}/${contract.customers?.sales_agents?.agent_code || "-"}/${contract.customers?.sales_agents?.name || "-"}`;
 
+  // Group coupons into pages of 9 (3x3 grid)
+  const groupCouponsIntoPages = (coupons: InstallmentCoupon[], couponsPerPage: number = 9) => {
+    const pages: InstallmentCoupon[][] = [];
+    for (let i = 0; i < coupons.length; i += couponsPerPage) {
+      pages.push(coupons.slice(i, i + couponsPerPage));
+    }
+    return pages;
+  };
+
+  const couponPages = groupCouponsIntoPages(coupons);
+
   return (
-    <div className="print-coupon-8x5-container">
-      <div className="coupon-8x5-grid">
-        {coupons.map((coupon) => (
+    <>
+      {couponPages.map((pageCoupons, pageIndex) => (
+        <div key={`page-${pageIndex}`} className="print-coupon-8x5-container">
+          <div className="coupon-8x5-grid">
+            {pageCoupons.map((coupon) => (
           <div
             key={coupon.id}
             className="coupon-8x5-card"
-            style={{ "--coupon-bg": `url(${couponBg})` } as React.CSSProperties}
           >
             {/* NO.Faktur */}
             <span className="coupon-8x5-data coupon-8x5-faktur">
@@ -86,5 +97,7 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
         ))}
       </div>
     </div>
+    ))}
+    </>
   );
 }
