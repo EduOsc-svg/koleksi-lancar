@@ -306,13 +306,18 @@
 /* Print Optimizations */
 @media print {
   .coupon-8x5-card {
-    page-break-inside: avoid;
-    break-inside: avoid;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
   
-  /* Force page break setelah 9 voucher */
-  .coupon-8x5-card:nth-child(9n) {
-    page-break-after: always;
+  /* Force page break antar container halaman */
+  .print-coupon-8x5-container {
+    page-break-after: always !important;
+  }
+  
+  /* Jangan page break di halaman terakhir */
+  .print-coupon-8x5-container:last-child {
+    page-break-after: auto !important;
   }
   
   /* Prevent orphans di print */

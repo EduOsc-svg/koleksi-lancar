@@ -49,55 +49,65 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
 
   const couponPages = groupCouponsIntoPages(coupons);
 
+  console.log(`Printing ${coupons.length} coupons across ${couponPages.length} pages`);
+
   return (
     <>
       {couponPages.map((pageCoupons, pageIndex) => (
         <div key={`page-${pageIndex}`} className="print-coupon-8x5-container">
           <div className="coupon-8x5-grid">
-            {pageCoupons.map((coupon) => (
-          <div
-            key={coupon.id}
-            className="coupon-8x5-card"
-          >
-            {/* NO.Faktur */}
-            <span className="coupon-8x5-data coupon-8x5-faktur">
-              {truncateText(noFaktur, 25)}
-            </span>
+            {/* Fill empty slots to maintain grid structure */}
+            {Array.from({ length: 9 }, (_, index) => {
+              const coupon = pageCoupons[index];
+              if (!coupon) {
+                return <div key={`empty-${index}`} className="coupon-8x5-card" style={{ visibility: 'hidden' }}></div>;
+              }
+              
+              return (
+                <div
+                  key={coupon.id}
+                  className="coupon-8x5-card"
+                >
+                  {/* NO.Faktur */}
+                  <span className="coupon-8x5-data coupon-8x5-faktur">
+                    {truncateText(noFaktur, 25)}
+                  </span>
 
-            {/* Nama */}
-            <span className="coupon-8x5-data coupon-8x5-nama">
-              {truncateText(contract.customers?.name || "-", 30)}
-            </span>
+                  {/* Nama */}
+                  <span className="coupon-8x5-data coupon-8x5-nama">
+                    {truncateText(contract.customers?.name || "-", 30)}
+                  </span>
 
-            {/* Alamat */}
-            <span className="coupon-8x5-data coupon-8x5-alamat">
-              {truncateText(contract.customers?.address || "-", 30)}
-            </span>
+                  {/* Alamat */}
+                  <span className="coupon-8x5-data coupon-8x5-alamat">
+                    {truncateText(contract.customers?.address || "-", 30)}
+                  </span>
 
-            {/* Jatuh Tempo */}
-            <span className="coupon-8x5-data coupon-8x5-jatuhtempo">
-              {formatDate(coupon.due_date)}
-            </span>
+                  {/* Jatuh Tempo */}
+                  <span className="coupon-8x5-data coupon-8x5-jatuhtempo">
+                    {formatDate(coupon.due_date)}
+                  </span>
 
-            {/* Angsuran Ke */}
-            <span className="coupon-8x5-data coupon-8x5-angsuran-ke">
-              {coupon.installment_index}
-            </span>
+                  {/* Angsuran Ke */}
+                  <span className="coupon-8x5-data coupon-8x5-angsuran-ke">
+                    {coupon.installment_index}
+                  </span>
 
-            {/* Besar Angsuran */}
-            <span className="coupon-8x5-data coupon-8x5-nominal">
-              {formatAmount(coupon.amount)}
-            </span>
+                  {/* Besar Angsuran */}
+                  <span className="coupon-8x5-data coupon-8x5-nominal">
+                    {formatAmount(coupon.amount)}
+                  </span>
 
-            {/* Kantor */}
-            <span className="coupon-8x5-data coupon-8x5-kantor">
-              0852 5882 5882
-            </span>
+                  {/* Kantor */}
+                  <span className="coupon-8x5-data coupon-8x5-kantor">
+                    0852 5882 5882
+                  </span>
+                </div>
+              );
+            })}
           </div>
-        ))}
-      </div>
-    </div>
-    ))}
+        </div>
+      ))}
     </>
   );
 }
