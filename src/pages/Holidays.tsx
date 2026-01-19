@@ -56,11 +56,13 @@ export default function Holidays() {
   const [searchQuery, setSearchQuery] = useState("");
   
   // Filter holidays based on search query
-  const filteredHolidays = holidays?.filter(holiday =>
-    holiday.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (holiday.holiday_date && holiday.holiday_date.includes(searchQuery)) ||
-    (holiday.day_of_week !== null && DAY_NAMES[holiday.day_of_week].toLowerCase().includes(searchQuery.toLowerCase()))
-  ) || [];
+  const filteredHolidays = holidays?.filter(holiday => {
+    const query = searchQuery.toLowerCase();
+    const descriptionMatch = holiday.description?.toLowerCase().includes(query) || false;
+    const dateMatch = holiday.holiday_date?.includes(searchQuery) || false;
+    const dayMatch = holiday.day_of_week !== null && DAY_NAMES[holiday.day_of_week]?.toLowerCase().includes(query);
+    return descriptionMatch || dateMatch || dayMatch;
+  }) || [];
   
   const ITEMS_PER_PAGE = 10;
   const { currentPage, totalPages, paginatedItems, goToPage, totalItems } = usePagination(filteredHolidays, ITEMS_PER_PAGE);
