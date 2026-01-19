@@ -1,8 +1,6 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { FileText, CreditCard } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import "@/styles/Voucher-new.css";
-import VoucherPage from "@/components/print/VoucherPage";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 
@@ -21,7 +19,6 @@ export default function Collection() {
   const { data: customers } = useCustomers();
   const { data: contracts, isLoading: contractsLoading } = useContracts("active");
   const createPayment = useCreatePayment();
-  const printRef = useRef<HTMLDivElement>(null);
 
   // Manifest state
   const [selectedCustomer, setSelectedCustomer] = useState("");
@@ -60,23 +57,6 @@ export default function Collection() {
     setManifestPage(1);
   }, [selectedCustomer, searchQuery, setManifestPage]);
 
-  // Print info
-  const selectedCustomerName = selectedCustomer
-    ? (() => {
-        const customer = customers?.find((c) => c.id === selectedCustomer);
-        return customer ? `${customer.customer_code} - ${customer.name}` : null;
-      })()
-    : null;
-
-
-  const handlePrintCoupons = () => {
-    if (!manifestContracts.length) {
-      toast.error(t("collection.noContracts"));
-      return;
-    }
-    window.print();
-  };
-
   const handleSubmitPayment = async (data: {
     contract_id: string;
     payment_date: string;
@@ -95,29 +75,16 @@ export default function Collection() {
   };
 
   return (
-    <div className="space-y-6 print:space-y-0" ref={printRef}>
-      {/* Print Header */}
-      <div className="print:block hidden print:mb-4 print:border-b print:border-black print:pb-2">
-        <h1 className="text-xl font-bold text-center">DAFTAR KUPON COLLECTION</h1>
-        <div className="text-sm text-center mt-2">
-          {selectedCustomerName && <div>Pelanggan: {selectedCustomerName}</div>}
-          {!selectedCustomerName && <div>Semua Pelanggan</div>}
-          <div className="mt-1">Tanggal Cetak: {new Date().toLocaleDateString("id-ID")}</div>
-        </div>
-      </div>
-
-      {/* VoucherPage for print */}
-      {manifestContracts.length > 0 && <VoucherPage contracts={manifestContracts} />}
-
+    <div className="space-y-6">
       {/* Page Header */}
-      <div className="print:hidden">
+      <div>
         <h1 className="text-2xl font-bold tracking-tight">{t("collection.title")}</h1>
         <p className="text-muted-foreground">{t("collection.description")}</p>
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue="manifest" className="w-full print:block">
-        <TabsList className="grid w-full grid-cols-2 max-w-md print:hidden">
+      <Tabs defaultValue="manifest" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 max-w-md">
           <TabsTrigger value="manifest" className="gap-2">
             <FileText className="h-4 w-4" />
             {t("collection.generateManifest")}
@@ -128,14 +95,13 @@ export default function Collection() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="manifest" className="space-y-4 print:space-y-0 print:block mt-6">
+        <TabsContent value="manifest" className="space-y-4 mt-6">
           <ManifestFilters
             selectedCustomer={selectedCustomer}
             setSelectedCustomer={setSelectedCustomer}
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
             customers={customers}
-            onPrint={handlePrintCoupons}
             contractCount={manifestContracts.length}
           />
 
@@ -151,7 +117,7 @@ export default function Collection() {
           />
         </TabsContent>
 
-        <TabsContent value="payment" className="print:hidden mt-6">
+        <TabsContent value="payment" className="mt-6">
           <div className="max-w-2xl">
             <PaymentForm
               contracts={contracts}
