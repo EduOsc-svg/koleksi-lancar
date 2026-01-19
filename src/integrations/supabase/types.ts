@@ -202,6 +202,7 @@ export type Database = {
         Row: {
           address: string | null
           assigned_sales_id: string | null
+          business_address: string | null
           created_at: string
           customer_code: string | null
           id: string
@@ -212,6 +213,7 @@ export type Database = {
         Insert: {
           address?: string | null
           assigned_sales_id?: string | null
+          business_address?: string | null
           created_at?: string
           customer_code?: string | null
           id?: string
@@ -222,6 +224,7 @@ export type Database = {
         Update: {
           address?: string | null
           assigned_sales_id?: string | null
+          business_address?: string | null
           created_at?: string
           customer_code?: string | null
           id?: string
