@@ -266,8 +266,8 @@ export default function Contracts() {
     console.log("Starting print mode with", selectedContractCoupons.length, "coupons");
     
     // Show instruction to user
-    toast.info("Print dialog akan terbuka dengan setting A4 Landscape otomatis. Jika masih portrait, ubah ke Landscape di print dialog.", {
-      duration: 3000,
+    toast.info("Pastikan print dialog menggunakan orientasi Landscape dan ukuran A4", {
+      duration: 4000,
     });
     
     setPrintMode(true);
@@ -281,25 +281,48 @@ export default function Contracts() {
     printStyle.id = printStyleId;
     printStyle.textContent = `
       @media print {
-        @page { size: A4 landscape; margin: 0mm; }
-        body { width: 297mm; height: 210mm; margin: 0; padding: 0; }
-        html { width: 297mm; height: 210mm; }
+        @page { 
+          size: A4 landscape; 
+          margin: 0; 
+        }
+        html, body { 
+          width: 297mm; 
+          margin: 0; 
+          padding: 0;
+          background: white !important;
+        }
+        body > *:not(.print-coupon-wrapper) {
+          display: none !important;
+        }
+        .print-coupon-wrapper {
+          display: block !important;
+        }
       }
     `;
     document.head.appendChild(printStyle);
     
-    // Give more time for the component to render
+    // Add class to body for print mode
+    document.body.classList.add('printing-coupons');
+    
+    // Give more time for the component to render via portal
     setTimeout(() => {
       console.log("Triggering print dialog with A4 landscape settings");
       window.print();
       
-      // Clean up after printing
-      setTimeout(() => {
+      // Clean up after printing with onafterprint or timeout
+      const cleanup = () => {
         setPrintMode(false);
+        document.body.classList.remove('printing-coupons');
         const style = document.getElementById(printStyleId);
         if (style) style.remove();
-      }, 1000);
-    }, 800);
+      };
+      
+      // Listen for print dialog close
+      window.addEventListener('afterprint', cleanup, { once: true });
+      
+      // Fallback cleanup after delay
+      setTimeout(cleanup, 2000);
+    }, 500);
   };
 
   const getNoFaktur = (contractId: string) => {

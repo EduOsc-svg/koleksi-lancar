@@ -1,4 +1,5 @@
 import { InstallmentCoupon } from "@/hooks/useInstallmentCoupons";
+import { createPortal } from "react-dom";
 import "@/styles/print-coupon-8x5.css";
 
 interface ContractInfo {
@@ -56,8 +57,9 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
 
   console.log(`Printing ${coupons.length} coupons across ${couponPages.length} pages`);
 
-  return (
-    <>
+  // Use portal to render directly into body for proper print isolation
+  const printContent = (
+    <div className="print-coupon-wrapper">
       {couponPages.map((pageCoupons, pageIndex) => (
         <div key={`page-${pageIndex}`} className="print-coupon-8x5-container">
           <div className="coupon-8x5-grid">
@@ -108,6 +110,9 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
           </div>
         </div>
       ))}
-    </>
+    </div>
   );
+
+  // Render into body for proper print isolation
+  return createPortal(printContent, document.body);
 }
