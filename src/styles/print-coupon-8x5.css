@@ -52,7 +52,7 @@
 }
 
 /* ==========================================
-   MODE PRINT - PRESISI TINGGI
+   MODE PRINT - A4 LANDSCAPE OTOMATIS
    ========================================== */
 @media print {
   /* Reset semua elemen */
@@ -60,6 +60,48 @@
     box-sizing: border-box;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+  }
+
+  /* FORCE A4 LANDSCAPE - Multiple declarations untuk kompatibilitas */
+  @page {
+    size: A4 landscape;
+    margin: 0mm;
+    orientation: landscape;
+  }
+
+  @page :first {
+    size: A4 landscape;
+    margin: 0mm;
+  }
+
+  @page :left {
+    size: A4 landscape;
+    margin: 0mm;
+  }
+
+  @page :right {
+    size: A4 landscape;
+    margin: 0mm;
+  }
+
+  /* HTML dan Body setup untuk landscape */
+  html {
+    width: 297mm !important;
+    height: 210mm !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+    overflow: hidden !important;
+  }
+
+  body {
+    width: 297mm !important;
+    height: 210mm !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+    overflow: hidden !important;
+    transform: none !important;
   }
 
   /* Hide semua kecuali print container */
@@ -70,21 +112,6 @@
   .print-coupon-8x5-container,
   .print-coupon-8x5-container * {
     visibility: visible !important;
-  }
-
-  /* Page setup - A4 Landscape tanpa margin */
-  @page {
-    size: A4 landscape;
-    margin: 0;
-  }
-
-  html, body {
-    width: 297mm;
-    height: 210mm;
-    margin: 0;
-    padding: 0;
-    background: white !important;
-    overflow: hidden;
   }
 
   .print-coupon-8x5-container {
@@ -100,11 +127,12 @@
     box-shadow: none !important;
     border: none !important;
     border-radius: 0 !important;
-    z-index: 9999 !important;
+    transform: none !important;
+    overflow: hidden !important;
   }
 
   .print-coupon-8x5-container::before {
-    display: none; /* Hide preview border di print mode */
+    display: none !important; /* Hide preview border di print mode */
   }
 }
 
@@ -354,6 +382,12 @@
 
 /* Print Optimizations dengan font yang konsisten */
 @media print {
+  /* Force landscape orientation */
+  @page {
+    size: 297mm 210mm; /* Explicit A4 landscape dimensions */
+    margin: 0 !important;
+  }
+  
   .coupon-8x5-card {
     page-break-inside: avoid !important;
     break-inside: avoid !important;
@@ -379,5 +413,13 @@
   .coupon-8x5-data {
     orphans: 2;
     widows: 2;
+  }
+  
+  /* Backup landscape enforcement */
+  body {
+    width: 297mm !important;
+    height: 210mm !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 }

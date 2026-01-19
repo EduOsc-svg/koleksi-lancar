@@ -264,14 +264,42 @@ export default function Contracts() {
     }
     
     console.log("Starting print mode with", selectedContractCoupons.length, "coupons");
+    
+    // Show instruction to user
+    toast.info("Print dialog akan terbuka dengan setting A4 Landscape otomatis. Jika masih portrait, ubah ke Landscape di print dialog.", {
+      duration: 3000,
+    });
+    
     setPrintMode(true);
+    
+    // Force add print styles for landscape
+    const printStyleId = 'force-landscape-print';
+    const existingStyle = document.getElementById(printStyleId);
+    if (existingStyle) existingStyle.remove();
+    
+    const printStyle = document.createElement('style');
+    printStyle.id = printStyleId;
+    printStyle.textContent = `
+      @media print {
+        @page { size: A4 landscape; margin: 0mm; }
+        body { width: 297mm; height: 210mm; margin: 0; padding: 0; }
+        html { width: 297mm; height: 210mm; }
+      }
+    `;
+    document.head.appendChild(printStyle);
     
     // Give more time for the component to render
     setTimeout(() => {
-      console.log("Triggering print dialog");
+      console.log("Triggering print dialog with A4 landscape settings");
       window.print();
-      setPrintMode(false);
-    }, 500);
+      
+      // Clean up after printing
+      setTimeout(() => {
+        setPrintMode(false);
+        const style = document.getElementById(printStyleId);
+        if (style) style.remove();
+      }, 1000);
+    }, 800);
   };
 
   const getNoFaktur = (contractId: string) => {
