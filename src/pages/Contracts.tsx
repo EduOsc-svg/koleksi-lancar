@@ -300,6 +300,7 @@ export default function Contracts() {
             customers: selectedContract.customers ? {
               name: selectedContract.customers.name,
               address: selectedContract.customers.address || null,
+              customer_code: selectedContract.customers.customer_code || null,
               sales_agents: selectedContract.customers.sales_agents || null,
             } : null,
           }}

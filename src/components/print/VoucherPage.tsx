@@ -18,6 +18,7 @@ interface ContractData {
   customers?: {
     name: string;
     address?: string | null;
+    customer_code?: string | null;
     sales_agents?: {
       agent_code: string;
       name: string;
@@ -47,9 +48,9 @@ const VoucherPage: React.FC<VoucherPageProps> = ({
     if (coupons && coupons.length > 0) {
       return coupons.map((coupon) => {
         const tenor = contract.tenor_days || 0;
-        const agentCode = contract.customers?.sales_agents?.agent_code || "X";
-        const agentName = contract.customers?.sales_agents?.name || "X";
-        const noFaktur = `${tenor}/${agentCode}/${agentName}`;
+        const agentCode = contract.customers?.sales_agents?.agent_code || "-";
+        const customerCode = contract.customers?.customer_code || "-";
+        const noFaktur = `${tenor}/${agentCode}/${customerCode}`;
 
         // Format due date
         const dueDate = new Date(coupon.due_date).toLocaleDateString("id-ID", {
@@ -81,9 +82,9 @@ const VoucherPage: React.FC<VoucherPageProps> = ({
 
     for (let i = 0; i < contract.tenor_days; i++) {
       const tenor = contract.tenor_days || 0;
-      const agentCode = contract.customers?.sales_agents?.agent_code || "X";
-      const agentName = contract.customers?.sales_agents?.name || "X";
-      const noFaktur = `${tenor}/${agentCode}/${agentName}`;
+      const agentCode = contract.customers?.sales_agents?.agent_code || "-";
+      const customerCode = contract.customers?.customer_code || "-";
+      const noFaktur = `${tenor}/${agentCode}/${customerCode}`;
 
       allVouchers.push({
         contractRef: contract.contract_ref,

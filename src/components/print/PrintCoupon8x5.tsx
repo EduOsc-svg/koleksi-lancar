@@ -8,6 +8,7 @@ interface ContractInfo {
   customers: {
     name: string;
     address: string | null;
+    customer_code?: string | null;
     sales_agents?: { name: string; agent_code: string } | null;
   } | null;
 }
@@ -35,8 +36,8 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
     return text.substring(0, maxLength) + "...";
   };
 
-  // Generate No. Faktur format: tenor/agent_code/agent_name
-  const noFaktur = `${contract.tenor_days}/${contract.customers?.sales_agents?.agent_code || "-"}/${contract.customers?.sales_agents?.name || "-"}`;
+  // Generate No. Faktur format: TENOR/KODE_SALES/KODE_KONSUMEN
+  const noFaktur = `${contract.tenor_days}/${contract.customers?.sales_agents?.agent_code || "-"}/${contract.customers?.customer_code || "-"}`;
 
   // Group coupons into pages of 9 (3x3 grid)
   const groupCouponsIntoPages = (coupons: InstallmentCoupon[], couponsPerPage: number = 9) => {
