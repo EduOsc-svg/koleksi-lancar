@@ -28,8 +28,7 @@ export function PrintA4LandscapeCoupons({ contracts }: PrintA4LandscapeCouponsPr
   return (
     <VoucherPage 
       contracts={contracts}
-      couponsPerPage={12}
-      totalCoupons={100}
+      couponsPerPage={9}
     />
   );
 }

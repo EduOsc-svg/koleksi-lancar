@@ -1,6 +1,14 @@
 import React from 'react';
 import VoucherCard, { VoucherData } from './VoucherCard';
 
+interface CouponData {
+  id: string;
+  installment_index: number;
+  due_date: string;
+  amount: number;
+  status: string;
+}
+
 interface ContractData {
   id: string;
   contract_ref: string;
@@ -19,55 +27,79 @@ interface ContractData {
 
 interface VoucherPageProps {
   contracts: ContractData[];
+  coupons?: CouponData[];
   couponsPerPage?: number;
-  totalCoupons?: number;
 }
 
 const VoucherPage: React.FC<VoucherPageProps> = ({ 
   contracts, 
-  couponsPerPage = 12, 
-  totalCoupons = 100 
+  coupons,
+  couponsPerPage = 9 
 }) => {
-  // Generate current date for due date
-  const today = new Date();
-  const dueDate = today.toLocaleDateString("id-ID", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
+  // Get the first contract (for single contract printing)
+  const contract = contracts[0];
 
-  // Create array of vouchers (repeat contracts if needed)
+  // Generate voucher data from actual coupons
   const generateVoucherData = (): VoucherData[] => {
-    const allVouchers: VoucherData[] = [];
-    
-    for (let i = 0; i < totalCoupons; i++) {
-      const contractIndex = i % contracts.length; // Loop through available contracts
-      const contract = contracts[contractIndex];
-      
-      if (contract) {
-        // Generate No. Faktur: [Tenor]/[Kode Sales]/[Nama Sales]
+    if (!contract) return [];
+
+    // If coupons are provided, use actual coupon data
+    if (coupons && coupons.length > 0) {
+      return coupons.map((coupon) => {
         const tenor = contract.tenor_days || 0;
         const agentCode = contract.customers?.sales_agents?.agent_code || "X";
         const agentName = contract.customers?.sales_agents?.name || "X";
-        const installmentNumber = (contract.current_installment_index + 1) + Math.floor(i / contracts.length);
         const noFaktur = `${tenor}/${agentCode}/${agentName}`;
 
-        allVouchers.push({
+        // Format due date
+        const dueDate = new Date(coupon.due_date).toLocaleDateString("id-ID", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        });
+
+        return {
           contractRef: contract.contract_ref,
           noFaktur,
           customerName: contract.customers?.name || "-",
           customerAddress: contract.customers?.address || "-",
           dueDate,
-          installmentNumber,
-          installmentAmount: contract.daily_installment_amount,
-        });
-      }
+          installmentNumber: coupon.installment_index,
+          installmentAmount: coupon.amount,
+        };
+      });
     }
-    
+
+    // Fallback: generate based on tenor_days (for backward compatibility)
+    const allVouchers: VoucherData[] = [];
+    const today = new Date();
+    const dueDate = today.toLocaleDateString("id-ID", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
+
+    for (let i = 0; i < contract.tenor_days; i++) {
+      const tenor = contract.tenor_days || 0;
+      const agentCode = contract.customers?.sales_agents?.agent_code || "X";
+      const agentName = contract.customers?.sales_agents?.name || "X";
+      const noFaktur = `${tenor}/${agentCode}/${agentName}`;
+
+      allVouchers.push({
+        contractRef: contract.contract_ref,
+        noFaktur,
+        customerName: contract.customers?.name || "-",
+        customerAddress: contract.customers?.address || "-",
+        dueDate,
+        installmentNumber: i + 1,
+        installmentAmount: contract.daily_installment_amount,
+      });
+    }
+
     return allVouchers;
   };
 
-  // Group vouchers into pages
+  // Group vouchers into pages (9 per page for 3x3 grid)
   const groupIntoPages = (vouchers: VoucherData[]): VoucherData[][] => {
     const pages: VoucherData[][] = [];
     

@@ -298,6 +298,13 @@ export default function Contracts() {
               sales_agents: selectedContract.customers.sales_agents || null,
             } : null,
           }]}
+          coupons={selectedContractCoupons.map(c => ({
+            id: c.id,
+            installment_index: c.installment_index,
+            due_date: c.due_date,
+            amount: c.amount,
+            status: c.status,
+          }))}
         />
       )}
 
