@@ -8,6 +8,7 @@ export interface Customer {
   customer_code: string | null;
   nik: string;
   address: string | null;
+  business_address: string | null;
   phone: string | null;
   assigned_sales_id: string | null;
   created_at: string;
@@ -28,7 +29,7 @@ export const useCustomers = () => {
         .select('*, sales_agents(name, agent_code)')
         .order('name');
       if (error) throw error;
-      return data as CustomerWithRelations[];
+      return data as (CustomerWithRelations & { business_address: string | null })[];
     },
   });
 };
