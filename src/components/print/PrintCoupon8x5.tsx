@@ -21,7 +21,7 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleDateString("id-ID", {
       day: "2-digit",
-      month: "long",
+      month: "2-digit", 
       year: "numeric",
     });
   };
@@ -68,40 +68,63 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
                   key={coupon.id}
                   className="coupon-8x5-card"
                 >
-                  {/* NO.Faktur */}
-                  <span className="coupon-8x5-data coupon-8x5-faktur">
-                    {truncateText(noFaktur, 25)}
-                  </span>
+                  {/* Header - Company Info (Static) */}
+                  <div className="coupon-8x5-data coupon-8x5-header">
+                    CV MAHKOTA JAYA ELEKTRONIK
+                    <br />
+                    <span style={{ fontSize: '12pt', color: '#0066CC' }}>
+                      Jangan dibayar tanpa bukti kupon kami tidak bertanggung jawab
+                    </span>
+                  </div>
+                  
+                  {/* Title */}
+                  <div className="coupon-8x5-data coupon-8x5-title">
+                    VOUCER ANGSURAN
+                  </div>
 
-                  {/* Nama */}
-                  <span className="coupon-8x5-data coupon-8x5-nama">
-                    {truncateText(contract.customers?.name || "-", 30)}
-                  </span>
+                  {/* NO.Faktur dengan label */}
+                  <div className="coupon-8x5-data coupon-8x5-faktur">
+                    <span style={{ color: '#CC0000' }}>NO.Faktur:</span> {truncateText(noFaktur, 20)}
+                  </div>
 
-                  {/* Alamat */}
-                  <span className="coupon-8x5-data coupon-8x5-alamat">
-                    {truncateText(contract.customers?.address || "-", 30)}
-                  </span>
+                  {/* Nama dengan label */}
+                  <div className="coupon-8x5-data coupon-8x5-nama">
+                    <span style={{ color: '#CC0000' }}>Nama:</span> {truncateText(contract.customers?.name || "-", 25)}
+                  </div>
 
-                  {/* Jatuh Tempo */}
-                  <span className="coupon-8x5-data coupon-8x5-jatuhtempo">
-                    {formatDate(coupon.due_date)}
-                  </span>
+                  {/* Alamat dengan label */}
+                  <div className="coupon-8x5-data coupon-8x5-alamat">
+                    <span style={{ color: '#CC0000' }}>Alamat:</span> {truncateText(contract.customers?.address || "-", 25)}
+                  </div>
 
-                  {/* Angsuran Ke */}
-                  <span className="coupon-8x5-data coupon-8x5-angsuran-ke">
-                    {coupon.installment_index}
-                  </span>
+                  {/* Jatuh Tempo dengan label */}
+                  <div className="coupon-8x5-data coupon-8x5-jatuhtempo">
+                    <span style={{ color: '#CC0000' }}>Jatuh Tempo:</span> {formatDate(coupon.due_date)}
+                  </div>
 
-                  {/* Besar Angsuran */}
-                  <span className="coupon-8x5-data coupon-8x5-nominal">
+                  {/* Angsuran Ke dengan label */}
+                  <div className="coupon-8x5-data coupon-8x5-angsuran-ke">
+                    <span style={{ color: '#CC0000' }}>Angsuran Ke-:</span> {coupon.installment_index}
+                  </div>
+
+                  {/* Bagian Kanan - Besar Angsuran */}
+                  <div className="coupon-8x5-data coupon-8x5-label-besar">
+                    Besar Angsuran
+                  </div>
+                  
+                  <div className="coupon-8x5-data coupon-8x5-rp-label">
+                    Rp.
+                  </div>
+
+                  {/* Nominal dengan garis bawah */}
+                  <div className="coupon-8x5-data coupon-8x5-nominal">
                     {formatAmount(coupon.amount)}
-                  </span>
+                  </div>
 
-                  {/* Kantor */}
-                  <span className="coupon-8x5-data coupon-8x5-kantor">
-                    0852 5882 5882
-                  </span>
+                  {/* Info Kantor */}
+                  <div className="coupon-8x5-data coupon-8x5-kantor">
+                    KANTOR / 0852 5882 5882
+                  </div>
                 </div>
               );
             })}
