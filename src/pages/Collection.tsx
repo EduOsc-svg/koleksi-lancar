@@ -5,7 +5,7 @@ import "@/styles/Voucher-new.css";
 import VoucherPage from "@/components/print/VoucherPage";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { useSalesAgents } from "@/hooks/useSalesAgents";
+
 import { useCollectors } from "@/hooks/useCollectors";
 import { useCustomers } from "@/hooks/useCustomers";
 import { useContracts } from "@/hooks/useContracts";
@@ -17,7 +17,6 @@ import { PaymentForm } from "@/components/collection/PaymentForm";
 
 export default function Collection() {
   const { t } = useTranslation();
-  const { data: agents } = useSalesAgents();
   const { data: collectors } = useCollectors();
   const { data: customers } = useCustomers();
   const { data: contracts, isLoading: contractsLoading } = useContracts("active");
@@ -26,14 +25,12 @@ export default function Collection() {
 
   // Manifest state
   const [selectedCustomer, setSelectedCustomer] = useState("");
-  const [selectedSales, setSelectedSales] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
 
   // Filter contracts for manifest
   const manifestContracts = contracts?.filter((c) => {
     if (!c.customers) return false;
     if (selectedCustomer && c.customer_id !== selectedCustomer) return false;
-    if (selectedSales && c.customers.assigned_sales_id !== selectedSales) return false;
     if (searchQuery) {
       const query = searchQuery.toLowerCase().trim();
       if (query) {
@@ -61,7 +58,7 @@ export default function Collection() {
   // Reset pagination when filters change
   useEffect(() => {
     setManifestPage(1);
-  }, [selectedCustomer, selectedSales, searchQuery, setManifestPage]);
+  }, [selectedCustomer, searchQuery, setManifestPage]);
 
   // Print info
   const selectedCustomerName = selectedCustomer
@@ -71,12 +68,6 @@ export default function Collection() {
       })()
     : null;
 
-  const selectedSalesName = selectedSales
-    ? (() => {
-        const agent = agents?.find((a) => a.id === selectedSales);
-        return agent ? `${agent.agent_code} - ${agent.name}` : null;
-      })()
-    : null;
 
   const handlePrintCoupons = () => {
     if (!manifestContracts.length) {
@@ -110,8 +101,7 @@ export default function Collection() {
         <h1 className="text-xl font-bold text-center">DAFTAR KUPON COLLECTION</h1>
         <div className="text-sm text-center mt-2">
           {selectedCustomerName && <div>Pelanggan: {selectedCustomerName}</div>}
-          {selectedSalesName && <div>Sales Agent: {selectedSalesName}</div>}
-          {!selectedCustomerName && !selectedSalesName && <div>Semua Pelanggan & Sales Agent</div>}
+          {!selectedCustomerName && <div>Semua Pelanggan</div>}
           <div className="mt-1">Tanggal Cetak: {new Date().toLocaleDateString("id-ID")}</div>
         </div>
       </div>
@@ -142,12 +132,9 @@ export default function Collection() {
           <ManifestFilters
             selectedCustomer={selectedCustomer}
             setSelectedCustomer={setSelectedCustomer}
-            selectedSales={selectedSales}
-            setSelectedSales={setSelectedSales}
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
             customers={customers}
-            agents={agents}
             onPrint={handlePrintCoupons}
             contractCount={manifestContracts.length}
           />
