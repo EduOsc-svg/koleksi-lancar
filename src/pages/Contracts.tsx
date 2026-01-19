@@ -72,7 +72,7 @@ export default function Contracts() {
   // Only search by contract_ref and customer name to avoid confusion
   const filteredContracts = contracts?.filter(contract =>
     contract.contract_ref.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    contract.customers?.name.toLowerCase().includes(searchQuery.toLowerCase())
+    (contract.customers?.name && contract.customers.name.toLowerCase().includes(searchQuery.toLowerCase()))
   ) || [];
   
   const ITEMS_PER_PAGE = 5;

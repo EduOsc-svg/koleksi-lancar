@@ -63,7 +63,7 @@ export default function SalesAgents() {
   const filteredAgents = agents?.filter(agent =>
     agent.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     agent.agent_code.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    agent.phone?.toLowerCase().includes(searchQuery.toLowerCase())
+    (agent.phone && agent.phone.toLowerCase().includes(searchQuery.toLowerCase()))
   ) || [];
   
   const ITEMS_PER_PAGE = 5;
