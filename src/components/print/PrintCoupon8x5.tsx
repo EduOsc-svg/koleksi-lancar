@@ -1,7 +1,6 @@
 import React from 'react';
 import { InstallmentCoupon } from "@/hooks/useInstallmentCoupons";
 import { createPortal } from "react-dom";
-import "@/styles/print-coupon-8x5.css";
 
 interface ContractInfo {
   contract_ref: string;
@@ -25,10 +24,205 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
   // Inject custom print styles untuk memaksa A4 landscape
   React.useEffect(() => {
     const printStyles = `
+      /* =========================================
+         1. GLOBAL & RESET
+         ========================================= */
+      * { 
+        margin: 0; 
+        padding: 0; 
+        box-sizing: border-box; 
+      }
+
+      body { 
+        font-family: 'Times New Roman', Times, serif; 
+        -webkit-print-color-adjust: exact; 
+        print-color-adjust: exact; 
+      }
+
+      /* =========================================
+         2. MODE PREVIEW (LAYAR)
+         ========================================= */
+      @media screen {
+        body {
+          background-color: #525659;
+          display: flex;
+          justify-content: center;
+          padding: 40px;
+        }
+        .print-coupon-wrapper {
+          width: 297mm;
+          height: 210mm;
+          background: white;
+          box-shadow: 0 0 15px rgba(0,0,0,0.5);
+          padding: 10mm;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+        }
+        .coupon-card { 
+          border: 1px dashed #ccc; 
+        }
+      }
+
+      /* =========================================
+         3. MODE CETAK (PRINT)
+         ========================================= */
       @media print {
-        @page { size: A4 landscape; margin: 0; }
-        body { margin: 0; padding: 0; width: 297mm; height: 210mm; }
-        html { width: 297mm; height: 210mm; }
+        @page { 
+          size: A4 landscape; 
+          margin: 0; 
+        }
+        body { 
+          margin: 0; 
+          background: white; 
+        }
+        
+        .print-coupon-wrapper {
+          width: 297mm;
+          height: 209mm;
+          padding: 10mm;
+          margin: 0 auto;
+          page-break-after: always;
+        }
+        .print-coupon-wrapper:last-child { 
+          page-break-after: avoid; 
+        }
+        .coupon-card { 
+          border: none; 
+        }
+      }
+
+      /* =========================================
+         4. GRID LAYOUT (3 x 3)
+         ========================================= */
+      .coupon-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 93mm);
+        grid-template-rows: repeat(3, 63mm);
+        gap: 2mm; 
+        justify-content: center;
+        align-content: center;
+      }
+
+      /* =========================================
+         5. STYLE KARTU VOUCHER
+         ========================================= */
+      .coupon-card {
+        width: 93mm;
+        height: 63mm;
+        position: relative;
+        background-image: url('/Background with WM.png'); 
+        background-size: cover;
+        background-position: center;
+        overflow: visible;
+      }
+
+      /* GARIS POTONG (CUT LINES) */
+      .coupon-card::after {
+        content: ''; 
+        position: absolute; 
+        top: 0; 
+        right: -1.5mm; 
+        width: 0; 
+        height: 100%;
+        border-right: 1px dashed #999; 
+        z-index: 10;
+      }
+      .coupon-card::before {
+        content: ''; 
+        position: absolute; 
+        left: 0; 
+        bottom: -1.5mm; 
+        width: 100%; 
+        height: 0;
+        border-bottom: 1px dashed #999; 
+        z-index: 10;
+      }
+      .coupon-card:nth-child(3n)::after { 
+        display: none; 
+      }
+      .coupon-card:nth-child(n+7)::before { 
+        display: none; 
+      }
+
+      /* =========================================
+         6. POSISI DATA
+         ========================================= */
+      .coupon-data {
+        position: absolute;
+        font-size: 11pt;
+        line-height: 1.2;
+        color: #000;
+        z-index: 5;
+        white-space: nowrap;
+      }
+
+      /* Alignment Label (Agar titik dua lurus) */
+      .coupon-data span.label { 
+        display: inline-block; 
+        width: 95px; 
+        font-weight: normal; 
+      }
+
+      .coupon-data span.value {
+        font-weight: normal;
+      }
+
+      /* --- KOORDINAT POSISI (PIXEL) --- */
+
+      /* Judul Voucher (Merah & Underline) */
+      .pos-judul {
+        width: 100%;
+        text-align: center;
+        top: 65px;
+        color: red;
+        font-weight: bold;
+        text-decoration: underline;
+        font-size: 11pt;
+      }
+
+      /* Area Kiri (Data Utama) */
+      .pos-faktur     { left: 15px; top: 95px; }
+      .pos-nama       { left: 15px; top: 110px; }
+      .pos-alamat     { left: 15px; top: 125px; max-width: 230px; overflow: hidden; text-overflow: ellipsis; }
+      .pos-jatuhtempo { left: 15px; top: 140px; }
+      .pos-angsuran   { left: 15px; top: 155px; }
+      
+      /* Style khusus untuk angka angsuran yang center */
+      .pos-angsuran .angka-center {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        margin-left: -15px;
+      }
+
+      /* Area Kanan (Besar Angsuran) */
+      .pos-lbl-besar-angsuran {
+        right: 10px;
+        top: 160px;
+        font-size: 11pt;
+        font-weight: normal;
+        text-decoration: underline;
+        color: red;
+      }
+
+      /* Nominal Rupiah */
+      .pos-val-besar-angsuran {
+        right: 10px;
+        top: 182px;
+        text-align: right;
+        font-size: 11pt;
+        color: red;
+      }
+
+      /* Footer (Kantor) */
+      .pos-kantor {
+        width: 100%;
+        text-align: center;
+        bottom: 10px; 
+        font-size: 11pt;
+        font-weight: normal;
+        color: red;
       }
     `;
     
@@ -83,68 +277,56 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
   // Use portal to render directly into body for proper print isolation
   const printContent = (
     <div className="print-coupon-wrapper">
-      {couponPages.map((pageCoupons, pageIndex) => (
-        <div key={`page-${pageIndex}`} className="print-coupon-8x5-container">
-          <div className="coupon-8x5-grid">
-            {/* Fill empty slots to maintain grid structure */}
-            {Array.from({ length: 9 }, (_, index) => {
-              const coupon = pageCoupons[index];
-              if (!coupon) {
-                return <div key={`empty-${index}`} className="coupon-8x5-card" style={{ visibility: 'hidden' }}></div>;
-              }
+      {couponPages.map((pagesCoupons, pageIndex) => (
+        <div key={pageIndex} className="coupon-grid">
+          {Array.from({ length: 9 }, (_, index) => {
+            const coupon = pagesCoupons[index];
+            
+            if (!coupon) {
+              return <div key={`empty-${index}`} className="coupon-card" style={{ visibility: 'hidden' }}></div>;
+            }
               
-              return (
-                <div
-                  key={coupon.id}
-                  className="coupon-8x5-card"
-                >
-                  {/* Header - Company Info (Static) */}
-                  <div className="coupon-8x5-data coupon-8x5-header">
-                    CV MAHKOTA JAYA ELEKTRONIK
-                    <br />
-                    <span style={{ fontSize: '12pt', color: '#0066CC' }}>
-                      Jangan dibayar tanpa bukti kupon kami tidak bertanggung jawab
-                    </span>
-                  </div>
-                  
-                  {/* Title */}
-                  <div className="coupon-8x5-data coupon-8x5-title">
-                    VOUCER ANGSURAN
-                  </div>
+            return (
+              <div key={coupon.id} className="coupon-card">
+                {/* Judul Voucher */}
+                <div className="coupon-data pos-judul">VOUCHER ANGSURAN</div>
 
-                  {/* NO.Faktur dengan label */}
-                  <div className="coupon-8x5-data coupon-8x5-faktur">
-                    NO.Faktur: {truncateText(noFaktur, 20)}
-                  </div>
-
-                  {/* Nama - Posisi bawah No.Faktur */}
-                  <div className="coupon-8x5-data coupon-8x5-nama">
-                    Nama: {truncateText(contract.customers?.name || "-", 25)}
-                  </div>
-
-                  {/* Alamat Usaha - Posisi bawah Nama */}
-                  <div className="coupon-8x5-data coupon-8x5-alamat">
-                    Alamat: {truncateText(displayAddress, 28)}
-                  </div>
-
-                  {/* Jatuh Tempo - Posisi bawah Alamat */}
-                  <div className="coupon-8x5-data coupon-8x5-jatuhtempo">
-                    Jatuh Tempo: {formatDate(coupon.due_date)}
-                  </div>
-
-                  {/* Angsuran Ke- */}
-                  <div className="coupon-8x5-data coupon-8x5-angsuran-ke">
-                    Angsuran Ke-: {coupon.installment_index}
-                  </div>
-
-                  {/* Nominal Angsuran - Bagian kanan */}
-                  <div className="coupon-8x5-data coupon-8x5-nominal">
-                    Rp. {formatAmount(coupon.amount)}
-                  </div>
+                {/* NO.Faktur */}
+                <div className="coupon-data pos-faktur">
+                  <span className="label">NO.Faktur</span><span className="value">: {truncateText(noFaktur, 20)}</span>
                 </div>
-              );
-            })}
-          </div>
+
+                {/* Nama */}
+                <div className="coupon-data pos-nama">
+                  <span className="label">Nama</span><span className="value">: {truncateText(contract.customers?.name || "-", 25)}</span>
+                </div>
+
+                {/* Alamat */}
+                <div className="coupon-data pos-alamat">
+                  <span className="label">Alamat</span><span className="value">: {truncateText(displayAddress, 28)}</span>
+                </div>
+
+                {/* Jatuh Tempo */}
+                <div className="coupon-data pos-jatuhtempo">
+                  <span className="label">Jatuh Tempo</span><span className="value">: {formatDate(coupon.due_date)}</span>
+                </div>
+
+                {/* Angsuran Ke- */}
+                <div className="coupon-data pos-angsuran">
+                  <span className="label">Angsuran Ke-</span><span className="value">: <span className="angka-center">{coupon.installment_index}</span></span>
+                </div>
+
+                {/* Besar Angsuran - Label */}
+                <div className="coupon-data pos-lbl-besar-angsuran">Besar Angsuran</div>
+
+                {/* Besar Angsuran - Value */}
+                <div className="coupon-data pos-val-besar-angsuran">Rp {formatAmount(coupon.amount)}</div>
+
+                {/* Footer Kantor */}
+                <div className="coupon-data pos-kantor">KANTOR / 0852 5882 5882</div>
+              </div>
+            );
+          })}
         </div>
       ))}
     </div>
