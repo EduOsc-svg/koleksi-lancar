@@ -383,7 +383,7 @@ export default function Contracts() {
             <TableRow>
               <TableHead>Kode Kontrak</TableHead>
               <TableHead>Pelanggan</TableHead>
-              <TableHead>Sales Agent</TableHead>
+              <TableHead>Kode Sales</TableHead>
               <TableHead>Progress</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Aksi</TableHead>
@@ -440,7 +440,7 @@ export default function Contracts() {
                   >
                     <TableCell className="font-medium">{contract.contract_ref}</TableCell>
                     <TableCell>{contract.customers?.name}</TableCell>
-                    <TableCell>{salesAgents?.find(a => a.id === contract.sales_agent_id)?.name || "-"}</TableCell>
+                    <TableCell>{salesAgents?.find(a => a.id === contract.sales_agent_id)?.agent_code || "-"}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Progress value={progress} className="w-16 h-2" />
