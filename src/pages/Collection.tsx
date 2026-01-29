@@ -1,11 +1,9 @@
 import { useState, useEffect } from "react";
 import { FileText, CreditCard } from "lucide-react";
-import { useTranslation } from "react-i18next";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 
 import { useCollectors } from "@/hooks/useCollectors";
-import { useCustomers } from "@/hooks/useCustomers";
 import { useContracts } from "@/hooks/useContracts";
 import { useCreatePayment } from "@/hooks/usePayments";
 import { usePagination } from "@/hooks/usePagination";
@@ -14,28 +12,24 @@ import { ManifestTable } from "@/components/collection/ManifestTable";
 import { PaymentForm } from "@/components/collection/PaymentForm";
 
 export default function Collection() {
-  const { t } = useTranslation();
   const { data: collectors } = useCollectors();
-  const { data: customers } = useCustomers();
   const { data: contracts, isLoading: contractsLoading } = useContracts("active");
   const createPayment = useCreatePayment();
 
   // Manifest state
-  const [selectedCustomer, setSelectedCustomer] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
 
   // Filter contracts for manifest
   const manifestContracts = contracts?.filter((c) => {
     if (!c.customers) return false;
-    if (selectedCustomer && c.customer_id !== selectedCustomer) return false;
     if (searchQuery) {
       const query = searchQuery.toLowerCase().trim();
       if (query) {
-        // Only search by contract_ref and customer name, not customer_code
-        // to avoid confusion when searching for contract references
+        // Search by contract_ref, customer name, or customer_code
         return (
           c.contract_ref.toLowerCase().includes(query) ||
-          c.customers.name.toLowerCase().includes(query)
+          c.customers.name.toLowerCase().includes(query) ||
+          (c.customers.customer_code?.toLowerCase().includes(query) ?? false)
         );
       }
     }
@@ -55,7 +49,7 @@ export default function Collection() {
   // Reset pagination when filters change
   useEffect(() => {
     setManifestPage(1);
-  }, [selectedCustomer, searchQuery, setManifestPage]);
+  }, [searchQuery, setManifestPage]);
 
   const handleSubmitPayment = async (data: {
     contract_id: string;
@@ -67,9 +61,9 @@ export default function Collection() {
   }) => {
     try {
       await createPayment.mutateAsync(data);
-      toast.success(t("collection.paymentRecorded", { coupon: data.installment_index }));
+      toast.success(`Pembayaran kupon #${data.installment_index} berhasil dicatat`);
     } catch {
-      toast.error(t("errors.saveFailed"));
+      toast.error("Gagal menyimpan data");
       throw new Error("Payment failed");
     }
   };
@@ -78,8 +72,8 @@ export default function Collection() {
     <div className="space-y-6">
       {/* Page Header */}
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">{t("collection.title")}</h1>
-        <p className="text-muted-foreground">{t("collection.description")}</p>
+        <h1 className="text-2xl font-bold tracking-tight">Penagihan</h1>
+        <p className="text-muted-foreground">Kelola manifest penagihan dan input pembayaran</p>
       </div>
 
       {/* Tabs */}
@@ -87,21 +81,18 @@ export default function Collection() {
         <TabsList className="grid w-full grid-cols-2 max-w-md">
           <TabsTrigger value="manifest" className="gap-2">
             <FileText className="h-4 w-4" />
-            {t("collection.generateManifest")}
+            Manifest
           </TabsTrigger>
           <TabsTrigger value="payment" className="gap-2">
             <CreditCard className="h-4 w-4" />
-            {t("collection.inputPayment")}
+            Input Pembayaran
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="manifest" className="space-y-4 mt-6">
           <ManifestFilters
-            selectedCustomer={selectedCustomer}
-            setSelectedCustomer={setSelectedCustomer}
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
-            customers={customers}
             contractCount={manifestContracts.length}
           />
 

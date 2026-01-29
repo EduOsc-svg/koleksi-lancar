@@ -1,4 +1,3 @@
-import { useTranslation } from "react-i18next";
 import { FileX } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -44,8 +43,6 @@ export function ManifestTable({
   itemsPerPage = 10,
   searchQuery,
 }: ManifestTableProps) {
-  const { t } = useTranslation();
-
   if (isLoading) {
     return (
       <div className="border rounded-lg print:hidden">
@@ -53,11 +50,9 @@ export function ManifestTable({
           <TableHeader>
             <TableRow>
               <TableHead className="w-12">#</TableHead>
-              <TableHead>{t("customers.customerCode")}</TableHead>
-              <TableHead>{t("collection.customer")}</TableHead>
-              <TableHead>{t("contracts.contractRef")}</TableHead>
-              <TableHead className="text-center">{t("contracts.couponIndex")}</TableHead>
-              <TableHead className="text-right">{t("contracts.amount")}</TableHead>
+              <TableHead>Kode Pelanggan</TableHead>
+              <TableHead>Nama Pelanggan</TableHead>
+              <TableHead className="text-right">Jumlah</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -66,8 +61,6 @@ export function ManifestTable({
                 <TableCell><Skeleton className="h-4 w-6" /></TableCell>
                 <TableCell><Skeleton className="h-4 w-16" /></TableCell>
                 <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-                <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                <TableCell className="text-center"><Skeleton className="h-6 w-8 mx-auto" /></TableCell>
                 <TableCell className="text-right"><Skeleton className="h-4 w-20 ml-auto" /></TableCell>
               </TableRow>
             ))}
@@ -85,12 +78,12 @@ export function ManifestTable({
             <FileX className="h-8 w-8 text-muted-foreground" />
           </div>
           <h3 className="font-semibold text-lg mb-1">
-            {searchQuery ? "Tidak Ada Hasil" : t("collection.noContracts")}
+            {searchQuery ? "Tidak Ada Hasil" : "Tidak Ada Kontrak"}
           </h3>
           <p className="text-muted-foreground text-sm max-w-sm">
             {searchQuery 
               ? `Tidak ada kontrak yang ditemukan dengan kata kunci "${searchQuery}". Coba kata kunci lain atau hapus filter pencarian.`
-              : t("collection.noContractsDescription")
+              : "Tidak ada kontrak aktif yang tersedia untuk penagihan."
             }
           </p>
         </div>
@@ -113,11 +106,9 @@ export function ManifestTable({
           <TableHeader>
             <TableRow className="bg-muted/50">
               <TableHead className="w-12 font-semibold">#</TableHead>
-              <TableHead className="font-semibold">{t("customers.customerCode")}</TableHead>
-              <TableHead className="font-semibold">{t("collection.customer")}</TableHead>
-              <TableHead className="font-semibold">{t("contracts.contractRef")}</TableHead>
-              <TableHead className="font-semibold text-center">{t("contracts.couponIndex")}</TableHead>
-              <TableHead className="font-semibold text-right">{t("contracts.amount")}</TableHead>
+              <TableHead className="font-semibold">Kode Pelanggan</TableHead>
+              <TableHead className="font-semibold">Nama Pelanggan</TableHead>
+              <TableHead className="font-semibold text-right">Jumlah</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -132,12 +123,6 @@ export function ManifestTable({
                   </Badge>
                 </TableCell>
                 <TableCell className="font-medium">{contract.customers?.name}</TableCell>
-                <TableCell className="font-mono text-sm">{contract.contract_ref}</TableCell>
-                <TableCell className="text-center">
-                  <Badge variant="secondary" className="font-semibold">
-                    {contract.current_installment_index + 1}
-                  </Badge>
-                </TableCell>
                 <TableCell className="text-right font-medium">
                   {formatRupiah(contract.daily_installment_amount)}
                 </TableCell>
