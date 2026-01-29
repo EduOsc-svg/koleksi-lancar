@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { CreditCard, AlertTriangle, CheckCircle2, Info } from "lucide-react";
+import { CreditCard, AlertTriangle, CheckCircle2, Info, Check, ChevronsUpDown } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,13 +10,9 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { cn } from "@/lib/utils";
 import { formatRupiah } from "@/lib/format";
 import { useLastPaymentDate, useNextCouponDueDate, calculateLateNoteFromDueDate } from "@/hooks/useLastPaymentDate";
 import { toast } from "sonner";
@@ -55,9 +51,11 @@ export function PaymentForm({ contracts, collectors, onSubmit, isSubmitting }: P
   const { t } = useTranslation();
   
   const [selectedContract, setSelectedContract] = useState("");
+  const [contractOpen, setContractOpen] = useState(false);
   const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split("T")[0]);
   const [paymentAmount, setPaymentAmount] = useState<number | undefined>(undefined);
   const [paymentCollector, setPaymentCollector] = useState("");
+  const [collectorOpen, setCollectorOpen] = useState(false);
   const [paymentNotes, setPaymentNotes] = useState("");
 
   const selectedContractData = contracts?.find((c) => c.id === selectedContract);
@@ -141,19 +139,53 @@ export function PaymentForm({ contracts, collectors, onSubmit, isSubmitting }: P
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
             <Label className="text-sm font-medium">{t("collection.selectContract")}</Label>
-            <Select value={selectedContract} onValueChange={setSelectedContract}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder={t("collection.chooseContract")} />
-              </SelectTrigger>
-              <SelectContent>
-                {contracts?.map((contract) => (
-                  <SelectItem key={contract.id} value={contract.id}>
-                    <span className="font-mono">{contract.contract_ref}</span>
-                    <span className="text-muted-foreground ml-2">- {contract.customers?.name}</span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Popover open={contractOpen} onOpenChange={setContractOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={contractOpen}
+                  className="w-full justify-between font-normal"
+                >
+                  {selectedContract
+                    ? (() => {
+                        const contract = contracts?.find((c) => c.id === selectedContract);
+                        return contract ? `${contract.contract_ref} - ${contract.customers?.name}` : t("collection.chooseContract");
+                      })()
+                    : t("collection.chooseContract")}
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[400px] p-0" align="start">
+                <Command>
+                  <CommandInput placeholder="Cari kontrak atau nama pelanggan..." />
+                  <CommandList>
+                    <CommandEmpty>Kontrak tidak ditemukan.</CommandEmpty>
+                    <CommandGroup>
+                      {contracts?.map((contract) => (
+                        <CommandItem
+                          key={contract.id}
+                          value={`${contract.contract_ref} ${contract.customers?.name || ''}`}
+                          onSelect={() => {
+                            setSelectedContract(contract.id);
+                            setContractOpen(false);
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              selectedContract === contract.id ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                          <span className="font-mono">{contract.contract_ref}</span>
+                          <span className="text-muted-foreground ml-2">- {contract.customers?.name}</span>
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
           </div>
           <div className="space-y-2">
             <Label className="text-sm font-medium">{t("collection.paymentDate")}</Label>
@@ -266,18 +298,52 @@ export function PaymentForm({ contracts, collectors, onSubmit, isSubmitting }: P
           </div>
           <div className="space-y-2">
             <Label className="text-sm font-medium">{t("collection.collector")}</Label>
-            <Select value={paymentCollector} onValueChange={setPaymentCollector}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder={t("collection.selectSales")} />
-              </SelectTrigger>
-              <SelectContent>
-                {collectors?.map((collector) => (
-                  <SelectItem key={collector.id} value={collector.id}>
-                    {collector.collector_code} - {collector.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Popover open={collectorOpen} onOpenChange={setCollectorOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={collectorOpen}
+                  className="w-full justify-between font-normal"
+                >
+                  {paymentCollector
+                    ? (() => {
+                        const collector = collectors?.find((c) => c.id === paymentCollector);
+                        return collector ? `${collector.collector_code} - ${collector.name}` : t("collection.selectSales");
+                      })()
+                    : t("collection.selectSales")}
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[300px] p-0" align="start">
+                <Command>
+                  <CommandInput placeholder="Cari kolektor..." />
+                  <CommandList>
+                    <CommandEmpty>Kolektor tidak ditemukan.</CommandEmpty>
+                    <CommandGroup>
+                      {collectors?.map((collector) => (
+                        <CommandItem
+                          key={collector.id}
+                          value={`${collector.collector_code} ${collector.name}`}
+                          onSelect={() => {
+                            setPaymentCollector(collector.id);
+                            setCollectorOpen(false);
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              paymentCollector === collector.id ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                          {collector.collector_code} - {collector.name}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
           </div>
         </div>
 
