@@ -132,19 +132,29 @@ export default function Collector() {
     
     const worksheet = workbook.addWorksheet("Performa Kolektor");
 
-    // Define columns
-    // A: No, B: Kode, C: Nama, D: Jumlah Tagihan, E: Customer, F: Total Tertagih
+    // Define columns - hanya 4 kolom sesuai permintaan
+    // A: Kode, B: Nama, C: Jumlah Tagihan, D: Total Tertagih
     worksheet.columns = [
-      { header: "No", key: "no", width: 6 },
       { header: "Kode Kolektor", key: "collector_code", width: 18 },
       { header: "Nama", key: "name", width: 30 },
       { header: "Jumlah Tagihan", key: "payment_count", width: 18 },
-      { header: "Customer", key: "unique_customers", width: 15 },
       { header: "Total Tertagih", key: "total_collected", width: 22 },
     ];
 
-    // Style header row
-    worksheet.getRow(1).eachCell((cell) => {
+    // Add title and period info
+    worksheet.insertRow(1, [`LAPORAN PERFORMA KOLEKTOR - ${format(selectedDate, "MMMM yyyy", { locale: localeId }).toUpperCase()}`]);
+    worksheet.mergeCells('A1:D1');
+    const titleCell = worksheet.getCell('A1');
+    titleCell.font = { bold: true, size: 16 };
+    titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
+    titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1F4788' } };
+    titleCell.font = { bold: true, size: 16, color: { argb: 'FFFFFFFF' } };
+
+    // Add empty row
+    worksheet.addRow([]);
+
+    // Style header row (now row 3)
+    worksheet.getRow(3).eachCell((cell) => {
       cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
       cell.fill = {
         type: "pattern",
@@ -162,19 +172,14 @@ export default function Collector() {
 
     // Add data rows
     collectorStats.forEach((collector, index) => {
-      const rowNumber = index + 2;
+      const rowNumber = index + 4; // Starting from row 4 due to title and headers
       
       const row = worksheet.addRow({
-        no: null,
         collector_code: collector.collector_code,
         name: collector.name,
         payment_count: collector.paymentCount,
-        unique_customers: collector.uniqueCustomers,
         total_collected: collector.totalCollected,
       });
-      
-      // Formula for auto-numbering: =ROW()-1
-      worksheet.getCell(`A${rowNumber}`).value = { formula: `ROW()-1` };
       
       // Style each row
       row.eachCell((cell) => {
@@ -187,46 +192,46 @@ export default function Collector() {
       });
     });
 
-    // Add summary row with SUM formulas
-    const lastDataRow = collectorStats.length + 1;
-    const summaryRowNumber = lastDataRow + 2;
+    // Add summary section with formulas
+    const lastDataRow = collectorStats.length + 3; // Adjusted for title
+    const summaryStartRow = lastDataRow + 2;
     
-    worksheet.addRow({});
+    worksheet.addRow([]);
     
-    const summaryRow = worksheet.addRow({
-      no: "TOTAL",
-      collector_code: null,
-      name: null,
-      payment_count: null,
-      unique_customers: null,
-      total_collected: null,
-    });
-    
-    // Dynamic SUM formulas
-    worksheet.getCell(`D${summaryRowNumber}`).value = { formula: `SUM(D2:D${lastDataRow})` };
-    worksheet.getCell(`E${summaryRowNumber}`).value = { formula: `SUM(E2:E${lastDataRow})` };
-    worksheet.getCell(`F${summaryRowNumber}`).value = { formula: `SUM(F2:F${lastDataRow})` };
-    
-    // Style summary row
-    summaryRow.font = { bold: true };
-    summaryRow.fill = {
-      type: "pattern",
-      pattern: "solid",
-      fgColor: { argb: "FFE2EFDA" },
-    };
-    summaryRow.eachCell((cell) => {
-      cell.border = {
-        top: { style: "thin" },
-        left: { style: "thin" },
-        bottom: { style: "thin" },
-        right: { style: "thin" },
-      };
+    // Summary header
+    const summaryHeaderRow = worksheet.addRow(['RINGKASAN']);
+    worksheet.mergeCells(`A${summaryStartRow}:D${summaryStartRow}`);
+    const summaryHeaderCell = worksheet.getCell(`A${summaryStartRow}`);
+    summaryHeaderCell.font = { bold: true, size: 14 };
+    summaryHeaderCell.alignment = { horizontal: 'center' };
+    summaryHeaderCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD9E2F3' } };
+
+    // Summary rows with formulas
+    const summaryRows = [
+      ['Total Kolektor:', { formula: `COUNTA(A4:A${lastDataRow})` }, '', ''],
+      ['Total Tagihan:', { formula: `SUM(C4:C${lastDataRow})` }, '', ''],
+      ['Total Tertagih:', { formula: `SUM(D4:D${lastDataRow})` }, '', ''],
+      ['Rata² per Kolektor:', { formula: `AVERAGE(D4:D${lastDataRow})` }, '', ''],
+    ];
+
+    summaryRows.forEach(rowData => {
+      const row = worksheet.addRow(rowData);
+      row.getCell(1).font = { bold: true };
+      row.getCell(2).font = { bold: true };
+      
+      row.eachCell((cell) => {
+        cell.border = {
+          top: { style: "thin" },
+          left: { style: "thin" },
+          bottom: { style: "thin" },
+          right: { style: "thin" },
+        };
+      });
     });
 
     // Format number columns
     worksheet.getColumn("payment_count").numFmt = "#,##0";
-    worksheet.getColumn("unique_customers").numFmt = "#,##0";
-    worksheet.getColumn("total_collected").numFmt = "#,##0";
+    worksheet.getColumn("total_collected").numFmt = '"Rp "#,##0';
 
     const buffer = await workbook.xlsx.writeBuffer();
     const blob = new Blob([buffer], {
