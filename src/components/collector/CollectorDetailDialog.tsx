@@ -49,13 +49,11 @@ export function CollectorDetailDialog({
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(defaultDate);
 
   const { data: payments, isLoading } = useQuery({
-    queryKey: ['collector_detail_payments', collector?.id, selectedDate ? format(selectedDate, "yyyy-MM-dd") : null],
+    queryKey: ['collector_detail_payments', collector?.id, selectedDate ? format(selectedDate, "yyyy-MM-dd") : 'all'],
     queryFn: async () => {
-      if (!collector?.id || !selectedDate) return [];
+      if (!collector?.id) return [];
 
-      const dateStr = format(selectedDate, "yyyy-MM-dd");
-
-      const { data, error } = await supabase
+      let query = supabase
         .from('payment_logs')
         .select(`
           id,
@@ -74,13 +72,21 @@ export function CollectorDetailDialog({
           )
         `)
         .eq('collector_id', collector.id)
-        .eq('payment_date', dateStr)
+        .order('payment_date', { ascending: false })
         .order('created_at', { ascending: false });
+
+      // Filter by date only if selectedDate is set
+      if (selectedDate) {
+        const dateStr = format(selectedDate, "yyyy-MM-dd");
+        query = query.eq('payment_date', dateStr);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       return data || [];
     },
-    enabled: open && !!collector?.id && !!selectedDate,
+    enabled: open && !!collector?.id,
   });
 
   // Group payments by customer for the same date
@@ -135,31 +141,43 @@ export function CollectorDetailDialog({
         <div className="space-y-4">
           {/* Date Filter */}
           <div className="flex items-center justify-between">
-            <Popover>
-              <PopoverTrigger asChild>
+            <div className="flex items-center gap-2">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-[200px] justify-start text-left font-normal",
+                      !selectedDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {selectedDate
+                      ? format(selectedDate, "dd MMMM yyyy", { locale: localeId })
+                      : "Semua Tanggal"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={selectedDate}
+                    onSelect={setSelectedDate}
+                    locale={localeId}
+                    className="pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
+              {selectedDate && (
                 <Button
-                  variant="outline"
-                  className={cn(
-                    "w-[200px] justify-start text-left font-normal",
-                    !selectedDate && "text-muted-foreground"
-                  )}
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSelectedDate(undefined)}
+                  className="text-muted-foreground hover:text-foreground"
                 >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {selectedDate
-                    ? format(selectedDate, "dd MMMM yyyy", { locale: localeId })
-                    : "Pilih Tanggal"}
+                  Reset
                 </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={setSelectedDate}
-                  locale={localeId}
-                  className="pointer-events-auto"
-                />
-              </PopoverContent>
-            </Popover>
+              )}
+            </div>
 
             <div className="text-sm text-muted-foreground">
               {totalCustomers} pelanggan | Total: <span className="font-semibold text-primary">{formatRupiah(totalCollected)}</span>
