@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { FileSpreadsheet } from "lucide-react";
+import { FileSpreadsheet, Check, ChevronsUpDown, CalendarIcon } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { format, startOfMonth, endOfMonth } from "date-fns";
+import { id as localeId } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -14,26 +14,42 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { Calendar } from "@/components/ui/calendar";
 import { useAggregatedPayments } from "@/hooks/useAggregatedPayments";
 import { useCustomers } from "@/hooks/useCustomers";
 import { formatRupiah, formatDate } from "@/lib/format";
 import { usePagination } from "@/hooks/usePagination";
 import { TablePagination } from "@/components/TablePagination";
 import { SearchInput } from "@/components/ui/search-input";
+import { cn } from "@/lib/utils";
 
 export default function Reports() {
   const { t } = useTranslation();
   const { data: customers } = useCustomers();
-  const [dateFrom, setDateFrom] = useState(
-    new Date(new Date().setDate(1)).toISOString().split("T")[0]
-  );
-  const [dateTo, setDateTo] = useState(new Date().toISOString().split("T")[0]);
+  
+  // Month selection - use Date object for dynamic calendar
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  
+  // Calculate date range from selected date
+  const monthStart = startOfMonth(selectedDate);
+  const monthEnd = endOfMonth(selectedDate);
+  const dateFrom = format(monthStart, "yyyy-MM-dd");
+  const dateTo = format(monthEnd, "yyyy-MM-dd");
+  
+  // Customer combobox state
+  const [customerOpen, setCustomerOpen] = useState(false);
   const [customerId, setCustomerId] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -41,6 +57,9 @@ export default function Reports() {
     dateFrom,
     dateTo
   );
+
+  // Get selected customer info
+  const selectedCustomer = customers?.find(c => c.id === customerId);
 
   // Client-side filtering untuk customer dan pencarian
   const filteredPayments = payments?.filter(payment => {
@@ -56,6 +75,13 @@ export default function Reports() {
     }
     return true;
   });
+  
+  // Handle date selection from calendar
+  const handleDateSelect = (date: Date | undefined) => {
+    if (date) {
+      setSelectedDate(date);
+    }
+  };
 
   const ITEMS_PER_PAGE = 5;
   const { currentPage, totalPages, paginatedItems, goToPage, totalItems } = usePagination(
@@ -256,93 +282,128 @@ export default function Reports() {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold">{t("reports.title")}</h2>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>{t("reports.filter", "Filter")}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {/* Search Input */}
-            <div>
-              <Label>Pencarian</Label>
-              <SearchInput
-                value={searchQuery}
-                onChange={setSearchQuery}
-                placeholder="Cari berdasarkan nama customer, kode customer, kontrak, sales, atau kolektor..."
-                className="mt-1"
-              />
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div>
-              <Label>{t("reports.fromDate", "Dari Tanggal")}</Label>
-              <Input
-                type="date"
-                value={dateFrom}
-                onChange={(e) => setDateFrom(e.target.value)}
-              />
-            </div>
-            <div>
-              <Label>{t("reports.toDate", "Sampai Tanggal")}</Label>
-              <Input
-                type="date"
-                value={dateTo}
-                onChange={(e) => setDateTo(e.target.value)}
-              />
-            </div>
-            <div>
-              <Label>{t("Filter Berdasarkan Customer (Kode)")}</Label>
-              <Select value={customerId} onValueChange={(v) => setCustomerId(v === "all" ? "" : v)}>
-                <SelectTrigger>
-                  <SelectValue placeholder={t("Semua Customer")} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{t("Semua Customer")}</SelectItem>
-                  {customers?.map((customer) => (
-                    <SelectItem key={customer.id} value={customer.id}>
-                      {customer.customer_code} - {customer.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex items-end md:col-span-2 lg:col-span-1">
-              <Button onClick={handleExportExcel} variant="outline" className="w-full">
-                <FileSpreadsheet className="mr-2 h-4 w-4" />
-                {t("reports.exportExcel", "Export Excel")}
-              </Button>
-            </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Summary & Filter Info */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
-            <div className="space-y-2">
-              <h3 className="font-semibold text-lg">Ringkasan Filter Aktif:</h3>
-              <div className="text-sm text-muted-foreground space-y-1">
-                <div>📅 Periode: {formatDate(dateFrom)} - {formatDate(dateTo)}</div>
-                {customerId && (
-                  <div>👤 Customer: {customers?.find(c => c.id === customerId)?.customer_code} - {customers?.find(c => c.id === customerId)?.name}</div>
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold">{t("reports.title")}</h2>
+        
+        <div className="flex gap-4">
+          <Button onClick={handleExportExcel} variant="outline">
+            <FileSpreadsheet className="mr-2 h-4 w-4" />
+            Export Excel
+          </Button>
+          
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(
+                  "w-[200px] justify-start text-left font-normal",
+                  !selectedDate && "text-muted-foreground"
                 )}
-                {!customerId && (
-                  <div>🌍 Menampilkan: Semua Customer</div>
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {format(selectedDate, "MMMM yyyy", { locale: localeId })}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="end">
+              <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={handleDateSelect}
+                defaultMonth={selectedDate}
+                locale={localeId}
+                className="pointer-events-auto"
+              />
+            </PopoverContent>
+          </Popover>
+          
+          {/* Searchable Customer Combobox */}
+          <Popover open={customerOpen} onOpenChange={setCustomerOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                role="combobox"
+                aria-expanded={customerOpen}
+                className="w-[280px] justify-between"
+              >
+                {selectedCustomer
+                  ? `${selectedCustomer.customer_code} - ${selectedCustomer.name}`
+                  : "Semua Customer"}
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[280px] p-0">
+              <Command>
+                <CommandInput placeholder="Cari customer..." />
+                <CommandList>
+                  <CommandEmpty>Customer tidak ditemukan</CommandEmpty>
+                  <CommandGroup>
+                    <CommandItem
+                      value="all"
+                      onSelect={() => {
+                        setCustomerId("");
+                        setCustomerOpen(false);
+                      }}
+                    >
+                      <Check
+                        className={cn(
+                          "mr-2 h-4 w-4",
+                          !customerId ? "opacity-100" : "opacity-0"
+                        )}
+                      />
+                      Semua Customer
+                    </CommandItem>
+                    {customers?.map((customer) => (
+                      <CommandItem
+                        key={customer.id}
+                        value={`${customer.customer_code} ${customer.name}`}
+                        onSelect={() => {
+                          setCustomerId(customer.id);
+                          setCustomerOpen(false);
+                        }}
+                      >
+                        <Check
+                          className={cn(
+                            "mr-2 h-4 w-4",
+                            customerId === customer.id ? "opacity-100" : "opacity-0"
+                          )}
+                        />
+                        {customer.customer_code} - {customer.name}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
+        </div>
+      </div>
+
+      {/* Search and Summary */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <SearchInput
+          value={searchQuery}
+          onChange={setSearchQuery}
+          placeholder="Cari berdasarkan nama, kontrak, sales, atau kolektor..."
+          className="max-w-md"
+        />
+        
+        <Card className="w-full md:w-auto">
+          <CardContent className="py-3 px-4">
+            <div className="flex items-center gap-6">
+              <div className="text-sm text-muted-foreground">
+                📅 {format(monthStart, "d MMM", { locale: localeId })} - {format(monthEnd, "d MMM yyyy", { locale: localeId })}
+                {selectedCustomer && (
+                  <span className="ml-2">• 👤 {selectedCustomer.customer_code}</span>
                 )}
               </div>
+              <div className="text-right">
+                <div className="text-lg font-bold text-primary">{formatRupiah(totalAmount)}</div>
+                <div className="text-xs text-muted-foreground">{filteredPayments?.length || 0} Transaksi</div>
+              </div>
             </div>
-            <div className="text-right">
-              <div className="text-2xl font-bold text-primary">{formatRupiah(totalAmount)}</div>
-              <div className="text-sm text-muted-foreground">Total Pembayaran</div>
-              <div className="text-sm text-muted-foreground">{filteredPayments?.length || 0} Transaksi</div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </div>
 
       <div className="border rounded-lg">
         <Table>
