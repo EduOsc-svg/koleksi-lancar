@@ -83,12 +83,20 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
           padding: 10mm;
           margin: 0 auto;
           page-break-after: always;
+          page-break-inside: avoid;
+          display: flex;
+          justify-content: center;
+          align-items: center;
         }
         .print-coupon-wrapper:last-child { 
           page-break-after: avoid; 
         }
         .coupon-card { 
-          border: none; 
+          border: none;
+          page-break-inside: avoid; 
+        }
+        .coupon-grid {
+          page-break-inside: avoid;
         }
       }
 
@@ -111,7 +119,7 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
         width: 93mm;
         height: 63mm;
         position: relative;
-        background-image: url('/Background with WM.png'); 
+        background-image: url('/Background WM SME.png'); 
         background-size: cover;
         background-position: center;
         overflow: visible;
@@ -151,7 +159,7 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
       .coupon-data {
         position: absolute;
         font-size: 11pt;
-        line-height: 1.2;
+        line-height: 2;
         color: #000;
         z-index: 5;
         white-space: nowrap;
@@ -188,12 +196,16 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
       .pos-jatuhtempo { left: 15px; top: 140px; }
       .pos-angsuran   { left: 15px; top: 155px; }
       
-      /* Style khusus untuk angka angsuran yang center */
-      .pos-angsuran .angka-center {
+      /* Angka angsuran yang center - posisi terpisah */
+      .pos-angka-center {
         position: absolute;
         left: 50%;
+        top: 155px;
         transform: translateX(-50%);
-        margin-left: -15px;
+        font-size: 11pt;
+        font-weight: bold;
+        color: #000;
+        z-index: 6;
       }
 
       /* Area Kanan (Besar Angsuran) */
@@ -219,10 +231,26 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
       .pos-kantor {
         width: 100%;
         text-align: center;
-        bottom: 10px; 
+        bottom: 5px; 
         font-size: 11pt;
         font-weight: normal;
         color: red;
+      }
+
+      /* =========================================
+         7. URGENT COUPON STYLES (10 HARI TERAKHIR)
+         ========================================= */
+      .coupon-urgent .coupon-data {
+        color: red !important;
+      }
+      
+      .coupon-urgent .pos-judul {
+        color: red !important;
+      }
+      
+      .coupon-urgent .pos-angka-center {
+        color: red !important;
+        font-weight: bold;
       }
     `;
     
@@ -255,6 +283,13 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
     return text.substring(0, maxLength) + "...";
   };
 
+  // Check if coupon is in last 10 days of tenor
+  const isUrgentCoupon = (coupon: InstallmentCoupon, tenor: number) => {
+    const installmentIndex = coupon.installment_index;
+    const remainingDays = tenor - installmentIndex;
+    return remainingDays <= 10;
+  };
+
   // Generate No. Faktur format: TENOR/KODE_SALES/KODE_KONSUMEN
   const noFaktur = `${contract.tenor_days}/${contract.customers?.sales_agents?.agent_code || "-"}/${contract.customers?.customer_code || "-"}`;
 
@@ -276,18 +311,22 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
 
   // Use portal to render directly into body for proper print isolation
   const printContent = (
-    <div className="print-coupon-wrapper">
+    <>
       {couponPages.map((pagesCoupons, pageIndex) => (
-        <div key={pageIndex} className="coupon-grid">
-          {Array.from({ length: 9 }, (_, index) => {
-            const coupon = pagesCoupons[index];
-            
-            if (!coupon) {
-              return <div key={`empty-${index}`} className="coupon-card" style={{ visibility: 'hidden' }}></div>;
-            }
+        <div key={pageIndex} className="print-coupon-wrapper">
+          <div className="coupon-grid">
+            {Array.from({ length: 9 }, (_, index) => {
+              const coupon = pagesCoupons[index];
+              
+              if (!coupon) {
+                return <div key={`empty-${index}`} className="coupon-card" style={{ visibility: 'hidden' }}></div>;
+              }
+
+              // Check if this coupon is urgent (last 10 days)
+              const isUrgent = isUrgentCoupon(coupon, contract.tenor_days);
               
             return (
-              <div key={coupon.id} className="coupon-card">
+              <div key={coupon.id} className={`coupon-card ${isUrgent ? 'coupon-urgent' : ''}`}>
                 {/* Judul Voucher */}
                 <div className="coupon-data pos-judul">VOUCHER ANGSURAN</div>
 
@@ -313,7 +352,12 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
 
                 {/* Angsuran Ke- */}
                 <div className="coupon-data pos-angsuran">
-                  <span className="label">Angsuran Ke-</span><span className="value">: <span className="angka-center">{coupon.installment_index}</span></span>
+                  <span className="label">Angsuran Ke-</span><span className="value">:</span>
+                </div>
+                
+                {/* Angka Angsuran - Center */}
+                <div className="coupon-data pos-angka-center">
+                  {coupon.installment_index}
                 </div>
 
                 {/* Besar Angsuran - Label */}
@@ -327,9 +371,10 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
               </div>
             );
           })}
+          </div>
         </div>
       ))}
-    </div>
+    </>
   );
 
   // Render into body for proper print isolation

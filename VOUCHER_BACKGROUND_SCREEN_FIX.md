@@ -3,7 +3,7 @@
 ## 📋 Perubahan yang Dilakukan
 
 ### 🎨 **Background Asset Update**
-- ✅ **Background Baru**: `Background with WM.png` dari folder assets
+- ✅ **Background Baru**: `Background with WM SME.png` dari folder assets
 - ❌ **Background Lama Dihapus**: 
   - `Voucher background Hitam.png` 
   - `Voucher backround Merah.png`
@@ -24,7 +24,7 @@ const bgType = isUrgentTenor ? 'merah' : backgroundType;
 
 // AFTER (Single background)
 // No backgroundType prop needed
-<img src="/Background with WM.png" alt="Background Voucher" />
+<img src="/Background with WM SME.png" alt="Background Voucher" />
 ```
 
 #### CSS Structure
@@ -63,7 +63,7 @@ const bgType = isUrgentTenor ? 'merah' : backgroundType;
 
 ```
 public/
-└── Background with WM.png          # ✨ New watermarked background
+└── Background with WM SME.png          # ✨ New watermarked background
 
 src/
 ├── components/

@@ -35,7 +35,7 @@ Menggunakan file `backup/print-a4-landscape.css` sebagai basis untuk implementas
 ```css
 /* Print-efficient background */
 .voucher-container {
-    background-image: url('/Background with WM.png');
+    background-image: url('/Background with WM SME.png');
     background-size: 100% 100%;
     background-repeat: no-repeat;
 }
