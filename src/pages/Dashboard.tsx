@@ -162,7 +162,6 @@ export default function Dashboard() {
           value={totalExpenses}
           valueColor="text-orange-600"
           isNegative
-          onDetailClick={() => setExpenseDialogOpen(true)}
         />
 
         <StatCard
