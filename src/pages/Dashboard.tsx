@@ -3,9 +3,11 @@ import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useCollectionTrend } from "@/hooks/useCollectionTrend";
 import { useMonthlyPerformance, useYearlyTarget } from "@/hooks/useMonthlyPerformance";
+import { useYearlyFinancialSummary } from "@/hooks/useYearlyFinancialSummary";
 import { useOperationalExpenses, useOperationalExpenseMutations, OperationalExpenseInput } from "@/hooks/useOperationalExpenses";
 import { useAgentContractHistory } from "@/hooks/useAgentPerformance";
 import { formatRupiah } from "@/lib/format";
+import { exportYearlyReportToExcel } from "@/lib/exportYearlyReport";
 import {
   LineChart,
   Line,
@@ -14,9 +16,11 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  BarChart,
+  Bar,
 } from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
-import { TrendingUp, Users, ChevronRight, ArrowLeft, DollarSign, Target, Wallet, Percent, Calendar, Plus, Trash2, Settings } from "lucide-react";
+import { TrendingUp, Users, ChevronRight, ArrowLeft, DollarSign, Target, Wallet, Percent, Calendar, Plus, Trash2, Settings, FileSpreadsheet, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CurrencyInput } from "@/components/ui/currency-input";
@@ -57,6 +61,7 @@ export default function Dashboard() {
   const { data: trendData, isLoading: isLoadingTrend } = useCollectionTrend(30);
   const { data: monthlyData, isLoading: isLoadingMonthly } = useMonthlyPerformance(selectedMonth);
   const { data: yearlyData, isLoading: isLoadingYearly } = useYearlyTarget(selectedYear);
+  const { data: yearlyFinancial, isLoading: isLoadingYearlyFinancial } = useYearlyFinancialSummary(selectedYear);
   const { data: expenses, isLoading: isLoadingExpenses } = useOperationalExpenses(selectedMonth);
   const { data: historyData, isLoading: isLoadingHistory } = useAgentContractHistory(selectedAgent?.id || null);
   const { createExpense, deleteExpense } = useOperationalExpenseMutations();
@@ -103,6 +108,21 @@ export default function Dashboard() {
       notes: '',
     });
     setExpenseDialogOpen(false);
+  };
+
+  // Handle export to Excel
+  const handleExportYearlyReport = async () => {
+    if (!yearlyFinancial) {
+      toast.error('Data tahunan belum tersedia');
+      return;
+    }
+    try {
+      await exportYearlyReportToExcel(yearlyFinancial, selectedYear.getFullYear());
+      toast.success('Laporan tahunan berhasil diexport');
+    } catch (error) {
+      toast.error('Gagal mengexport laporan');
+      console.error(error);
+    }
   };
 
   return (
@@ -200,47 +220,169 @@ export default function Dashboard() {
         </CardContent>
       </Card>
 
-      {/* Yearly Target Section */}
+      {/* Yearly Financial Summary Section */}
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Target className="h-5 w-5 text-orange-500" />
-              <CardTitle>Target Penagihan Tahunan</CardTitle>
+              <BarChart3 className="h-5 w-5 text-indigo-500" />
+              <CardTitle>Kalkulasi Keuangan Tahunan</CardTitle>
             </div>
-            <Select
-              value={selectedYear.getFullYear().toString()}
-              onValueChange={(val) => setSelectedYear(new Date(parseInt(val), 0, 1))}
-            >
-              <SelectTrigger className="w-[120px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {yearOptions.map((year) => (
-                  <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex items-center gap-2">
+              <Select
+                value={selectedYear.getFullYear().toString()}
+                onValueChange={(val) => setSelectedYear(new Date(parseInt(val), 0, 1))}
+              >
+                <SelectTrigger className="w-[120px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {yearOptions.map((year) => (
+                    <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleExportYearlyReport}
+                disabled={isLoadingYearlyFinancial || !yearlyFinancial}
+              >
+                <FileSpreadsheet className="h-4 w-4 mr-2" />
+                Export Excel
+              </Button>
+            </div>
           </div>
         </CardHeader>
-        <CardContent>
-          {isLoadingYearly ? (
-            <Skeleton className="h-[100px] w-full" />
+        <CardContent className="space-y-6">
+          {isLoadingYearlyFinancial ? (
+            <Skeleton className="h-[400px] w-full" />
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="text-center p-4 bg-muted/50 rounded-lg">
-                <p className="text-sm text-muted-foreground mb-1">Harus Ditagih</p>
-                <p className="text-xl font-bold text-orange-600">{formatRupiah(yearlyData?.total_to_collect ?? 0)}</p>
+            <>
+              {/* Summary Cards */}
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                <div className="text-center p-4 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
+                  <p className="text-xs text-muted-foreground mb-1">Total Modal</p>
+                  <p className="text-lg font-bold text-blue-600">{formatRupiah(yearlyFinancial?.total_modal ?? 0)}</p>
+                </div>
+                <div className="text-center p-4 bg-indigo-50 dark:bg-indigo-950/30 rounded-lg border border-indigo-200 dark:border-indigo-800">
+                  <p className="text-xs text-muted-foreground mb-1">Total Omset</p>
+                  <p className="text-lg font-bold text-indigo-600">{formatRupiah(yearlyFinancial?.total_omset ?? 0)}</p>
+                </div>
+                <div className="text-center p-4 bg-green-50 dark:bg-green-950/30 rounded-lg border border-green-200 dark:border-green-800">
+                  <p className="text-xs text-muted-foreground mb-1">Keuntungan Kotor</p>
+                  <p className="text-lg font-bold text-green-600">{formatRupiah(yearlyFinancial?.total_profit ?? 0)}</p>
+                </div>
+                <div className="text-center p-4 bg-purple-50 dark:bg-purple-950/30 rounded-lg border border-purple-200 dark:border-purple-800">
+                  <p className="text-xs text-muted-foreground mb-1">Total Komisi</p>
+                  <p className="text-lg font-bold text-purple-600">{formatRupiah(yearlyFinancial?.total_commission ?? 0)}</p>
+                </div>
+                <div className="text-center p-4 bg-orange-50 dark:bg-orange-950/30 rounded-lg border border-orange-200 dark:border-orange-800">
+                  <p className="text-xs text-muted-foreground mb-1">Biaya Operasional</p>
+                  <p className="text-lg font-bold text-orange-600">{formatRupiah(yearlyFinancial?.total_expenses ?? 0)}</p>
+                </div>
+                <div className={`text-center p-4 rounded-lg border ${
+                  (yearlyFinancial?.net_profit ?? 0) >= 0 
+                    ? 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800' 
+                    : 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800'
+                }`}>
+                  <p className="text-xs text-muted-foreground mb-1">Keuntungan Bersih</p>
+                  <p className={`text-lg font-bold ${(yearlyFinancial?.net_profit ?? 0) >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                    {formatRupiah(yearlyFinancial?.net_profit ?? 0)}
+                  </p>
+                </div>
               </div>
-              <div className="text-center p-4 bg-muted/50 rounded-lg">
-                <p className="text-sm text-muted-foreground mb-1">Sudah Tertagih</p>
-                <p className="text-xl font-bold text-green-600">{formatRupiah(yearlyData?.total_collected ?? 0)}</p>
+
+              {/* Monthly Breakdown Chart */}
+              <div>
+                <h4 className="text-sm font-medium mb-3">Breakdown Bulanan</h4>
+                <div className="h-[250px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={yearlyFinancial?.monthly_breakdown || []}>
+                      <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                      <XAxis dataKey="monthLabel" className="text-xs" />
+                      <YAxis tickFormatter={(v) => `${(v / 1000000).toFixed(0)}M`} className="text-xs" />
+                      <Tooltip
+                        formatter={(value: number, name: string) => {
+                          const labels: Record<string, string> = {
+                            total_modal: 'Modal',
+                            total_omset: 'Omset',
+                            profit: 'Keuntungan',
+                            collected: 'Tertagih',
+                          };
+                          return [formatRupiah(value), labels[name] || name];
+                        }}
+                        contentStyle={{ 
+                          backgroundColor: "hsl(var(--card))", 
+                          border: "1px solid hsl(var(--border))" 
+                        }}
+                      />
+                      <Bar dataKey="total_modal" fill="hsl(217, 91%, 60%)" name="total_modal" />
+                      <Bar dataKey="total_omset" fill="hsl(239, 84%, 67%)" name="total_omset" />
+                      <Bar dataKey="profit" fill="hsl(142, 76%, 36%)" name="profit" />
+                      <Bar dataKey="collected" fill="hsl(168, 84%, 38%)" name="collected" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
               </div>
-              <div className="text-center p-4 bg-muted/50 rounded-lg">
-                <p className="text-sm text-muted-foreground mb-1">Tingkat Penagihan</p>
-                <p className="text-xl font-bold text-blue-600">{(yearlyData?.collection_rate ?? 0).toFixed(1)}%</p>
+
+              {/* Collection Stats */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="text-center p-4 bg-muted/50 rounded-lg">
+                  <p className="text-sm text-muted-foreground mb-1">Jumlah Kontrak</p>
+                  <p className="text-xl font-bold">{yearlyFinancial?.contracts_count ?? 0}</p>
+                </div>
+                <div className="text-center p-4 bg-muted/50 rounded-lg">
+                  <p className="text-sm text-muted-foreground mb-1">Sudah Tertagih</p>
+                  <p className="text-xl font-bold text-green-600">{formatRupiah(yearlyFinancial?.total_collected ?? 0)}</p>
+                </div>
+                <div className="text-center p-4 bg-muted/50 rounded-lg">
+                  <p className="text-sm text-muted-foreground mb-1">Sisa Tagihan</p>
+                  <p className="text-xl font-bold text-orange-600">{formatRupiah(yearlyFinancial?.total_to_collect ?? 0)}</p>
+                </div>
+                <div className="text-center p-4 bg-muted/50 rounded-lg">
+                  <p className="text-sm text-muted-foreground mb-1">Tingkat Penagihan</p>
+                  <p className="text-xl font-bold text-blue-600">{(yearlyFinancial?.collection_rate ?? 0).toFixed(1)}%</p>
+                </div>
               </div>
-            </div>
+
+              {/* Agent Performance Table */}
+              {yearlyFinancial?.agents && yearlyFinancial.agents.length > 0 && (
+                <div>
+                  <h4 className="text-sm font-medium mb-3">Performa Sales Agent Tahunan</h4>
+                  <div className="rounded-md border">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="w-[50px]">#</TableHead>
+                          <TableHead>Kode</TableHead>
+                          <TableHead>Nama</TableHead>
+                          <TableHead className="text-right">Modal</TableHead>
+                          <TableHead className="text-right">Omset</TableHead>
+                          <TableHead className="text-right">Keuntungan</TableHead>
+                          <TableHead className="text-right">Komisi</TableHead>
+                          <TableHead className="text-right">Kontrak</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {yearlyFinancial.agents.map((agent, index) => (
+                          <TableRow key={agent.agent_id}>
+                            <TableCell>{index + 1}</TableCell>
+                            <TableCell className="font-mono">{agent.agent_code}</TableCell>
+                            <TableCell>{agent.agent_name}</TableCell>
+                            <TableCell className="text-right text-blue-600">{formatRupiah(agent.total_modal)}</TableCell>
+                            <TableCell className="text-right">{formatRupiah(agent.total_omset)}</TableCell>
+                            <TableCell className="text-right text-green-600">{formatRupiah(agent.profit)}</TableCell>
+                            <TableCell className="text-right text-purple-600">{formatRupiah(agent.total_commission)}</TableCell>
+                            <TableCell className="text-right">{agent.contracts_count}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </CardContent>
       </Card>
