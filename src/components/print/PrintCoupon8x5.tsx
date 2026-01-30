@@ -192,6 +192,7 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
       /* Area Kiri (Data Utama) */
       .pos-faktur     { left: 15px; top: 95px; }
       .pos-nama       { left: 15px; top: 110px; }
+      .pos-kode-kontrak { right: 15px; top: 110px; font-size: 13pt; font-weight: bold; }
       .pos-alamat     { left: 15px; top: 125px; max-width: 230px; overflow: hidden; text-overflow: ellipsis; }
       .pos-jatuhtempo { left: 15px; top: 140px; }
       .pos-angsuran   { left: 15px; top: 155px; }
@@ -249,6 +250,11 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
       }
       
       .coupon-urgent .pos-angka-center {
+        color: red !important;
+        font-weight: bold;
+      }
+
+      .coupon-urgent .pos-kode-kontrak {
         color: red !important;
         font-weight: bold;
       }
@@ -338,6 +344,11 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
                 {/* Nama */}
                 <div className="coupon-data pos-nama">
                   <span className="label">Nama</span><span className="value">: {truncateText(contract.customers?.name || "-", 25)}</span>
+                </div>
+
+                {/* Kode Kontrak - di pojok kanan baris nama */}
+                <div className="coupon-data pos-kode-kontrak">
+                  {contract.contract_ref}
                 </div>
 
                 {/* Alamat */}

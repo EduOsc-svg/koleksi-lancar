@@ -219,7 +219,7 @@ export function PaymentForm({ contracts, collectors, onSubmit, isSubmitting }: P
                   <span className="font-medium">{formatRupiah(selectedContractData.total_loan_amount)}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">{t("contracts.installmentAmount")}</span>
+                  <span className="text-muted-foreground">{t("Cicilan yang dibayar")}</span>
                   <span className="font-semibold text-primary">{formatRupiah(selectedContractData.daily_installment_amount)}</span>
                 </div>
 
