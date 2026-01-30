@@ -32,7 +32,6 @@ import { useCustomers } from "@/hooks/useCustomers";
 import { formatRupiah, formatDate } from "@/lib/format";
 import { usePagination } from "@/hooks/usePagination";
 import { TablePagination } from "@/components/TablePagination";
-import { SearchInput } from "@/components/ui/search-input";
 import { cn } from "@/lib/utils";
 
 export default function Reports() {
@@ -51,7 +50,7 @@ export default function Reports() {
   // Customer combobox state
   const [customerOpen, setCustomerOpen] = useState(false);
   const [customerId, setCustomerId] = useState<string>("");
-  const [searchQuery, setSearchQuery] = useState("");
+  
 
   const { data: payments, isLoading } = useAggregatedPayments(
     dateFrom,
@@ -61,18 +60,9 @@ export default function Reports() {
   // Get selected customer info
   const selectedCustomer = customers?.find(c => c.id === customerId);
 
-  // Client-side filtering untuk customer dan pencarian
+  // Client-side filtering untuk customer
   const filteredPayments = payments?.filter(payment => {
     if (customerId && payment.customer_id !== customerId) return false;
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      return (
-        payment.customer_name.toLowerCase().includes(query) ||
-        payment.contract_ref.toLowerCase().includes(query) ||
-        payment.sales_agent_name?.toLowerCase().includes(query) ||
-        payment.collector_name?.toLowerCase().includes(query)
-      );
-    }
     return true;
   });
   
@@ -378,32 +368,23 @@ export default function Reports() {
         </div>
       </div>
 
-      {/* Search and Summary */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <SearchInput
-          value={searchQuery}
-          onChange={setSearchQuery}
-          placeholder="Cari berdasarkan nama, kontrak, sales, atau kolektor..."
-          className="max-w-md"
-        />
-        
-        <Card className="w-full md:w-auto">
-          <CardContent className="py-3 px-4">
-            <div className="flex items-center gap-6">
-              <div className="text-sm text-muted-foreground">
-                📅 {format(monthStart, "d MMM", { locale: localeId })} - {format(monthEnd, "d MMM yyyy", { locale: localeId })}
-                {selectedCustomer && (
-                  <span className="ml-2">• 👤 {selectedCustomer.customer_code}</span>
-                )}
-              </div>
-              <div className="text-right">
-                <div className="text-lg font-bold text-primary">{formatRupiah(totalAmount)}</div>
-                <div className="text-xs text-muted-foreground">{filteredPayments?.length || 0} Transaksi</div>
-              </div>
+      {/* Summary Card */}
+      <Card className="w-full">
+        <CardContent className="py-3 px-4">
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-muted-foreground">
+              📅 {format(monthStart, "d MMM", { locale: localeId })} - {format(monthEnd, "d MMM yyyy", { locale: localeId })}
+              {selectedCustomer && (
+                <span className="ml-2">• 👤 {selectedCustomer.customer_code} - {selectedCustomer.name}</span>
+              )}
             </div>
-          </CardContent>
-        </Card>
-      </div>
+            <div className="text-right">
+              <div className="text-lg font-bold text-primary">{formatRupiah(totalAmount)}</div>
+              <div className="text-xs text-muted-foreground">{filteredPayments?.length || 0} Transaksi</div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="border rounded-lg">
         <Table>
