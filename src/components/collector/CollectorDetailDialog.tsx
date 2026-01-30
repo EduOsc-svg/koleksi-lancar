@@ -89,44 +89,15 @@ export function CollectorDetailDialog({
     enabled: open && !!collector?.id,
   });
 
-  // Group payments by customer for the same date
-  const groupedPayments = payments?.reduce((acc, payment) => {
-    const customerId = payment.credit_contracts?.customer_id;
-    if (!customerId) return acc;
+  // Simple list of payments with contract ref, date, and amount
+  const paymentList = payments?.map(payment => ({
+    contract_ref: payment.credit_contracts?.contract_ref || '-',
+    payment_date: payment.payment_date,
+    amount_paid: Number(payment.amount_paid),
+  })) || [];
 
-    const key = `${customerId}-${payment.credit_contracts?.contract_ref}`;
-    if (!acc[key]) {
-      acc[key] = {
-        customer_name: payment.credit_contracts?.customers?.name || 'Unknown',
-        customer_code: payment.credit_contracts?.customers?.customer_code || '-',
-        contract_ref: payment.credit_contracts?.contract_ref || '-',
-        daily_amount: Number(payment.credit_contracts?.daily_installment_amount) || 0,
-        total_paid: 0,
-        coupon_count: 0,
-        coupon_indices: [] as number[],
-      };
-    }
-    acc[key].total_paid += Number(payment.amount_paid);
-    acc[key].coupon_count += 1;
-    acc[key].coupon_indices.push(payment.installment_index);
-    return acc;
-  }, {} as Record<string, {
-    customer_name: string;
-    customer_code: string;
-    contract_ref: string;
-    daily_amount: number;
-    total_paid: number;
-    coupon_count: number;
-    coupon_indices: number[];
-  }>) || {};
-
-  const groupedList = Object.values(groupedPayments).map(item => ({
-    ...item,
-    coupon_indices: item.coupon_indices.sort((a, b) => a - b),
-  }));
-
-  const totalCollected = groupedList.reduce((sum, item) => sum + item.total_paid, 0);
-  const totalCustomers = groupedList.length;
+  const totalCollected = paymentList.reduce((sum, item) => sum + item.amount_paid, 0);
+  const totalPayments = paymentList.length;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -180,7 +151,7 @@ export function CollectorDetailDialog({
             </div>
 
             <div className="text-sm text-muted-foreground">
-              {totalCustomers} pelanggan | Total: <span className="font-semibold text-primary">{formatRupiah(totalCollected)}</span>
+              {totalPayments} transaksi | Total: <span className="font-semibold text-primary">{formatRupiah(totalCollected)}</span>
             </div>
           </div>
 
@@ -189,45 +160,36 @@ export function CollectorDetailDialog({
             <TableHeader>
               <TableRow>
                 <TableHead>#</TableHead>
-                <TableHead>Kode</TableHead>
-                <TableHead>Nama Pelanggan</TableHead>
-                <TableHead>Kontrak</TableHead>
-                <TableHead className="text-center">Kupon</TableHead>
+                <TableHead>Kode Kontrak</TableHead>
+                <TableHead>Tanggal</TableHead>
                 <TableHead className="text-right">Jumlah</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground">
+                  <TableCell colSpan={4} className="text-center text-muted-foreground">
                     Memuat data...
                   </TableCell>
                 </TableRow>
-              ) : groupedList.length === 0 ? (
+              ) : paymentList.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground">
-                    Tidak ada tagihan pada tanggal ini
+                  <TableCell colSpan={4} className="text-center text-muted-foreground">
+                    Tidak ada tagihan
                   </TableCell>
                 </TableRow>
               ) : (
-                groupedList.map((item, i) => (
+                paymentList.map((item, i) => (
                   <TableRow key={i}>
                     <TableCell>{i + 1}</TableCell>
                     <TableCell>
-                      <Badge variant="secondary">{item.customer_code}</Badge>
-                    </TableCell>
-                    <TableCell className="font-medium">{item.customer_name}</TableCell>
-                    <TableCell>
                       <Badge variant="outline">{item.contract_ref}</Badge>
                     </TableCell>
-                    <TableCell className="text-center">
-                      <Badge>{item.coupon_count}x</Badge>
-                      <span className="ml-1 text-xs text-muted-foreground">
-                        ({item.coupon_indices.join(', ')})
-                      </span>
+                    <TableCell>
+                      {format(new Date(item.payment_date), "dd MMM yyyy", { locale: localeId })}
                     </TableCell>
                     <TableCell className="text-right font-medium text-primary">
-                      {formatRupiah(item.total_paid)}
+                      {formatRupiah(item.amount_paid)}
                     </TableCell>
                   </TableRow>
                 ))
