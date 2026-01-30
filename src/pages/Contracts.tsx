@@ -662,7 +662,12 @@ export default function Contracts() {
                 <div className="grid grid-cols-2 gap-4 p-4 bg-muted rounded-lg">
                   <div>
                     <p className="text-sm text-muted-foreground">Pelanggan</p>
-                    <p className="font-medium">{selectedContract.customers?.name}</p>
+                    <p className="font-medium">
+                      {selectedContract.customers?.name}
+                      {selectedContract.customers?.customer_code && (
+                        <span className="ml-2 text-muted-foreground">({selectedContract.customers.customer_code})</span>
+                      )}
+                    </p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">No. Faktur</p>
@@ -670,7 +675,13 @@ export default function Contracts() {
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Sales Agent</p>
-                    <p className="font-medium">{salesAgents?.find(a => a.id === selectedContract.sales_agent_id)?.name || "-"}</p>
+                    <p className="font-medium">
+                      {salesAgents?.find(a => a.id === selectedContract.sales_agent_id)?.name || "-"}
+                      {(() => {
+                        const agent = salesAgents?.find(a => a.id === selectedContract.sales_agent_id);
+                        return agent?.agent_code ? <span className="ml-2 text-muted-foreground">({agent.agent_code})</span> : null;
+                      })()}
+                    </p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Tanggal Mulai</p>
