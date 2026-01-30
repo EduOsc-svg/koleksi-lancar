@@ -46,8 +46,6 @@ export default function Collector() {
   // Month selection - use Date object for dynamic calendar
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   
-  // Filter by collector
-  const [selectedCollector, setSelectedCollector] = useState<string>("");
   
   // Search state
   const [searchQuery, setSearchQuery] = useState("");
@@ -73,8 +71,8 @@ export default function Collector() {
   const dateTo = format(monthEnd, "yyyy-MM-dd");
   
   // Fetch payments for the selected period
-  const { data: payments, isLoading } = usePayments(dateFrom, dateTo, selectedCollector || undefined);
-  const { data: aggregatedPayments } = useAggregatedPayments(dateFrom, dateTo, selectedCollector || undefined);
+  const { data: payments, isLoading } = usePayments(dateFrom, dateTo, undefined);
+  const { data: aggregatedPayments } = useAggregatedPayments(dateFrom, dateTo, undefined);
   
   // Calculate collector statistics
   const collectorStats = collectors?.map(collector => {
@@ -296,21 +294,6 @@ export default function Collector() {
               />
             </PopoverContent>
           </Popover>
-          
-          <Select value={selectedCollector} onValueChange={(v) => setSelectedCollector(v === "all" ? "" : v)}>
-            <SelectTrigger className="w-[200px]">
-              <Users className="mr-2 h-4 w-4" />
-              <SelectValue placeholder="Semua Kolektor" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Semua Kolektor</SelectItem>
-              {collectors?.map((collector) => (
-                <SelectItem key={collector.id} value={collector.id}>
-                  {collector.collector_code} - {collector.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
         </div>
       </div>
 
