@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { format } from "date-fns";
+import { format, startOfMonth, endOfMonth } from "date-fns";
 import { id as localeId } from "date-fns/locale";
 import { CalendarIcon } from "lucide-react";
 import {
@@ -16,6 +16,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
@@ -28,6 +35,8 @@ import { cn } from "@/lib/utils";
 import { formatRupiah } from "@/lib/format";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+
+type FilterMode = "all" | "daily" | "monthly";
 
 interface CollectorDetailDialogProps {
   open: boolean;
@@ -46,10 +55,23 @@ export function CollectorDetailDialog({
   collector,
   defaultDate,
 }: CollectorDetailDialogProps) {
+  const [filterMode, setFilterMode] = useState<FilterMode>("all");
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(defaultDate);
+  const [selectedMonth, setSelectedMonth] = useState<Date>(defaultDate);
+
+  // Generate query key based on filter mode
+  const getQueryKey = () => {
+    if (filterMode === "daily" && selectedDate) {
+      return format(selectedDate, "yyyy-MM-dd");
+    }
+    if (filterMode === "monthly") {
+      return format(selectedMonth, "yyyy-MM");
+    }
+    return "all";
+  };
 
   const { data: payments, isLoading } = useQuery({
-    queryKey: ['collector_detail_payments', collector?.id, selectedDate ? format(selectedDate, "yyyy-MM-dd") : 'all'],
+    queryKey: ['collector_detail_payments', collector?.id, filterMode, getQueryKey()],
     queryFn: async () => {
       if (!collector?.id) return [];
 
@@ -75,10 +97,14 @@ export function CollectorDetailDialog({
         .order('payment_date', { ascending: false })
         .order('created_at', { ascending: false });
 
-      // Filter by date only if selectedDate is set
-      if (selectedDate) {
+      // Filter based on mode
+      if (filterMode === "daily" && selectedDate) {
         const dateStr = format(selectedDate, "yyyy-MM-dd");
         query = query.eq('payment_date', dateStr);
+      } else if (filterMode === "monthly") {
+        const startDate = format(startOfMonth(selectedMonth), "yyyy-MM-dd");
+        const endDate = format(endOfMonth(selectedMonth), "yyyy-MM-dd");
+        query = query.gte('payment_date', startDate).lte('payment_date', endDate);
       }
 
       const { data, error } = await query;
@@ -110,43 +136,72 @@ export function CollectorDetailDialog({
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* Date Filter */}
-          <div className="flex items-center justify-between">
+          {/* Filter Controls */}
+          <div className="flex items-center justify-between flex-wrap gap-2">
             <div className="flex items-center gap-2">
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-[200px] justify-start text-left font-normal",
-                      !selectedDate && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {selectedDate
-                      ? format(selectedDate, "dd MMMM yyyy", { locale: localeId })
-                      : "Semua Tanggal"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={selectedDate}
-                    onSelect={setSelectedDate}
-                    locale={localeId}
-                    className="pointer-events-auto"
-                  />
-                </PopoverContent>
-              </Popover>
-              {selectedDate && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setSelectedDate(undefined)}
-                  className="text-muted-foreground hover:text-foreground"
-                >
-                  Reset
-                </Button>
+              {/* Filter Mode Selector */}
+              <Select value={filterMode} onValueChange={(v) => setFilterMode(v as FilterMode)}>
+                <SelectTrigger className="w-[130px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Semua</SelectItem>
+                  <SelectItem value="daily">Harian</SelectItem>
+                  <SelectItem value="monthly">Bulanan</SelectItem>
+                </SelectContent>
+              </Select>
+
+              {/* Daily Date Picker */}
+              {filterMode === "daily" && (
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-[180px] justify-start text-left font-normal",
+                        !selectedDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {selectedDate
+                        ? format(selectedDate, "dd MMM yyyy", { locale: localeId })
+                        : "Pilih Tanggal"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={selectedDate}
+                      onSelect={setSelectedDate}
+                      locale={localeId}
+                      className="pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
+              )}
+
+              {/* Monthly Picker */}
+              {filterMode === "monthly" && (
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="w-[180px] justify-start text-left font-normal"
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {format(selectedMonth, "MMMM yyyy", { locale: localeId })}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={selectedMonth}
+                      onSelect={(date) => date && setSelectedMonth(date)}
+                      locale={localeId}
+                      className="pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
               )}
             </div>
 
