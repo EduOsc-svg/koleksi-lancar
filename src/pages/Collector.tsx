@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { format, startOfMonth, endOfMonth } from "date-fns";
 import { id as localeId } from "date-fns/locale";
-import { Wallet, TrendingUp, Users, CalendarIcon, DollarSign, Download } from "lucide-react";
+import { Wallet, TrendingUp, Users, CalendarIcon, DollarSign, Download, Eye } from "lucide-react";
 import { toast } from "sonner";
 import ExcelJS from "exceljs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -37,6 +37,7 @@ import { formatRupiah } from "@/lib/format";
 import { TablePagination } from "@/components/TablePagination";
 import { usePagination } from "@/hooks/usePagination";
 import { SearchInput } from "@/components/ui/search-input";
+import { CollectorDetailDialog } from "@/components/collector/CollectorDetailDialog";
 
 export default function Collector() {
   const { t } = useTranslation();
@@ -50,6 +51,20 @@ export default function Collector() {
   
   // Search state
   const [searchQuery, setSearchQuery] = useState("");
+  
+  // Detail dialog state
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [selectedCollectorDetail, setSelectedCollectorDetail] = useState<{
+    id: string;
+    name: string;
+    collector_code: string;
+  } | null>(null);
+  
+  // Handle view detail
+  const handleViewDetail = (collector: { id: string; name: string; collector_code: string }) => {
+    setSelectedCollectorDetail(collector);
+    setDetailDialogOpen(true);
+  };
   
   // Calculate date range from selected date
   const monthStart = startOfMonth(selectedDate);
@@ -376,18 +391,19 @@ export default function Collector() {
                 <TableHead className="text-right">Jumlah Tagihan</TableHead>
                 <TableHead className="text-right">Customer</TableHead>
                 <TableHead className="text-right">Total Tertagih</TableHead>
+                <TableHead className="text-center">Aksi</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground">
+                  <TableCell colSpan={7} className="text-center text-muted-foreground">
                     Memuat data...
                   </TableCell>
                 </TableRow>
               ) : paginatedCollectors.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground">
+                  <TableCell colSpan={7} className="text-center text-muted-foreground">
                     {searchQuery ? `Tidak ada kolektor yang ditemukan dengan kata kunci "${searchQuery}"` : "Belum ada data kolektor"}
                   </TableCell>
                 </TableRow>
@@ -403,6 +419,20 @@ export default function Collector() {
                     <TableCell className="text-right">{collector.uniqueCustomers}</TableCell>
                     <TableCell className="text-right font-medium text-primary">
                       {formatRupiah(collector.totalCollected)}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleViewDetail({
+                          id: collector.id,
+                          name: collector.name,
+                          collector_code: collector.collector_code,
+                        })}
+                      >
+                        <Eye className="h-4 w-4 mr-1" />
+                        Detail
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))
@@ -484,6 +514,14 @@ export default function Collector() {
           )}
         </CardContent>
       </Card>
+
+      {/* Detail Dialog */}
+      <CollectorDetailDialog
+        open={detailDialogOpen}
+        onOpenChange={setDetailDialogOpen}
+        collector={selectedCollectorDetail}
+        defaultDate={selectedDate}
+      />
     </div>
   );
 }
