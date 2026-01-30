@@ -34,9 +34,13 @@ export default function CustomerHistory() {
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>("");
   const [selectedContractId, setSelectedContractId] = useState<string>("");
 
-  const filteredCustomers = customers?.filter((c) =>
-    c.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredCustomers = customers?.filter((c) => {
+    const query = searchTerm.toLowerCase();
+    return (
+      c.name.toLowerCase().includes(query) ||
+      c.customer_code?.toLowerCase().includes(query)
+    );
+  });
 
   const customerContracts = contracts?.filter(
     (c) => c.customer_id === selectedCustomerId
@@ -79,7 +83,7 @@ export default function CustomerHistory() {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Cari berdasarkan nama pelanggan..."
+              placeholder="Cari berdasarkan nama atau kode customer..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
