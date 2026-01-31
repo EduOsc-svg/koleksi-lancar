@@ -8,7 +8,7 @@ export const exportYearlyReportToExcel = async (
   year: number
 ) => {
   const workbook = new ExcelJS.Workbook();
-  workbook.creator = 'Koleksi Lancar';
+  workbook.creator = 'Management System Kredit';
   workbook.created = new Date();
 
   // ============ Sheet 1: Ringkasan Tahunan ============
@@ -23,7 +23,7 @@ export const exportYearlyReportToExcel = async (
 
   summarySheet.mergeCells('A2:E2');
   const subtitleCell = summarySheet.getCell('A2');
-  subtitleCell.value = 'KOLEKSI LANCAR';
+  subtitleCell.value = 'MANAGEMENT SYSTEM KREDIT';
   subtitleCell.font = { bold: true, size: 12 };
   subtitleCell.alignment = { horizontal: 'center' };
 
@@ -239,7 +239,7 @@ export const exportYearlyReportToExcel = async (
   const url = window.URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = `Laporan_Tahunan_${year}_Koleksi_Lancar.xlsx`;
+  link.download = `Laporan_Tahunan_${year}_Management_System_Kredit.xlsx`;
   link.click();
   window.URL.revokeObjectURL(url);
 };
