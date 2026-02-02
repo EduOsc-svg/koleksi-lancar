@@ -297,7 +297,7 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
   };
 
   // Generate No. Faktur format: TENOR/KODE_SALES/KODE_KONSUMEN
-  const noFaktur = `${contract.tenor_days}/${contract.customers?.sales_agents?.agent_code || "-"}/${contract.customers?.customer_code || "-"}`;
+  const noFaktur = `${contract.tenor_days} / ${contract.customers?.sales_agents?.agent_code || "-"} / ${contract.customers?.customer_code || "-"}`;
 
   // Determine display address (prioritize business_address, fallback to address)
   const displayAddress = contract.customers?.business_address || contract.customers?.address || "-";
