@@ -295,13 +295,8 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
     return remainingDays <= 10;
   };
 
-<<<<<<< HEAD
-  // Generate No. Faktur format: TENOR/KODE_SALES/KODE_KONSUMEN
-  const noFaktur = `${contract.tenor_days} / ${contract.customers?.sales_agents?.agent_code || "-"} / ${contract.customers?.customer_code || "-"}`;
-=======
   // Generate No. Faktur format: TENOR/KODE_SALES/KODE_KONTRAK
   const noFaktur = `${contract.tenor_days}/${contract.sales_agents?.agent_code || "-"}/${contract.contract_ref}`;
->>>>>>> 0058da06ce777883de2e845f44be93f0a01dead0
 
   // Determine display address (prioritize business_address, fallback to address)
   const displayAddress = contract.customers?.business_address || contract.customers?.address || "-";
