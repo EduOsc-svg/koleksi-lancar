@@ -4,6 +4,7 @@
 -- 100 for 2025, 100 for 2026
 -- =========================================
 -- Using existing sales agents and collectors IDs
+-- Note: customer_code has been removed from customers table
 
 -- =========================================
 -- CUSTOMERS & CONTRACTS FOR 2025 (100 records)
@@ -40,12 +41,12 @@ DECLARE
   v_collector_id UUID;
   v_product TEXT;
   v_customer_name TEXT;
-  v_customer_code TEXT;
   v_contract_ref TEXT;
   v_i INT;
   v_coupon_date DATE;
   v_coupon_index INT;
   v_coupon_id UUID;
+  v_nik TEXT;
 BEGIN
   FOR v_i IN 1..100 LOOP
     -- Generate random data for 2025
@@ -58,16 +59,16 @@ BEGIN
     v_collector_id := v_collector_ids[1 + floor(random() * 3)::INT];
     v_product := v_products[1 + floor(random() * 10)::INT];
     v_customer_name := v_names[1 + floor(random() * 20)::INT] || ' ' || v_surnames[1 + floor(random() * 10)::INT];
-    v_customer_code := 'C' || LPAD(v_i::TEXT, 3, '0');
     v_contract_ref := 'A' || LPAD(v_i::TEXT, 3, '0');
+    v_nik := LPAD((3200000000000000 + floor(random() * 999999999999)::BIGINT)::TEXT, 16, '0');
     
-    -- Insert customer
+    -- Insert customer (without customer_code)
     v_customer_id := gen_random_uuid();
-    INSERT INTO public.customers (id, customer_code, name, phone, address, business_address)
+    INSERT INTO public.customers (id, name, nik, phone, address, business_address)
     VALUES (
       v_customer_id,
-      v_customer_code,
       v_customer_name,
+      v_nik,
       '08' || (1000000000 + floor(random() * 9000000000))::BIGINT,
       'Jl. Raya No.' || (1 + floor(random() * 100))::INT || ', RT ' || (1 + floor(random() * 10))::INT || '/RW ' || (1 + floor(random() * 5))::INT,
       'Pasar ' || v_surnames[1 + floor(random() * 10)::INT] || ' Blok ' || CHR(65 + floor(random() * 10)::INT) || (1 + floor(random() * 50))::INT
@@ -151,7 +152,6 @@ DECLARE
   v_collector_id UUID;
   v_product TEXT;
   v_customer_name TEXT;
-  v_customer_code TEXT;
   v_contract_ref TEXT;
   v_i INT;
   v_coupon_date DATE;
@@ -159,6 +159,7 @@ DECLARE
   v_coupon_id UUID;
   v_paid_count INT;
   v_today DATE := CURRENT_DATE;
+  v_nik TEXT;
 BEGIN
   FOR v_i IN 101..200 LOOP
     -- Generate random data for 2026
@@ -171,19 +172,19 @@ BEGIN
     v_collector_id := v_collector_ids[1 + floor(random() * 3)::INT];
     v_product := v_products[1 + floor(random() * 10)::INT];
     v_customer_name := v_names[1 + floor(random() * 20)::INT] || ' ' || v_surnames[1 + floor(random() * 10)::INT];
-    v_customer_code := 'C' || LPAD(v_i::TEXT, 3, '0');
     v_contract_ref := 'A' || LPAD(v_i::TEXT, 3, '0');
+    v_nik := LPAD((3200000000000000 + floor(random() * 999999999999)::BIGINT)::TEXT, 16, '0');
     
     -- Calculate how many should be paid (based on days elapsed from start)
     v_paid_count := GREATEST(0, LEAST(v_tenor, (v_today - v_start_date)::INT - 5 + floor(random() * 10)::INT));
     
-    -- Insert customer
+    -- Insert customer (without customer_code)
     v_customer_id := gen_random_uuid();
-    INSERT INTO public.customers (id, customer_code, name, phone, address, business_address)
+    INSERT INTO public.customers (id, name, nik, phone, address, business_address)
     VALUES (
       v_customer_id,
-      v_customer_code,
       v_customer_name,
+      v_nik,
       '08' || (1000000000 + floor(random() * 9000000000))::BIGINT,
       'Jl. Merdeka No.' || (1 + floor(random() * 100))::INT || ', Kel. ' || v_surnames[1 + floor(random() * 10)::INT],
       'Toko ' || v_names[1 + floor(random() * 20)::INT] || ' - Pasar ' || v_surnames[1 + floor(random() * 10)::INT]

@@ -73,7 +73,6 @@ export default function Customers() {
   // Filter customers based on search query
   const filteredCustomers = customers?.filter(customer =>
     customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (customer.customer_code || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
     (customer.nik || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
     (customer.phone || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
     (customer.address || '').toLowerCase().includes(searchQuery.toLowerCase())
@@ -83,7 +82,6 @@ export default function Customers() {
   const { currentPage, totalPages, paginatedItems, goToPage, totalItems } = usePagination(filteredCustomers, ITEMS_PER_PAGE);
   const [formData, setFormData] = useState({
     name: "",
-    customer_code: "",
     nik: "",
     address: "",
     business_address: "",
@@ -138,7 +136,7 @@ export default function Customers() {
 
   const handleOpenCreate = () => {
     setSelectedCustomer(null);
-    setFormData({ name: "", customer_code: "", nik: "", address: "", business_address: "", phone: "" });
+    setFormData({ name: "", nik: "", address: "", business_address: "", phone: "" });
     setDialogOpen(true);
   };
 
@@ -146,7 +144,6 @@ export default function Customers() {
     setSelectedCustomer(customer);
     setFormData({
       name: customer.name,
-      customer_code: customer.customer_code || "",
       nik: customer.nik || "",
       address: customer.address || "",
       business_address: (customer as any).business_address || "",
@@ -157,10 +154,6 @@ export default function Customers() {
 
   const handleSubmit = async () => {
     // Validate required fields
-    if (!formData.customer_code.trim()) {
-      toast.error(t("errors.customerCodeRequired", "Kode customer wajib diisi"));
-      return;
-    }
     if (!formData.name.trim()) {
       toast.error(t("errors.nameRequired", "Nama customer wajib diisi"));
       return;
@@ -188,8 +181,6 @@ export default function Customers() {
     
     try {
       const submitData = {
-        ...formData,
-        customer_code: formData.customer_code.trim().toUpperCase(),
         name: formData.name.trim(),
         nik: formData.nik.trim(),
         address: formData.address.trim() || null,
@@ -267,10 +258,10 @@ export default function Customers() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="min-w-[120px]">{t("customers.customerCode")}</TableHead>
                 <TableHead className="min-w-[200px]">{t("customers.name")}</TableHead>
                 <TableHead className="min-w-[140px]">{t("customers.nik")}</TableHead>
                 <TableHead className="min-w-[130px]">{t("customers.phone")}</TableHead>
+                <TableHead className="min-w-[200px]">Alamat</TableHead>
                 <TableHead className="text-right min-w-[100px]">{t("common.actions")}</TableHead>
               </TableRow>
             </TableHeader>
@@ -295,11 +286,6 @@ export default function Customers() {
                       highlightedRowId === customer.id && "bg-yellow-100 border-yellow-300 animate-pulse"
                     )}
                   >
-                    <TableCell>
-                      <Badge variant="secondary" className="font-mono">
-                        {customer.customer_code || "-"}
-                      </Badge>
-                    </TableCell>
                     <TableCell className="font-medium">{customer.name}</TableCell>
                     <TableCell>
                       <span className="font-mono text-sm">
@@ -314,6 +300,9 @@ export default function Customers() {
                       ) : (
                         <span className="text-muted-foreground">-</span>
                       )}
+                    </TableCell>
+                    <TableCell className="max-w-[200px] truncate" title={customer.address || ''}>
+                      {customer.address || "-"}
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1">
@@ -352,16 +341,6 @@ export default function Customers() {
             <DialogTitle>{selectedCustomer ? t("customers.editCustomer") : t("customers.newCustomer")}</DialogTitle>
           </DialogHeader>
           <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="customer_code">{t("customers.customerCode")} *</Label>
-              <Input
-                id="customer_code"
-                value={formData.customer_code}
-                onChange={(e) => setFormData({ ...formData, customer_code: e.target.value.toUpperCase() })}
-                placeholder="e.g., C001"
-                maxLength={20}
-              />
-            </div>
             <div>
               <Label htmlFor="name">{t("customers.name")} *</Label>
               <Input

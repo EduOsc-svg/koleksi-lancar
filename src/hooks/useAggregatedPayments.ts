@@ -5,7 +5,6 @@ export interface AggregatedPayment {
   payment_date: string;
   customer_id: string;
   customer_name: string;
-  customer_code: string | null;
   contract_ref: string;
   collector_name: string | null;
   sales_agent_name: string | null;
@@ -33,7 +32,6 @@ export const useAggregatedPayments = (dateFrom?: string, dateTo?: string, collec
             customer_id,
             customers(
               name,
-              customer_code,
               sales_agents(name, agent_code)
             )
           ),
@@ -66,7 +64,6 @@ export const useAggregatedPayments = (dateFrom?: string, dateTo?: string, collec
             payment_date: payment.payment_date,
             customer_id: payment.credit_contracts?.customer_id || '',
             customer_name: payment.credit_contracts?.customers?.name || 'Unknown',
-            customer_code: payment.credit_contracts?.customers?.customer_code || null,
             contract_ref: payment.credit_contracts?.contract_ref || '',
             collector_name: payment.collectors?.name || null,
             sales_agent_name: payment.credit_contracts?.customers?.sales_agents?.name || null,
