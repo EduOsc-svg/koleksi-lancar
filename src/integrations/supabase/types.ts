@@ -187,7 +187,6 @@ export type Database = {
       customers: {
         Row: {
           address: string | null
-          assigned_sales_id: string | null
           business_address: string | null
           created_at: string
           id: string
@@ -197,7 +196,6 @@ export type Database = {
         }
         Insert: {
           address?: string | null
-          assigned_sales_id?: string | null
           business_address?: string | null
           created_at?: string
           id?: string
@@ -207,7 +205,6 @@ export type Database = {
         }
         Update: {
           address?: string | null
-          assigned_sales_id?: string | null
           business_address?: string | null
           created_at?: string
           id?: string
@@ -215,15 +212,7 @@ export type Database = {
           nik?: string | null
           phone?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "customers_assigned_sales_id_fkey"
-            columns: ["assigned_sales_id"]
-            isOneToOne: false
-            referencedRelation: "sales_agents"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       holidays: {
         Row: {

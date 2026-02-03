@@ -30,10 +30,8 @@ export const useAggregatedPayments = (dateFrom?: string, dateTo?: string, collec
             contract_ref,
             daily_installment_amount,
             customer_id,
-            customers(
-              name,
-              sales_agents(name, agent_code)
-            )
+            customers(name),
+            sales_agents(name, agent_code)
           ),
           collectors(name, collector_code)
         `)
@@ -59,6 +57,9 @@ export const useAggregatedPayments = (dateFrom?: string, dateTo?: string, collec
         // Include contract_ref in the key to prevent mixing different contracts
         const key = `${payment.credit_contracts?.customer_id}-${payment.payment_date}-${payment.credit_contracts?.contract_ref}`;
         
+        const salesAgent = payment.credit_contracts?.sales_agents;
+        const salesAgentName = Array.isArray(salesAgent) ? salesAgent[0]?.name : salesAgent?.name;
+        
         if (!grouped.has(key)) {
           grouped.set(key, {
             payment_date: payment.payment_date,
@@ -66,7 +67,7 @@ export const useAggregatedPayments = (dateFrom?: string, dateTo?: string, collec
             customer_name: payment.credit_contracts?.customers?.name || 'Unknown',
             contract_ref: payment.credit_contracts?.contract_ref || '',
             collector_name: payment.collectors?.name || null,
-            sales_agent_name: payment.credit_contracts?.customers?.sales_agents?.name || null,
+            sales_agent_name: salesAgentName || null,
             daily_installment_amount: Number(payment.credit_contracts?.daily_installment_amount) || 0,
             coupon_count: 0,
             total_amount: 0,

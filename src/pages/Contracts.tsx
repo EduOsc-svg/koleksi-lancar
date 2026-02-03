@@ -372,8 +372,8 @@ export default function Contracts() {
               name: selectedContract.customers.name,
               address: selectedContract.customers.address || null,
               business_address: selectedContract.customers.business_address || null,
-              sales_agents: selectedContract.customers.sales_agents || null,
             } : null,
+            sales_agents: selectedContract.sales_agents || null,
           }}
         />
       )}

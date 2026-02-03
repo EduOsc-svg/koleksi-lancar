@@ -17,12 +17,13 @@ export interface CouponWithContract extends InstallmentCoupon {
     customer_id: string;
     daily_installment_amount: number;
     tenor_days: number;
+    sales_agent_id: string | null;
     customers: {
       name: string;
       address: string | null;
       phone: string | null;
-      sales_agents: { name: string; agent_code: string } | null;
     } | null;
+    sales_agents?: { name: string; agent_code: string } | null;
   } | null;
 }
 
@@ -59,12 +60,9 @@ export const useTodayDueCoupons = () => {
             customer_id,
             daily_installment_amount,
             tenor_days,
-            customers(
-              name,
-              address,
-              phone,
-              sales_agents(name, agent_code)
-            )
+            sales_agent_id,
+            customers(name, address, phone),
+            sales_agents(name, agent_code)
           )
         `)
         .eq('due_date', today)
@@ -90,13 +88,9 @@ export const useUnpaidCoupons = (salesAgentId?: string) => {
             customer_id,
             daily_installment_amount,
             tenor_days,
-            customers(
-              name,
-              address,
-              phone,
-              assigned_sales_id,
-              sales_agents(name, agent_code)
-            )
+            sales_agent_id,
+            customers(name, address, phone),
+            sales_agents(name, agent_code)
           )
         `)
         .eq('status', 'unpaid')
@@ -110,7 +104,7 @@ export const useUnpaidCoupons = (salesAgentId?: string) => {
       let filtered = data as CouponWithContract[];
       if (salesAgentId) {
         filtered = filtered.filter(c => 
-          c.credit_contracts?.customers?.sales_agents?.agent_code === salesAgentId
+          c.credit_contracts?.sales_agents?.agent_code === salesAgentId
         );
       }
 
