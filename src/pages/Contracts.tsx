@@ -98,6 +98,28 @@ export default function Contracts() {
   // Fetch coupons for selected contract (for detail view and printing)
   const { data: selectedContractCoupons } = useCouponsByContract(selectedContract?.id || null);
   
+  // Generate next contract code (A001, A002, etc.)
+  const generateNextContractCode = () => {
+    if (!contracts || contracts.length === 0) {
+      return "A001";
+    }
+    
+    // Extract all codes that match pattern A followed by digits
+    const existingCodes = contracts
+      .map(c => c.contract_ref)
+      .filter(ref => /^A\d+$/.test(ref))
+      .map(ref => parseInt(ref.substring(1), 10))
+      .filter(num => !isNaN(num));
+    
+    if (existingCodes.length === 0) {
+      return "A001";
+    }
+    
+    const maxCode = Math.max(...existingCodes);
+    const nextNumber = maxCode + 1;
+    return `A${nextNumber.toString().padStart(3, '0')}`;
+  };
+
   const [printMode, setPrintMode] = useState(false);
 
   // Handle highlighting item from global search
@@ -139,7 +161,7 @@ export default function Contracts() {
   const handleOpenCreate = () => {
     setSelectedContract(null);
     setFormData({
-      contract_ref: "",
+      contract_ref: generateNextContractCode(),
       customer_id: "",
       sales_agent_id: "",
       product_type: "",
@@ -499,9 +521,14 @@ export default function Contracts() {
                 <Input
                   id="contract_ref"
                   value={formData.contract_ref}
-                  onChange={(e) => setFormData({ ...formData, contract_ref: e.target.value })}
-                  placeholder="Contoh: A4146"
+                  onChange={(e) => setFormData({ ...formData, contract_ref: e.target.value.toUpperCase() })}
+                  placeholder="Contoh: A001"
                 />
+                {!selectedContract && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Kode otomatis: A001, A002, dst.
+                  </p>
+                )}
               </div>
               <div>
                 <Label htmlFor="customer">Pelanggan</Label>

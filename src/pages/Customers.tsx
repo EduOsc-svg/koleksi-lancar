@@ -48,7 +48,7 @@ import {
   useDeleteCustomer,
   CustomerWithRelations,
 } from "@/hooks/useCustomers";
-import { useSalesAgents } from "@/hooks/useSalesAgents";
+
 import { usePagination } from "@/hooks/usePagination";
 import { TablePagination } from "@/components/TablePagination";
 import { SearchInput } from "@/components/ui/search-input";
@@ -58,7 +58,7 @@ export default function Customers() {
   const [searchParams, setSearchParams] = useSearchParams();
   const highlightId = searchParams.get('highlight');
   const { data: customers, isLoading } = useCustomers();
-  const { data: agents } = useSalesAgents();
+  
   const createCustomer = useCreateCustomer();
   const updateCustomer = useUpdateCustomer();
   const deleteCustomer = useDeleteCustomer();
@@ -88,7 +88,6 @@ export default function Customers() {
     address: "",
     business_address: "",
     phone: "",
-    assigned_sales_id: null as string | null,
   });
 
   // Handle highlighting item from global search
@@ -139,7 +138,7 @@ export default function Customers() {
 
   const handleOpenCreate = () => {
     setSelectedCustomer(null);
-    setFormData({ name: "", customer_code: "", nik: "", address: "", business_address: "", phone: "", assigned_sales_id: null });
+    setFormData({ name: "", customer_code: "", nik: "", address: "", business_address: "", phone: "" });
     setDialogOpen(true);
   };
 
@@ -152,7 +151,6 @@ export default function Customers() {
       address: customer.address || "",
       business_address: (customer as any).business_address || "",
       phone: customer.phone || "",
-      assigned_sales_id: customer.assigned_sales_id,
     });
     setDialogOpen(true);
   };
@@ -272,7 +270,6 @@ export default function Customers() {
                 <TableHead className="min-w-[120px]">{t("customers.customerCode")}</TableHead>
                 <TableHead className="min-w-[200px]">{t("customers.name")}</TableHead>
                 <TableHead className="min-w-[140px]">{t("customers.nik")}</TableHead>
-                <TableHead className="min-w-[150px]">{t("customers.salesAgent")}</TableHead>
                 <TableHead className="min-w-[130px]">{t("customers.phone")}</TableHead>
                 <TableHead className="text-right min-w-[100px]">{t("common.actions")}</TableHead>
               </TableRow>
@@ -280,11 +277,11 @@ export default function Customers() {
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8">{t("common.loading")}</TableCell>
+                  <TableCell colSpan={5} className="text-center py-8">{t("common.loading")}</TableCell>
                 </TableRow>
               ) : filteredCustomers?.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
                     {searchQuery ? `Tidak ada customer yang ditemukan dengan kata kunci "${searchQuery}"` : t("common.noData")}
                   </TableCell>
                 </TableRow>
@@ -308,18 +305,6 @@ export default function Customers() {
                       <span className="font-mono text-sm">
                         {customer.nik || "-"}
                       </span>
-                    </TableCell>
-                    <TableCell>
-                      {customer.sales_agents?.name ? (
-                        <div className="flex flex-col">
-                          <span className="font-medium">{customer.sales_agents.name}</span>
-                          <span className="text-xs text-muted-foreground">
-                            {customer.sales_agents.agent_code}
-                          </span>
-                        </div>
-                      ) : (
-                        <span className="text-muted-foreground">-</span>
-                      )}
                     </TableCell>
                     <TableCell>
                       {customer.phone ? (
@@ -429,27 +414,6 @@ export default function Customers() {
                 placeholder="e.g., 08123456789"
                 maxLength={20}
               />
-            </div>
-            <div>
-              <Label htmlFor="agent">{t("customers.salesAgent")}</Label>
-              <Select
-                value={formData.assigned_sales_id || "none"}
-                onValueChange={(v) =>
-                  setFormData({ ...formData, assigned_sales_id: v === "none" ? null : v })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={t("customers.selectAgent")} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">-</SelectItem>
-                  {agents?.map((agent) => (
-                    <SelectItem key={agent.id} value={agent.id}>
-                      {agent.name} ({agent.agent_code})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
             </div>
             <div className="col-span-2">
               <Label htmlFor="address">{t("customers.address")} (Alamat Tinggal)</Label>
