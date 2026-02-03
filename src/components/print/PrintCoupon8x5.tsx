@@ -118,7 +118,7 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
         width: 90mm;
         height: 60mm;
         position: relative;
-        background-image: url('/Background WM SME.jpg'); 
+        background-image: url('/Background WM SME1.jpg'); 
         background-size: cover;
         background-position: center;
         overflow: visible;
@@ -226,41 +226,41 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
 
       /* --- KOORDINAT POSISI (PIXEL) --- */
 
-      /* Judul Voucher (Merah & Underline) */
+      /* Judul Voucher (Hitam & Underline, Merah hanya untuk urgent) */
       .pos-judul {
         width: 100%;
         text-align: center;
         top: 65px;
-        color: red;
+        color: black;
         font-weight: bold;
         text-decoration: underline;
         font-size: 11pt;
       }
 
       /* Area Kiri (Data Utama) */
-      .pos-faktur     { left: 15px; top: 95px; }
-      .pos-nama       { left: 15px; top: 110px; }
-      .pos-kode-kontrak { right: 15px; top: 110px; font-size: 13pt; font-weight: bold; }
-      .pos-alamat     { left: 15px; top: 125px; max-width: 230px; overflow: hidden; text-overflow: ellipsis; }
-      .pos-jatuhtempo { left: 15px; top: 140px; }
-      .pos-angsuran   { left: 15px; top: 155px; }
+      .pos-faktur     { left: 15px; top: 97px; }
+      .pos-nama       { left: 15px; top: 112px; }
+      .pos-kode-kontrak { right: 15px; top: 112px; font-size: 13pt; font-weight: bold; }
+      .pos-alamat     { left: 15px; top: 127px; max-width: 230px; overflow: hidden; text-overflow: ellipsis; }
+      .pos-jatuhtempo { left: 15px; top: 142px; }
+      .pos-angsuran   { left: 15px; top: 157px; }
       
       /* Angka angsuran yang center - posisi terpisah */
       .pos-angka-center {
         position: absolute;
         left: 50%;
-        top: 155px;
+        top: 157px;
         transform: translateX(-50%);
         font-size: 11pt;
         font-weight: bold;
-        color: #000;
+        color: red;
         z-index: 6;
       }
 
       /* Area Kanan (Besar Angsuran) */
       .pos-lbl-besar-angsuran {
         right: 10px;
-        top: 160px;
+        top: 162px;
         font-size: 11pt;
         font-weight: normal;
         text-decoration: underline;
@@ -270,7 +270,7 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
       /* Nominal Rupiah */
       .pos-val-besar-angsuran {
         right: 10px;
-        top: 182px;
+        top: 184px;
         text-align: right;
         font-size: 11pt;
         color: red;
