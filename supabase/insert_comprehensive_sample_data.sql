@@ -3,24 +3,7 @@
 -- Total Modal: ~1 Miliar IDR
 -- 100 for 2025, 100 for 2026
 -- =========================================
-
--- First, ensure we have sales agents and collectors
--- Check existing or insert if needed
-INSERT INTO public.sales_agents (id, agent_code, name, phone, commission_percentage)
-VALUES 
-  ('a1111111-1111-1111-1111-111111111111', 'S001', 'Ahmad Salesman', '081234567001', 5),
-  ('a2222222-2222-2222-2222-222222222222', 'S002', 'Budi Penjual', '081234567002', 5),
-  ('a3333333-3333-3333-3333-333333333333', 'S003', 'Citra Sales', '081234567003', 5),
-  ('a4444444-4444-4444-4444-444444444444', 'S004', 'Dewi Marketing', '081234567004', 5),
-  ('a5555555-5555-5555-5555-555555555555', 'S005', 'Eko Jualan', '081234567005', 5)
-ON CONFLICT (agent_code) DO NOTHING;
-
-INSERT INTO public.collectors (id, collector_code, name, phone)
-VALUES 
-  ('c1111111-1111-1111-1111-111111111111', 'K01', 'Kolektor Andi', '081987654001'),
-  ('c2222222-2222-2222-2222-222222222222', 'K02', 'Kolektor Bambang', '081987654002'),
-  ('c3333333-3333-3333-3333-333333333333', 'K03', 'Kolektor Cahyo', '081987654003')
-ON CONFLICT (collector_code) DO NOTHING;
+-- Using existing sales agents and collectors IDs
 
 -- =========================================
 -- CUSTOMERS & CONTRACTS FOR 2025 (100 records)
@@ -32,16 +15,16 @@ DECLARE
   v_customer_id UUID;
   v_contract_id UUID;
   v_sales_ids UUID[] := ARRAY[
-    'a1111111-1111-1111-1111-111111111111'::UUID,
-    'a2222222-2222-2222-2222-222222222222'::UUID,
-    'a3333333-3333-3333-3333-333333333333'::UUID,
-    'a4444444-4444-4444-4444-444444444444'::UUID,
-    'a5555555-5555-5555-5555-555555555555'::UUID
+    'a1000000-0000-0000-0000-000000000001'::UUID,
+    'a1000000-0000-0000-0000-000000000002'::UUID,
+    'a1000000-0000-0000-0000-000000000003'::UUID,
+    'a1000000-0000-0000-0000-000000000004'::UUID,
+    'a1000000-0000-0000-0000-000000000005'::UUID
   ];
   v_collector_ids UUID[] := ARRAY[
-    'c1111111-1111-1111-1111-111111111111'::UUID,
-    'c2222222-2222-2222-2222-222222222222'::UUID,
-    'c3333333-3333-3333-3333-333333333333'::UUID
+    'c1000000-0000-0000-0000-000000000001'::UUID,
+    'c1000000-0000-0000-0000-000000000002'::UUID,
+    'c1000000-0000-0000-0000-000000000003'::UUID
   ];
   v_tenors INT[] := ARRAY[30, 50, 60, 90, 100];
   v_products TEXT[] := ARRAY['Elektronik', 'Furniture', 'Handphone', 'Laptop', 'Perabotan', 'Motor', 'Mesin Jahit', 'Kulkas', 'TV', 'AC'];
@@ -143,16 +126,16 @@ DECLARE
   v_customer_id UUID;
   v_contract_id UUID;
   v_sales_ids UUID[] := ARRAY[
-    'a1111111-1111-1111-1111-111111111111'::UUID,
-    'a2222222-2222-2222-2222-222222222222'::UUID,
-    'a3333333-3333-3333-3333-333333333333'::UUID,
-    'a4444444-4444-4444-4444-444444444444'::UUID,
-    'a5555555-5555-5555-5555-555555555555'::UUID
+    'a1000000-0000-0000-0000-000000000001'::UUID,
+    'a1000000-0000-0000-0000-000000000002'::UUID,
+    'a1000000-0000-0000-0000-000000000003'::UUID,
+    'a1000000-0000-0000-0000-000000000004'::UUID,
+    'a1000000-0000-0000-0000-000000000005'::UUID
   ];
   v_collector_ids UUID[] := ARRAY[
-    'c1111111-1111-1111-1111-111111111111'::UUID,
-    'c2222222-2222-2222-2222-222222222222'::UUID,
-    'c3333333-3333-3333-3333-333333333333'::UUID
+    'c1000000-0000-0000-0000-000000000001'::UUID,
+    'c1000000-0000-0000-0000-000000000002'::UUID,
+    'c1000000-0000-0000-0000-000000000003'::UUID
   ];
   v_tenors INT[] := ARRAY[30, 50, 60, 90, 100];
   v_products TEXT[] := ARRAY['Elektronik', 'Furniture', 'Handphone', 'Laptop', 'Perabotan', 'Motor', 'Mesin Jahit', 'Kulkas', 'TV', 'AC'];
