@@ -118,7 +118,7 @@ export default function Reports() {
     const filterCell = worksheet.getCell('A3');
     let filterText = 'Filter: ';
     if (selectedCustomerInfo) {
-      filterText += `Customer: ${selectedCustomerInfo.customer_code} - ${selectedCustomerInfo.name}`;
+      filterText += `Customer: ${selectedCustomerInfo.name}`;
     } else {
       filterText += 'Semua Customer';
     }
@@ -133,7 +133,7 @@ export default function Reports() {
     const headerRow = worksheet.addRow([
       'Tanggal',
       'Pelanggan',
-      'Kode Customer',
+      'Kode Kontrak',
       'Jumlah Coupon',
       'Nominal Pembayaran',
       'Total',
@@ -162,8 +162,8 @@ export default function Reports() {
     filteredPayments.forEach((p, index) => {
       const rowNumber = index + 6; // Starting from row 6 (after headers and filter info)
       
-      // Use customer code as coupon code, fallback to contract ref or customer ID
-      const couponCode = p.customer_code || p.contract_ref || `${p.customer_id.slice(-4)}`;
+      // Use contract ref as code reference
+      const couponCode = p.contract_ref || `${p.customer_id.slice(-4)}`;
       
       // Calculate nominal per coupon (total amount divided by coupon count)
       const nominalPerCoupon = Math.round(p.total_amount / p.coupon_count);
@@ -316,7 +316,7 @@ export default function Reports() {
                 className="w-[280px] justify-between"
               >
                 {selectedCustomer
-                  ? `${selectedCustomer.customer_code} - ${selectedCustomer.name}`
+                  ? selectedCustomer.name
                   : "Semua Customer"}
                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
               </Button>
@@ -345,7 +345,7 @@ export default function Reports() {
                     {customers?.map((customer) => (
                       <CommandItem
                         key={customer.id}
-                        value={`${customer.customer_code} ${customer.name}`}
+                        value={customer.name}
                         onSelect={() => {
                           setCustomerId(customer.id);
                           setCustomerOpen(false);
@@ -357,7 +357,7 @@ export default function Reports() {
                             customerId === customer.id ? "opacity-100" : "opacity-0"
                           )}
                         />
-                        {customer.customer_code} - {customer.name}
+                        {customer.name}
                       </CommandItem>
                     ))}
                   </CommandGroup>
@@ -375,7 +375,7 @@ export default function Reports() {
             <div className="text-sm text-muted-foreground">
               📅 {format(monthStart, "d MMM", { locale: localeId })} - {format(monthEnd, "d MMM yyyy", { locale: localeId })}
               {selectedCustomer && (
-                <span className="ml-2">• 👤 {selectedCustomer.customer_code} - {selectedCustomer.name}</span>
+                <span className="ml-2">• 👤 {selectedCustomer.name}</span>
               )}
             </div>
             <div className="text-right">
@@ -413,8 +413,8 @@ export default function Reports() {
             ) : (
               <>
                 {paginatedItems.map((payment, idx) => {
-                  // Use customer code as coupon code, fallback to contract ref
-                  const couponCode = payment.customer_code || payment.contract_ref || `${payment.customer_id.slice(-4)}`;
+                  // Use contract ref as code reference
+                  const couponCode = payment.contract_ref || `${payment.customer_id.slice(-4)}`;
                   const nominalPerCoupon = Math.round(payment.total_amount / payment.coupon_count);
                   // Format coupon indices as readable string (e.g., "1, 2, 3" or "1-5")
                   const formatCouponIndices = (indices: number[]) => {
