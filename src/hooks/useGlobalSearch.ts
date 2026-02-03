@@ -43,11 +43,10 @@ export const useGlobalSearch = (query: string) => {
         .select(`
           id, 
           name, 
-          customer_code, 
           address, 
           phone
         `)
-        .or(`name.ilike.${searchTerm},customer_code.ilike.${searchTerm},address.ilike.${searchTerm},phone.ilike.${searchTerm}`)
+        .or(`name.ilike.${searchTerm},address.ilike.${searchTerm},phone.ilike.${searchTerm}`)
         .limit(5);
 
       if (customers) {
@@ -56,7 +55,7 @@ export const useGlobalSearch = (query: string) => {
             id: customer.id,
             type: 'customer',
             title: customer.name,
-            subtitle: `Kode: ${customer.customer_code || 'N/A'}${customer.address ? ` | ${customer.address}` : ''}`,
+            subtitle: customer.address ? `${customer.address}` : 'Alamat tidak tersedia',
             url: `/customers?highlight=${customer.id}`,
           });
         });

@@ -25,11 +25,10 @@ export default function Collection() {
     if (searchQuery) {
       const query = searchQuery.toLowerCase().trim();
       if (query) {
-        // Search by contract_ref, customer name, or customer_code
+        // Search by contract_ref or customer name
         return (
           c.contract_ref.toLowerCase().includes(query) ||
-          c.customers.name.toLowerCase().includes(query) ||
-          (c.customers.customer_code?.toLowerCase().includes(query) ?? false)
+          c.customers.name.toLowerCase().includes(query)
         );
       }
     }

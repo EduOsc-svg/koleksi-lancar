@@ -372,7 +372,6 @@ export default function Contracts() {
               name: selectedContract.customers.name,
               address: selectedContract.customers.address || null,
               business_address: selectedContract.customers.business_address || null,
-              customer_code: selectedContract.customers.customer_code || null,
               sales_agents: selectedContract.customers.sales_agents || null,
             } : null,
           }}
@@ -691,9 +690,6 @@ export default function Contracts() {
                     <p className="text-sm text-muted-foreground">Pelanggan</p>
                     <p className="font-medium">
                       {selectedContract.customers?.name}
-                      {selectedContract.customers?.customer_code && (
-                        <span className="ml-2 text-muted-foreground">({selectedContract.customers.customer_code})</span>
-                      )}
                     </p>
                   </div>
                   <div>

@@ -17,7 +17,7 @@ interface Contract {
   contract_ref: string;
   current_installment_index: number;
   daily_installment_amount: number;
-  customers: { name: string; customer_code: string | null } | null;
+  customers: { name: string } | null;
 }
 
 interface ManifestTableProps {
@@ -50,7 +50,7 @@ export function ManifestTable({
           <TableHeader>
             <TableRow>
               <TableHead className="w-12">#</TableHead>
-              <TableHead>Kode Pelanggan</TableHead>
+              <TableHead>Kode Kontrak</TableHead>
               <TableHead>Nama Pelanggan</TableHead>
               <TableHead className="text-right">Jumlah</TableHead>
             </TableRow>
@@ -119,7 +119,7 @@ export function ManifestTable({
                 </TableCell>
                 <TableCell>
                   <Badge variant="outline" className="font-mono">
-                    {contract.customers?.customer_code || "-"}
+                    {contract.contract_ref}
                   </Badge>
                 </TableCell>
                 <TableCell className="font-medium">{contract.customers?.name}</TableCell>

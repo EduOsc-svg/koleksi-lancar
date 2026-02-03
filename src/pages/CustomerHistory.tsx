@@ -37,8 +37,7 @@ export default function CustomerHistory() {
   const filteredCustomers = customers?.filter((c) => {
     const query = searchTerm.toLowerCase();
     return (
-      c.name.toLowerCase().includes(query) ||
-      c.customer_code?.toLowerCase().includes(query)
+      c.name.toLowerCase().includes(query)
     );
   });
 
@@ -106,7 +105,7 @@ export default function CustomerHistory() {
                 >
                   <div className="font-medium">{customer.name}</div>
                   <div className="text-xs text-muted-foreground">
-                    Kode: {customer.customer_code || "-"} | Agent: {customer.sales_agents?.name || "-"}
+                    NIK: {customer.nik || "-"} | Agent: {customer.sales_agents?.name || "-"}
                   </div>
                 </div>
               ))}

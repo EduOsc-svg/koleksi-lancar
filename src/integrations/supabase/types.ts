@@ -92,13 +92,6 @@ export type Database = {
             foreignKeyName: "activity_logs_sales_agent_id_fkey"
             columns: ["sales_agent_id"]
             isOneToOne: false
-            referencedRelation: "invoice_details"
-            referencedColumns: ["sales_agent_id"]
-          },
-          {
-            foreignKeyName: "activity_logs_sales_agent_id_fkey"
-            columns: ["sales_agent_id"]
-            isOneToOne: false
             referencedRelation: "sales_agents"
             referencedColumns: ["id"]
           },
@@ -186,13 +179,6 @@ export type Database = {
             foreignKeyName: "credit_contracts_sales_agent_id_fkey"
             columns: ["sales_agent_id"]
             isOneToOne: false
-            referencedRelation: "invoice_details"
-            referencedColumns: ["sales_agent_id"]
-          },
-          {
-            foreignKeyName: "credit_contracts_sales_agent_id_fkey"
-            columns: ["sales_agent_id"]
-            isOneToOne: false
             referencedRelation: "sales_agents"
             referencedColumns: ["id"]
           },
@@ -204,7 +190,6 @@ export type Database = {
           assigned_sales_id: string | null
           business_address: string | null
           created_at: string
-          customer_code: string | null
           id: string
           name: string
           nik: string | null
@@ -215,7 +200,6 @@ export type Database = {
           assigned_sales_id?: string | null
           business_address?: string | null
           created_at?: string
-          customer_code?: string | null
           id?: string
           name: string
           nik?: string | null
@@ -226,20 +210,12 @@ export type Database = {
           assigned_sales_id?: string | null
           business_address?: string | null
           created_at?: string
-          customer_code?: string | null
           id?: string
           name?: string
           nik?: string | null
           phone?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "customers_assigned_sales_id_fkey"
-            columns: ["assigned_sales_id"]
-            isOneToOne: false
-            referencedRelation: "invoice_details"
-            referencedColumns: ["sales_agent_id"]
-          },
           {
             foreignKeyName: "customers_assigned_sales_id_fkey"
             columns: ["assigned_sales_id"]
@@ -492,6 +468,13 @@ export type Database = {
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "credit_contracts_sales_agent_id_fkey"
+            columns: ["sales_agent_id"]
+            isOneToOne: false
+            referencedRelation: "sales_agents"
             referencedColumns: ["id"]
           },
         ]
