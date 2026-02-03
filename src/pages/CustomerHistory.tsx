@@ -103,9 +103,9 @@ export default function CustomerHistory() {
                     setSelectedContractId("");
                   }}
                 >
-                  <div className="font-medium">{customer.name}</div>
+                <div className="font-medium">{customer.name}</div>
                   <div className="text-xs text-muted-foreground">
-                    NIK: {customer.nik || "-"} | Agent: {customer.sales_agents?.name || "-"}
+                    NIK: {customer.nik || "-"}
                   </div>
                 </div>
               ))}

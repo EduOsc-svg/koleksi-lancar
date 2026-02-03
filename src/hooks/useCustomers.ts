@@ -9,13 +9,10 @@ export interface Customer {
   address: string | null;
   business_address: string | null;
   phone: string | null;
-  assigned_sales_id?: string | null;
   created_at: string;
 }
 
-export interface CustomerWithRelations extends Customer {
-  sales_agents?: { name: string; agent_code: string } | null;
-}
+export interface CustomerWithRelations extends Customer {}
 
 export type CustomerCreateInput = Omit<Customer, 'id' | 'created_at' | 'assigned_sales_id'>;
 
@@ -25,10 +22,10 @@ export const useCustomers = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('customers')
-        .select('*, sales_agents(name, agent_code)')
+        .select('*')
         .order('name');
       if (error) throw error;
-      return data as (CustomerWithRelations & { business_address: string | null })[];
+      return data as CustomerWithRelations[];
     },
   });
 };
