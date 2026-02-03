@@ -233,12 +233,15 @@ export default function Dashboard() {
                 value={selectedYear.getFullYear().toString()}
                 onValueChange={(val) => setSelectedYear(new Date(parseInt(val), 0, 1))}
               >
-                <SelectTrigger className="w-[120px]">
-                  <SelectValue />
+                <SelectTrigger className="w-[140px] bg-background">
+                  <Calendar className="h-4 w-4 text-muted-foreground mr-2" />
+                  <SelectValue placeholder="Pilih Tahun" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-popover border shadow-md">
                   {yearOptions.map((year) => (
-                    <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
+                    <SelectItem key={year} value={year.toString()}>
+                      <span className="font-medium">{year}</span>
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
