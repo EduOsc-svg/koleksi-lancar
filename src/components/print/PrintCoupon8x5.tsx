@@ -53,7 +53,7 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
           height: 210mm;
           background: white;
           box-shadow: 0 0 15px rgba(0,0,0,0.5);
-          padding: 10mm;
+          padding: 8mm;
           display: flex;
           justify-content: center;
           align-items: center;
@@ -79,7 +79,7 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
         .print-coupon-wrapper {
           width: 297mm;
           height: 209mm;
-          padding: 10mm;
+          padding: 8mm;
           margin: 0 auto;
           page-break-after: always;
           page-break-inside: avoid;
@@ -106,7 +106,7 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
         display: grid;
         grid-template-columns: repeat(3, 93mm);
         grid-template-rows: repeat(3, 63mm);
-        gap: 2mm; 
+        gap: 1mm; 
         justify-content: center;
         align-content: center;
       }
@@ -115,41 +115,90 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
          5. STYLE KARTU VOUCHER
          ========================================= */
       .coupon-card {
-        width: 93mm;
-        height: 63mm;
+        width: 90mm;
+        height: 60mm;
         position: relative;
-        background-image: url('/Background WM SME.png'); 
+        background-image: url('/Background WM SME.jpg'); 
         background-size: cover;
         background-position: center;
         overflow: visible;
       }
 
-      /* GARIS POTONG (CUT LINES) */
+      /* GARIS POTONG (CUT LINES) - Vertical (Right) - HIGH CONTRAST */
       .coupon-card::after {
         content: ''; 
         position: absolute; 
         top: 0; 
-        right: -1.5mm; 
+        right: -2.5mm; 
         width: 0; 
         height: 100%;
-        border-right: 1px dashed #999; 
+        border-right: 2px dashed #000; 
         z-index: 10;
       }
+      
+      /* GARIS POTONG (CUT LINES) - Horizontal (Bottom) - HIGH CONTRAST */
       .coupon-card::before {
         content: ''; 
         position: absolute; 
         left: 0; 
-        bottom: -1.5mm; 
+        bottom: -2.5mm; 
         width: 100%; 
         height: 0;
-        border-bottom: 1px dashed #999; 
+        border-bottom: 2px dashed #000; 
         z-index: 10;
       }
+      
+      /* Hide cut lines for last column (vertical) */
       .coupon-card:nth-child(3n)::after { 
         display: none; 
       }
+      
+      /* Hide cut lines for last row (horizontal) */
       .coupon-card:nth-child(n+7)::before { 
         display: none; 
+      }
+
+      /* Additional horizontal cut line for top row - HIGH CONTRAST */
+      .coupon-card:nth-child(-n+3) {
+        box-shadow: 0 -2.5mm 0 0 transparent, 0 -2.5mm 0 2px dashed #000;
+      }
+
+      /* Additional vertical cut line for left column - HIGH CONTRAST */
+      .coupon-card:nth-child(3n+1) {
+        box-shadow: -2.5mm 0 0 0 transparent, -2.5mm 0 0 2px dashed #000;
+      }
+
+      /* Combined cut lines for top-left corner - HIGH CONTRAST */
+      .coupon-card:first-child {
+        box-shadow: 
+          0 -2.5mm 0 0 transparent, 0 -2.5mm 0 2px dashed #000,
+          -2.5mm 0 0 0 transparent, -2.5mm 0 0 2px dashed #000;
+      }
+
+      /* Corner registration marks for better cutting guidance */
+      .coupon-card {
+        outline: none;
+      }
+      
+      /* Enhanced contrast for print mode */
+      @media print {
+        .coupon-card::after {
+          border-right: 2px dashed #000 !important;
+        }
+        .coupon-card::before {
+          border-bottom: 2px dashed #000 !important;
+        }
+        .coupon-card:nth-child(-n+3) {
+          box-shadow: 0 -2.5mm 0 0 transparent, 0 -2.5mm 0 2px dashed #000 !important;
+        }
+        .coupon-card:nth-child(3n+1) {
+          box-shadow: -2.5mm 0 0 0 transparent, -2.5mm 0 0 2px dashed #000 !important;
+        }
+        .coupon-card:first-child {
+          box-shadow: 
+            0 -2.5mm 0 0 transparent, 0 -2.5mm 0 2px dashed #000 !important,
+            -2.5mm 0 0 0 transparent, -2.5mm 0 0 2px dashed #000 !important;
+        }
       }
 
       /* =========================================
