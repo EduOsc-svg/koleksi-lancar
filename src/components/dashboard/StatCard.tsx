@@ -2,6 +2,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChevronRight } from "lucide-react";
 import { LucideIcon } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 // Format currency with abbreviation for large numbers
 const formatCompactCurrency = (amount: number): string => {
@@ -26,6 +32,7 @@ interface StatCardProps {
   subtitle?: string;
   isPercentage?: boolean;
   isNegative?: boolean;
+  hoverInfo?: string;
   onDetailClick?: () => void;
 }
 
@@ -38,14 +45,15 @@ export function StatCard({
   subtitle = "Bulan ini",
   isPercentage = false,
   isNegative = false,
+  hoverInfo,
   onDetailClick,
 }: StatCardProps) {
   const displayValue = isPercentage 
     ? `${value.toFixed(1)}%` 
     : `${isNegative ? '-' : ''}${formatCompactCurrency(Math.abs(value))}`;
 
-  return (
-    <Card className="relative group">
+  const cardContent = (
+    <Card className="relative group cursor-default">
       <CardContent className="pt-4 pb-3">
         <div className="flex items-center gap-2 mb-2">
           <Icon className={`h-4 w-4 ${iconColor}`} />
@@ -71,4 +79,21 @@ export function StatCard({
       </CardContent>
     </Card>
   );
+
+  if (hoverInfo) {
+    return (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            {cardContent}
+          </TooltipTrigger>
+          <TooltipContent>
+            <p className="text-sm">{hoverInfo}</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  }
+
+  return cardContent;
 }
