@@ -118,7 +118,7 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
         width: 90mm;
         height: 60mm;
         position: relative;
-        background-image: url('/Background WM SME1.jpg'); 
+        background-image: url('/Background WM SME2.jpg'); 
         background-size: cover;
         background-position: center;
         overflow: visible;
