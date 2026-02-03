@@ -20,7 +20,7 @@ import {
   Bar,
 } from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
-import { TrendingUp, Users, ChevronRight, ArrowLeft, DollarSign, Target, Wallet, Percent, Calendar, Plus, Trash2, Settings, FileSpreadsheet, BarChart3 } from "lucide-react";
+import { TrendingUp, Users, ChevronRight, ArrowLeft, DollarSign, Target, Wallet, Percent, Calendar, Plus, Trash2, Settings, FileSpreadsheet, BarChart3, CheckCircle, CircleDollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CurrencyInput } from "@/components/ui/currency-input";
@@ -522,38 +522,65 @@ export default function Dashboard() {
             <Skeleton className="h-[400px] w-full" />
           ) : (
             <>
-              {/* Summary Cards */}
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                <div className="text-center p-4 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
-                  <p className="text-xs text-muted-foreground mb-1">Total Modal</p>
-                  <p className="text-lg font-bold text-blue-600">{formatRupiah(yearlyFinancial?.total_modal ?? 0)}</p>
-                </div>
-                <div className="text-center p-4 bg-indigo-50 dark:bg-indigo-950/30 rounded-lg border border-indigo-200 dark:border-indigo-800">
-                  <p className="text-xs text-muted-foreground mb-1">Total Omset</p>
-                  <p className="text-lg font-bold text-indigo-600">{formatRupiah(yearlyFinancial?.total_omset ?? 0)}</p>
-                </div>
-                <div className="text-center p-4 bg-green-50 dark:bg-green-950/30 rounded-lg border border-green-200 dark:border-green-800">
-                  <p className="text-xs text-muted-foreground mb-1">Keuntungan Kotor</p>
-                  <p className="text-lg font-bold text-green-600">{formatRupiah(yearlyFinancial?.total_profit ?? 0)}</p>
-                </div>
-                <div className="text-center p-4 bg-purple-50 dark:bg-purple-950/30 rounded-lg border border-purple-200 dark:border-purple-800">
-                  <p className="text-xs text-muted-foreground mb-1">Total Komisi</p>
-                  <p className="text-lg font-bold text-purple-600">{formatRupiah(yearlyFinancial?.total_commission ?? 0)}</p>
-                </div>
-                <div className="text-center p-4 bg-orange-50 dark:bg-orange-950/30 rounded-lg border border-orange-200 dark:border-orange-800">
-                  <p className="text-xs text-muted-foreground mb-1">Biaya Operasional</p>
-                  <p className="text-lg font-bold text-orange-600">{formatRupiah(yearlyFinancial?.total_expenses ?? 0)}</p>
-                </div>
-                <div className={`text-center p-4 rounded-lg border ${
-                  (yearlyFinancial?.net_profit ?? 0) >= 0 
-                    ? 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800' 
-                    : 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800'
-                }`}>
-                  <p className="text-xs text-muted-foreground mb-1">Keuntungan Bersih</p>
-                  <p className={`text-lg font-bold ${(yearlyFinancial?.net_profit ?? 0) >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                    {formatRupiah(yearlyFinancial?.net_profit ?? 0)}
-                  </p>
-                </div>
+              {/* Summary Cards - Using StatCard like monthly */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+                <StatCard
+                  icon={DollarSign}
+                  iconColor="text-blue-500"
+                  label="Total Modal"
+                  value={yearlyFinancial?.total_modal ?? 0}
+                  subtitle={`Tahun ${selectedYear.getFullYear()}`}
+                  hoverInfo={`${yearlyFinancial?.contracts_count ?? 0} kontrak (${yearlyFinancial?.completed_count ?? 0} lunas, ${yearlyFinancial?.active_count ?? 0} aktif)`}
+                />
+                
+                <StatCard
+                  icon={Wallet}
+                  iconColor="text-indigo-500"
+                  label="Total Omset"
+                  value={yearlyFinancial?.total_omset ?? 0}
+                  subtitle={`Tahun ${selectedYear.getFullYear()}`}
+                  hoverInfo={`${yearlyFinancial?.contracts_count ?? 0} kontrak (${yearlyFinancial?.completed_count ?? 0} lunas)`}
+                />
+
+                <StatCard
+                  icon={TrendingUp}
+                  iconColor="text-green-500"
+                  label="Keuntungan Kotor"
+                  value={yearlyFinancial?.total_profit ?? 0}
+                  valueColor="text-green-600"
+                  subtitle={`Tahun ${selectedYear.getFullYear()}`}
+                  hoverInfo={`Margin: ${yearlyFinancial?.profit_margin?.toFixed(1) ?? 0}%`}
+                />
+
+                <StatCard
+                  icon={Percent}
+                  iconColor="text-purple-500"
+                  label="Total Komisi"
+                  value={yearlyFinancial?.total_commission ?? 0}
+                  valueColor="text-purple-600"
+                  subtitle={`Tahun ${selectedYear.getFullYear()}`}
+                  hoverInfo={`Dari ${yearlyFinancial?.contracts_count ?? 0} kontrak`}
+                />
+
+                <StatCard
+                  icon={Settings}
+                  iconColor="text-orange-500"
+                  label="Biaya Operasional"
+                  value={yearlyFinancial?.total_expenses ?? 0}
+                  valueColor="text-orange-600"
+                  isNegative
+                  subtitle={`Tahun ${selectedYear.getFullYear()}`}
+                />
+
+                <StatCard
+                  icon={CheckCircle}
+                  iconColor={(yearlyFinancial?.net_profit ?? 0) >= 0 ? "text-emerald-500" : "text-red-500"}
+                  label="Keuntungan Bersih"
+                  value={yearlyFinancial?.net_profit ?? 0}
+                  valueColor={(yearlyFinancial?.net_profit ?? 0) >= 0 ? "text-emerald-600" : "text-red-600"}
+                  subtitle={`Tahun ${selectedYear.getFullYear()}`}
+                  hoverInfo={`Lunas: ${yearlyFinancial?.completed_count ?? 0} | Aktif: ${yearlyFinancial?.active_count ?? 0}`}
+                />
               </div>
 
               {/* Monthly Breakdown Chart */}

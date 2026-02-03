@@ -36,6 +36,8 @@ export interface YearlyFinancialSummary {
   total_expenses: number;
   net_profit: number;
   contracts_count: number;
+  completed_count: number;
+  active_count: number;
   profit_margin: number;
   collection_rate: number;
   monthly_breakdown: MonthlyBreakdown[];
@@ -58,7 +60,7 @@ export const useYearlyFinancialSummary = (year: Date = new Date()) => {
         { data: unpaidCoupons, error: couponsError },
       ] = await Promise.all([
         supabase.from('sales_agents').select('id, name, agent_code, commission_percentage').order('name'),
-        supabase.from('credit_contracts').select('id, omset, total_loan_amount, sales_agent_id, start_date').gte('start_date', yearStart).lte('start_date', yearEnd),
+        supabase.from('credit_contracts').select('id, omset, total_loan_amount, sales_agent_id, start_date, status').gte('start_date', yearStart).lte('start_date', yearEnd),
         supabase.from('payment_logs').select('amount_paid, payment_date, contract_id, credit_contracts!inner(sales_agent_id)').gte('payment_date', yearStart).lte('payment_date', yearEnd),
         supabase.from('operational_expenses').select('amount, expense_date').gte('expense_date', yearStart).lte('expense_date', yearEnd),
         supabase.from('installment_coupons').select('amount, due_date, contract_id').eq('status', 'unpaid').gte('due_date', yearStart).lte('due_date', yearEnd),
@@ -99,6 +101,8 @@ export const useYearlyFinancialSummary = (year: Date = new Date()) => {
       let totalModal = 0;
       let totalOmset = 0;
       let totalContractsCount = 0;
+      let completedCount = 0;
+      let activeCount = 0;
 
       (contracts || []).forEach((contract: any) => {
         const monthKey = format(new Date(contract.start_date), 'yyyy-MM');
@@ -110,6 +114,12 @@ export const useYearlyFinancialSummary = (year: Date = new Date()) => {
         totalModal += modal;
         totalOmset += omset;
         totalContractsCount++;
+        
+        if (contract.status === 'completed') {
+          completedCount++;
+        } else if (contract.status === 'active') {
+          activeCount++;
+        }
 
         // Update monthly breakdown
         const monthData = monthlyData.get(monthKey);
@@ -194,6 +204,8 @@ export const useYearlyFinancialSummary = (year: Date = new Date()) => {
         total_expenses: totalExpenses,
         net_profit: netProfit,
         contracts_count: totalContractsCount,
+        completed_count: completedCount,
+        active_count: activeCount,
         profit_margin: profitMargin,
         collection_rate: collectionRate,
         monthly_breakdown: Array.from(monthlyData.values()),
