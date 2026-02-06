@@ -34,7 +34,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { usePagination } from "@/hooks/usePagination";
 import { TablePagination } from "@/components/TablePagination";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -327,48 +327,60 @@ export default function Dashboard() {
             </div>
           </div>
         </CardHeader>
-        <CardContent>
-          <div className="h-[300px]">
-            {isLoadingTrend ? (
-              <div className="flex items-center justify-center h-full">
-                <Skeleton className="h-full w-full" />
-              </div>
-            ) : (
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={activeTrendData}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                  <XAxis 
-                    dataKey="label" 
-                    className="text-xs"
-                    interval={trendPeriod === 'daily' ? Math.floor(activeTrendData.length / 10) : 0}
-                    angle={trendPeriod === 'monthly' ? -45 : 0}
-                    textAnchor={trendPeriod === 'monthly' ? 'end' : 'middle'}
-                    height={trendPeriod === 'monthly' ? 60 : 30}
-                  />
-                  <YAxis 
-                    tickFormatter={(v) => v >= 1000000000 ? `${(v / 1000000000).toFixed(1)}B` : `${(v / 1000000).toFixed(1)}M`} 
-                    className="text-xs" 
-                  />
-                  <Tooltip
-                    formatter={(value: number) => [formatRupiah(value), t("dashboard.collection", "Penagihan")]}
-                    labelFormatter={(label) => label}
-                    contentStyle={{ 
-                      backgroundColor: "hsl(var(--card))", 
-                      border: "1px solid hsl(var(--border))" 
-                    }}
-                  />
-                  <Line 
-                    type="monotone" 
-                    dataKey="amount" 
-                    stroke="hsl(var(--primary))" 
-                    strokeWidth={2}
-                    dot={{ fill: "hsl(var(--primary))", strokeWidth: 0, r: trendPeriod === 'daily' ? 2 : 4 }}
-                    activeDot={{ r: 6, fill: "hsl(var(--primary))" }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            )}
-          </div>
+        <CardContent className="p-0">
+          <ScrollArea className="w-full">
+            <div 
+              className="h-[300px] p-6" 
+              style={{ 
+                minWidth: trendPeriod === 'daily' 
+                  ? `${Math.max(800, activeTrendData.length * 25)}px` 
+                  : trendPeriod === 'monthly' 
+                    ? `${Math.max(600, activeTrendData.length * 60)}px`
+                    : '100%'
+              }}
+            >
+              {isLoadingTrend ? (
+                <div className="flex items-center justify-center h-full">
+                  <Skeleton className="h-full w-full" />
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={activeTrendData}>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                    <XAxis 
+                      dataKey="label" 
+                      className="text-xs"
+                      interval={0}
+                      angle={trendPeriod === 'monthly' ? -45 : 0}
+                      textAnchor={trendPeriod === 'monthly' ? 'end' : 'middle'}
+                      height={trendPeriod === 'monthly' ? 60 : 30}
+                    />
+                    <YAxis 
+                      tickFormatter={(v) => v >= 1000000000 ? `${(v / 1000000000).toFixed(1)}B` : `${(v / 1000000).toFixed(1)}M`} 
+                      className="text-xs" 
+                    />
+                    <Tooltip
+                      formatter={(value: number) => [formatRupiah(value), t("dashboard.collection", "Penagihan")]}
+                      labelFormatter={(label) => label}
+                      contentStyle={{ 
+                        backgroundColor: "hsl(var(--card))", 
+                        border: "1px solid hsl(var(--border))" 
+                      }}
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="amount" 
+                      stroke="hsl(var(--primary))" 
+                      strokeWidth={2}
+                      dot={{ fill: "hsl(var(--primary))", strokeWidth: 0, r: trendPeriod === 'daily' ? 3 : 4 }}
+                      activeDot={{ r: 6, fill: "hsl(var(--primary))" }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              )}
+            </div>
+            <ScrollBar orientation="horizontal" />
+          </ScrollArea>
         </CardContent>
       </Card>
 
