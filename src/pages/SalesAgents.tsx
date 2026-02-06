@@ -304,8 +304,7 @@ export default function SalesAgents() {
               <TableHead>{t("salesAgents.name")}</TableHead>
               <TableHead>{t("salesAgents.phone")}</TableHead>
               <TableHead>{t("salesAgents.commissionPct", "Komisi %")}</TableHead>
-              <TableHead>{t("salesAgents.totalModal", "Total Modal")}</TableHead>
-              <TableHead>{t("salesAgents.profit", "Keuntungan")}</TableHead>
+              <TableHead>{t("salesAgents.totalOmset", "Total Omset")}</TableHead>
               <TableHead>{t("salesAgents.earnings", "Komisi")}</TableHead>
               <TableHead className="text-right">{t("common.actions")}</TableHead>
             </TableRow>
@@ -313,11 +312,11 @@ export default function SalesAgents() {
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center">{t("common.loading")}</TableCell>
+                <TableCell colSpan={7} className="text-center">{t("common.loading")}</TableCell>
               </TableRow>
             ) : filteredAgents?.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center text-muted-foreground">
+                <TableCell colSpan={7} className="text-center text-muted-foreground">
                   {searchQuery ? `Tidak ada sales agent yang ditemukan dengan kata kunci "${searchQuery}"` : t("common.noData")}
                 </TableCell>
               </TableRow>
@@ -336,8 +335,7 @@ export default function SalesAgents() {
                     <TableCell>{agent.name}</TableCell>
                     <TableCell>{agent.phone || "-"}</TableCell>
                     <TableCell>{agent.commission_percentage || 0}%</TableCell>
-                    <TableCell>{formatRupiah(omsetData?.total_modal || 0)}</TableCell>
-                    <TableCell className="text-green-600">{formatRupiah(omsetData?.profit || 0)}</TableCell>
+                    <TableCell className="font-medium">{formatRupiah(omsetData?.total_omset || 0)}</TableCell>
                     <TableCell className="font-medium text-primary">
                       {formatRupiah(omsetData?.total_commission || 0)}
                     </TableCell>
