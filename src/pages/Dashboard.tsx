@@ -38,7 +38,7 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { usePagination } from "@/hooks/usePagination";
 import { TablePagination } from "@/components/TablePagination";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Slider } from "@/components/ui/slider";
+
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { format, startOfMonth, addMonths, subMonths } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
@@ -59,16 +59,13 @@ export default function Dashboard() {
     notes: '',
   });
   
-  // Trend period and range state
+  // Trend period state (fixed ranges: 90 days, 24 months, 10 years)
   const [trendPeriod, setTrendPeriod] = useState<TrendPeriod>('daily');
-  const [trendDays, setTrendDays] = useState(30);
-  const [trendMonths, setTrendMonths] = useState(12);
-  const [trendYears, setTrendYears] = useState(5);
   
-  // Data hooks - all trend hooks called unconditionally
-  const { data: dailyTrendData, isLoading: isLoadingDailyTrend } = useDailyCollectionTrend(trendDays);
-  const { data: monthlyTrendData, isLoading: isLoadingMonthlyTrend } = useMonthlyCollectionTrend(trendMonths);
-  const { data: yearlyTrendData, isLoading: isLoadingYearlyTrend } = useYearlyCollectionTrend(trendYears);
+  // Data hooks - fixed ranges for scrollable chart
+  const { data: dailyTrendData, isLoading: isLoadingDailyTrend } = useDailyCollectionTrend(90);
+  const { data: monthlyTrendData, isLoading: isLoadingMonthlyTrend } = useMonthlyCollectionTrend(24);
+  const { data: yearlyTrendData, isLoading: isLoadingYearlyTrend } = useYearlyCollectionTrend(10);
   
   const { data: monthlyData, isLoading: isLoadingMonthly } = useMonthlyPerformance(selectedMonth);
   const { data: yearlyData, isLoading: isLoadingYearly } = useYearlyTarget(selectedYear);
@@ -277,54 +274,6 @@ export default function Dashboard() {
               </ToggleGroup>
             </div>
             
-            {/* Period-specific slider */}
-            <div className="flex items-center gap-4">
-              {trendPeriod === 'daily' && (
-                <>
-                  <span className="text-xs text-muted-foreground whitespace-nowrap">7 Hari</span>
-                  <Slider
-                    value={[trendDays]}
-                    onValueChange={(value) => setTrendDays(value[0])}
-                    min={7}
-                    max={90}
-                    step={1}
-                    className="flex-1"
-                  />
-                  <span className="text-xs text-muted-foreground whitespace-nowrap">90 Hari</span>
-                  <span className="text-sm font-medium text-primary ml-2">{trendDays}H</span>
-                </>
-              )}
-              {trendPeriod === 'monthly' && (
-                <>
-                  <span className="text-xs text-muted-foreground whitespace-nowrap">3 Bulan</span>
-                  <Slider
-                    value={[trendMonths]}
-                    onValueChange={(value) => setTrendMonths(value[0])}
-                    min={3}
-                    max={24}
-                    step={1}
-                    className="flex-1"
-                  />
-                  <span className="text-xs text-muted-foreground whitespace-nowrap">24 Bulan</span>
-                  <span className="text-sm font-medium text-primary ml-2">{trendMonths}B</span>
-                </>
-              )}
-              {trendPeriod === 'yearly' && (
-                <>
-                  <span className="text-xs text-muted-foreground whitespace-nowrap">2 Tahun</span>
-                  <Slider
-                    value={[trendYears]}
-                    onValueChange={(value) => setTrendYears(value[0])}
-                    min={2}
-                    max={10}
-                    step={1}
-                    className="flex-1"
-                  />
-                  <span className="text-xs text-muted-foreground whitespace-nowrap">10 Tahun</span>
-                  <span className="text-sm font-medium text-primary ml-2">{trendYears}T</span>
-                </>
-              )}
-            </div>
           </div>
         </CardHeader>
         <CardContent className="p-0">
