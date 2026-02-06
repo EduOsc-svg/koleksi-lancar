@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Check, Wallet, History, Trash2, AlertCircle } from "lucide-react";
+import { Check, Wallet, History, Trash2, AlertCircle, CheckCheck } from "lucide-react";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
 import { toast } from "sonner";
@@ -46,6 +46,7 @@ import {
   useCreateCommissionPayment,
   useDeleteCommissionPayment,
   useCommissionSummary,
+  useBulkCreateCommissionPayments,
 } from "@/hooks/useCommissionPayments";
 
 interface CommissionPaymentDialogProps {
@@ -73,12 +74,18 @@ export function CommissionPaymentDialog({
   const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split('T')[0]);
   const [notes, setNotes] = useState("");
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [showPayAllConfirm, setShowPayAllConfirm] = useState(false);
+  const [payAllDate, setPayAllDate] = useState(new Date().toISOString().split('T')[0]);
+  const [payAllNotes, setPayAllNotes] = useState("");
 
   const { data: paidCommissions, isLoading: loadingPaid } = useCommissionPayments(agentId);
   const { data: unpaidCommissions, isLoading: loadingUnpaid } = useUnpaidCommissions(agentId);
   const { data: summary } = useCommissionSummary(agentId);
   const createPayment = useCreateCommissionPayment();
   const deletePayment = useDeleteCommissionPayment();
+  const bulkPayment = useBulkCreateCommissionPayments();
+
+  const totalUnpaidAmount = unpaidCommissions?.reduce((sum, item) => sum + item.commission, 0) || 0;
 
   const handlePayCommission = async () => {
     if (!selectedContract) return;
@@ -100,6 +107,30 @@ export function CommissionPaymentDialog({
       } else {
         toast.error("Gagal membayarkan komisi");
       }
+    }
+  };
+
+  const handlePayAll = async () => {
+    if (!unpaidCommissions || unpaidCommissions.length === 0) return;
+
+    try {
+      const payments = unpaidCommissions.map(item => ({
+        contract_id: item.contract_id,
+        amount: item.commission,
+      }));
+
+      await bulkPayment.mutateAsync({
+        sales_agent_id: agentId,
+        payments,
+        payment_date: payAllDate,
+        notes: payAllNotes || `Bayar semua komisi (${unpaidCommissions.length} kontrak)`,
+      });
+
+      toast.success(`${unpaidCommissions.length} komisi berhasil dibayarkan`);
+      setShowPayAllConfirm(false);
+      setPayAllNotes("");
+    } catch (error: any) {
+      toast.error("Gagal membayarkan komisi");
     }
   };
 
@@ -181,7 +212,24 @@ export function CommissionPaymentDialog({
                   <p>Semua komisi sudah dibayarkan!</p>
                 </div>
               ) : (
-                <div className="border rounded-lg">
+                <div className="space-y-4">
+                  {/* Pay All Button */}
+                  <div className="flex items-center justify-between p-3 border rounded-lg bg-muted/30">
+                    <div>
+                      <p className="text-sm font-medium">Total Belum Dibayar</p>
+                      <p className="text-lg font-bold text-primary">{formatRupiah(totalUnpaidAmount)}</p>
+                      <p className="text-xs text-muted-foreground">{unpaidCommissions?.length} kontrak</p>
+                    </div>
+                    <Button 
+                      onClick={() => setShowPayAllConfirm(true)}
+                      disabled={bulkPayment.isPending}
+                    >
+                      <CheckCheck className="h-4 w-4 mr-2" />
+                      Bayar Semua
+                    </Button>
+                  </div>
+
+                  <div className="border rounded-lg">
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -222,6 +270,7 @@ export function CommissionPaymentDialog({
                       ))}
                     </TableBody>
                   </Table>
+                </div>
                 </div>
               )}
             </TabsContent>
@@ -341,6 +390,48 @@ export function CommissionPaymentDialog({
           <AlertDialogFooter>
             <AlertDialogCancel>Batal</AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete}>Hapus</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Pay All Confirmation */}
+      <AlertDialog open={showPayAllConfirm} onOpenChange={setShowPayAllConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Bayar Semua Komisi?</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3">
+                <p>
+                  Anda akan membayar <strong>{unpaidCommissions?.length || 0} komisi</strong> sekaligus 
+                  dengan total <strong className="text-primary">{formatRupiah(totalUnpaidAmount)}</strong>.
+                </p>
+                <div className="space-y-2">
+                  <Label htmlFor="pay_all_date">Tanggal Pembayaran</Label>
+                  <Input
+                    id="pay_all_date"
+                    type="date"
+                    value={payAllDate}
+                    onChange={(e) => setPayAllDate(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="pay_all_notes">Catatan (opsional)</Label>
+                  <Input
+                    id="pay_all_notes"
+                    value={payAllNotes}
+                    onChange={(e) => setPayAllNotes(e.target.value)}
+                    placeholder="Catatan pembayaran..."
+                  />
+                </div>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Batal</AlertDialogCancel>
+            <AlertDialogAction onClick={handlePayAll} disabled={bulkPayment.isPending}>
+              <CheckCheck className="h-4 w-4 mr-2" />
+              Bayar Semua
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

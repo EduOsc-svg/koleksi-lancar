@@ -161,6 +161,50 @@ export const useCreateCommissionPayment = () => {
       queryClient.invalidateQueries({ queryKey: ['unpaid_commissions', variables.sales_agent_id] });
       queryClient.invalidateQueries({ queryKey: ['agent_omset'] });
       queryClient.invalidateQueries({ queryKey: ['agent_performance'] });
+      queryClient.invalidateQueries({ queryKey: ['commission_summary', variables.sales_agent_id] });
+    },
+  });
+};
+
+// Bulk create commission payments (pay all)
+export const useBulkCreateCommissionPayments = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: {
+      sales_agent_id: string;
+      payments: Array<{
+        contract_id: string;
+        amount: number;
+      }>;
+      payment_date?: string;
+      notes?: string;
+    }) => {
+      const paymentDate = data.payment_date || new Date().toISOString().split('T')[0];
+      
+      // Insert all payments at once
+      const insertData = data.payments.map(p => ({
+        sales_agent_id: data.sales_agent_id,
+        contract_id: p.contract_id,
+        amount: p.amount,
+        payment_date: paymentDate,
+        notes: data.notes || null,
+      }));
+
+      const { error } = await supabase
+        .from('commission_payments')
+        .insert(insertData);
+
+      if (error) throw error;
+      
+      return { count: data.payments.length, salesAgentId: data.sales_agent_id };
+    },
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ['commission_payments', result.salesAgentId] });
+      queryClient.invalidateQueries({ queryKey: ['unpaid_commissions', result.salesAgentId] });
+      queryClient.invalidateQueries({ queryKey: ['agent_omset'] });
+      queryClient.invalidateQueries({ queryKey: ['agent_performance'] });
+      queryClient.invalidateQueries({ queryKey: ['commission_summary', result.salesAgentId] });
     },
   });
 };
