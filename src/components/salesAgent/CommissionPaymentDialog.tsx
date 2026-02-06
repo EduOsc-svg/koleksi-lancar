@@ -127,7 +127,7 @@ export function CommissionPaymentDialog({
           </DialogHeader>
 
           {/* Summary Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
             <div className="p-3 border rounded-lg bg-muted/30">
               <p className="text-xs text-muted-foreground">Total Kontrak</p>
               <p className="text-lg font-semibold">{summary?.totalContracts || 0}</p>
@@ -142,11 +142,21 @@ export function CommissionPaymentDialog({
               <p className="text-lg font-semibold text-orange-600">{formatRupiah(summary?.totalUnpaid || 0)}</p>
               <p className="text-xs text-muted-foreground">{(summary?.totalContracts || 0) - (summary?.paidContracts || 0)} kontrak</p>
             </div>
-            <div className="p-3 border rounded-lg bg-primary/5">
-              <p className="text-xs text-muted-foreground">Total Komisi</p>
-              <p className="text-lg font-semibold text-primary">
-                {formatRupiah((summary?.totalPaid || 0) + (summary?.totalUnpaid || 0))}
-              </p>
+          </div>
+
+          {/* Yearly Bonus Section */}
+          <div className="p-3 border rounded-lg bg-purple-50 dark:bg-purple-900/20 mb-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-muted-foreground">Bonus Tahunan (0.8% x Omset {new Date().getFullYear()})</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Omset Tahun Ini: {formatRupiah(summary?.yearlyOmset || 0)}
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="text-lg font-bold text-purple-600">{formatRupiah(summary?.yearlyBonus || 0)}</p>
+                <Badge variant="outline" className="text-xs">Rekap Tgl 1</Badge>
+              </div>
             </div>
           </div>
 
@@ -178,6 +188,7 @@ export function CommissionPaymentDialog({
                         <TableHead>Kode Kontrak</TableHead>
                         <TableHead>Pelanggan</TableHead>
                         <TableHead>Omset</TableHead>
+                        <TableHead>%</TableHead>
                         <TableHead>Komisi</TableHead>
                         <TableHead className="text-right">Aksi</TableHead>
                       </TableRow>
@@ -188,6 +199,9 @@ export function CommissionPaymentDialog({
                           <TableCell className="font-medium">{item.contract_ref}</TableCell>
                           <TableCell>{item.customer_name}</TableCell>
                           <TableCell>{formatRupiah(item.omset)}</TableCell>
+                          <TableCell>
+                            <Badge variant="secondary">{item.commission_percentage}%</Badge>
+                          </TableCell>
                           <TableCell className="font-semibold text-primary">
                             {formatRupiah(item.commission)}
                           </TableCell>

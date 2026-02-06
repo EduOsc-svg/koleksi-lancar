@@ -76,7 +76,7 @@ export default function SalesAgents() {
   const [selectedAgent, setSelectedAgent] = useState<SalesAgent | null>(null);
   const [highlightedRowId, setHighlightedRowId] = useState<string | null>(null);
   const highlightedRowRef = useRef<HTMLTableRowElement>(null);
-  const [formData, setFormData] = useState({ agent_code: "", name: "", phone: "", commission_percentage: 0 });
+  const [formData, setFormData] = useState({ agent_code: "", name: "", phone: "", commission_percentage: 0, use_tiered_commission: true });
 
   // Handle highlighting item from global search
   useEffect(() => {
@@ -116,7 +116,7 @@ export default function SalesAgents() {
 
   const handleOpenCreate = () => {
     setSelectedAgent(null);
-    setFormData({ agent_code: "", name: "", phone: "", commission_percentage: 0 });
+    setFormData({ agent_code: "", name: "", phone: "", commission_percentage: 0, use_tiered_commission: true });
     setDialogOpen(true);
   };
 
@@ -127,6 +127,7 @@ export default function SalesAgents() {
       name: agent.name,
       phone: agent.phone || "",
       commission_percentage: agent.commission_percentage || 0,
+      use_tiered_commission: agent.use_tiered_commission ?? true,
     });
     setDialogOpen(true);
   };
