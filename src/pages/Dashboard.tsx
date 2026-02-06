@@ -1,7 +1,6 @@
 import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useDailyCollectionTrend, useMonthlyCollectionTrend, useYearlyCollectionTrend, TrendPeriod } from "@/hooks/useCollectionTrendPeriods";
 import { useMonthlyPerformance, useYearlyTarget } from "@/hooks/useMonthlyPerformance";
 import { useYearlyFinancialSummary } from "@/hooks/useYearlyFinancialSummary";
 import { useOperationalExpenses, useOperationalExpenseMutations, OperationalExpenseInput } from "@/hooks/useOperationalExpenses";
@@ -38,11 +37,10 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { usePagination } from "@/hooks/usePagination";
 import { TablePagination } from "@/components/TablePagination";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Slider } from "@/components/ui/slider";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { format, startOfMonth, addMonths, subMonths } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
 import { StatCard } from "@/components/dashboard/StatCard";
+import { CollectionTrendChart } from "@/components/dashboard/CollectionTrendChart";
 import { toast } from "sonner";
 
 export default function Dashboard() {
@@ -58,17 +56,6 @@ export default function Dashboard() {
     category: '',
     notes: '',
   });
-  
-  // Trend period and range state
-  const [trendPeriod, setTrendPeriod] = useState<TrendPeriod>('daily');
-  const [trendDays, setTrendDays] = useState(30);
-  const [trendMonths, setTrendMonths] = useState(12);
-  const [trendYears, setTrendYears] = useState(5);
-  
-  // Data hooks - all trend hooks called unconditionally
-  const { data: dailyTrendData, isLoading: isLoadingDailyTrend } = useDailyCollectionTrend(trendDays);
-  const { data: monthlyTrendData, isLoading: isLoadingMonthlyTrend } = useMonthlyCollectionTrend(trendMonths);
-  const { data: yearlyTrendData, isLoading: isLoadingYearlyTrend } = useYearlyCollectionTrend(trendYears);
   
   const { data: monthlyData, isLoading: isLoadingMonthly } = useMonthlyPerformance(selectedMonth);
   const { data: yearlyData, isLoading: isLoadingYearly } = useYearlyTarget(selectedYear);
@@ -90,23 +77,6 @@ export default function Dashboard() {
   const netProfit = useMemo(() => {
     return (monthlyData?.total_profit ?? 0) - totalExpenses;
   }, [monthlyData?.total_profit, totalExpenses]);
-
-  // Active trend data based on period
-  const activeTrendData = useMemo(() => {
-    switch (trendPeriod) {
-      case 'monthly': return monthlyTrendData || [];
-      case 'yearly': return yearlyTrendData || [];
-      default: return dailyTrendData || [];
-    }
-  }, [trendPeriod, dailyTrendData, monthlyTrendData, yearlyTrendData]);
-
-  const isLoadingTrend = trendPeriod === 'daily' ? isLoadingDailyTrend 
-    : trendPeriod === 'monthly' ? isLoadingMonthlyTrend 
-    : isLoadingYearlyTrend;
-
-  // Collection trend totals
-  const totalCollection = activeTrendData.reduce((sum, d) => sum + d.amount, 0);
-  const avgPerPeriod = activeTrendData.length > 0 ? totalCollection / activeTrendData.length : 0;
 
   const locale = i18n.language === 'id' ? 'id-ID' : 'en-US';
 
@@ -174,57 +144,72 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Monthly Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-        <StatCard
-          icon={DollarSign}
-          iconColor="text-blue-500"
-          label="Total Modal"
-          value={monthlyData?.total_modal ?? 0}
-        />
-        
-        <StatCard
-          icon={Wallet}
-          iconColor="text-indigo-500"
-          label="Omset"
-          value={monthlyData?.total_omset ?? 0}
-        />
+      {/* Monthly Summary Cards - Horizontal Scrollable */}
+      <ScrollArea className="w-full">
+        <div className="flex gap-4 pb-4" style={{ minWidth: 'max-content' }}>
+          <div className="w-[180px] flex-shrink-0">
+            <StatCard
+              icon={DollarSign}
+              iconColor="text-blue-500"
+              label="Total Modal"
+              value={monthlyData?.total_modal ?? 0}
+            />
+          </div>
+          
+          <div className="w-[180px] flex-shrink-0">
+            <StatCard
+              icon={Wallet}
+              iconColor="text-indigo-500"
+              label="Omset"
+              value={monthlyData?.total_omset ?? 0}
+            />
+          </div>
 
-        <StatCard
-          icon={TrendingUp}
-          iconColor="text-green-500"
-          label="Keuntungan"
-          value={monthlyData?.total_profit ?? 0}
-          valueColor="text-green-600"
-          subtitle="Sebelum operasional"
-        />
+          <div className="w-[180px] flex-shrink-0">
+            <StatCard
+              icon={TrendingUp}
+              iconColor="text-green-500"
+              label="Keuntungan"
+              value={monthlyData?.total_profit ?? 0}
+              valueColor="text-green-600"
+              subtitle="Sebelum operasional"
+            />
+          </div>
 
-        <StatCard
-          icon={Settings}
-          iconColor="text-orange-500"
-          label="Biaya Operasional"
-          value={totalExpenses}
-          valueColor="text-orange-600"
-          isNegative
-        />
+          <div className="w-[180px] flex-shrink-0">
+            <StatCard
+              icon={Settings}
+              iconColor="text-orange-500"
+              label="Biaya Operasional"
+              value={totalExpenses}
+              valueColor="text-orange-600"
+              isNegative
+            />
+          </div>
 
-        <StatCard
-          icon={Percent}
-          iconColor="text-purple-500"
-          label="Total Komisi"
-          value={monthlyData?.total_commission ?? 0}
-          valueColor="text-purple-600"
-        />
+          <div className="w-[180px] flex-shrink-0">
+            <StatCard
+              icon={Percent}
+              iconColor="text-purple-500"
+              label="Total Komisi"
+              value={monthlyData?.total_commission ?? 0}
+              valueColor="text-purple-600"
+            />
+          </div>
 
-        <StatCard
-          icon={Percent}
-          iconColor="text-emerald-500"
-          label="Margin"
-          value={monthlyData?.profit_margin ?? 0}
-          valueColor="text-emerald-600"
-          isPercentage
-        />
-      </div>
+          <div className="w-[180px] flex-shrink-0">
+            <StatCard
+              icon={Percent}
+              iconColor="text-emerald-500"
+              label="Margin"
+              value={monthlyData?.profit_margin ?? 0}
+              valueColor="text-emerald-600"
+              isPercentage
+            />
+          </div>
+        </div>
+        <ScrollBar orientation="horizontal" />
+      </ScrollArea>
 
       {/* Net Profit Card */}
       <Card className="bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20">
@@ -244,145 +229,8 @@ export default function Dashboard() {
         </CardContent>
       </Card>
 
-      {/* Collection Trend Chart - Trading Style */}
-      <Card>
-        <CardHeader>
-          <div className="flex flex-col gap-4">
-            {/* Period Toggle - Trading Style */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div>
-                <CardTitle className="flex items-center gap-2">
-                  <BarChart3 className="h-5 w-5 text-primary" />
-                  {t("dashboard.collectionTrend")}
-                </CardTitle>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Total: {formatRupiah(totalCollection)} | {trendPeriod === 'daily' ? t("dashboard.avgDaily", "Rata-rata Harian") : trendPeriod === 'monthly' ? 'Rata-rata Bulanan' : 'Rata-rata Tahunan'}: {formatRupiah(avgPerPeriod)}
-                </p>
-              </div>
-              <ToggleGroup 
-                type="single" 
-                value={trendPeriod} 
-                onValueChange={(value) => value && setTrendPeriod(value as TrendPeriod)}
-                className="bg-muted p-1 rounded-lg"
-              >
-                <ToggleGroupItem value="daily" className="text-xs px-3 data-[state=on]:bg-background data-[state=on]:shadow-sm">
-                  1H (Harian)
-                </ToggleGroupItem>
-                <ToggleGroupItem value="monthly" className="text-xs px-3 data-[state=on]:bg-background data-[state=on]:shadow-sm">
-                  1B (Bulanan)
-                </ToggleGroupItem>
-                <ToggleGroupItem value="yearly" className="text-xs px-3 data-[state=on]:bg-background data-[state=on]:shadow-sm">
-                  1T (Tahunan)
-                </ToggleGroupItem>
-              </ToggleGroup>
-            </div>
-            
-            {/* Period-specific slider */}
-            <div className="flex items-center gap-4">
-              {trendPeriod === 'daily' && (
-                <>
-                  <span className="text-xs text-muted-foreground whitespace-nowrap">7 Hari</span>
-                  <Slider
-                    value={[trendDays]}
-                    onValueChange={(value) => setTrendDays(value[0])}
-                    min={7}
-                    max={90}
-                    step={1}
-                    className="flex-1"
-                  />
-                  <span className="text-xs text-muted-foreground whitespace-nowrap">90 Hari</span>
-                  <span className="text-sm font-medium text-primary ml-2">{trendDays}H</span>
-                </>
-              )}
-              {trendPeriod === 'monthly' && (
-                <>
-                  <span className="text-xs text-muted-foreground whitespace-nowrap">3 Bulan</span>
-                  <Slider
-                    value={[trendMonths]}
-                    onValueChange={(value) => setTrendMonths(value[0])}
-                    min={3}
-                    max={24}
-                    step={1}
-                    className="flex-1"
-                  />
-                  <span className="text-xs text-muted-foreground whitespace-nowrap">24 Bulan</span>
-                  <span className="text-sm font-medium text-primary ml-2">{trendMonths}B</span>
-                </>
-              )}
-              {trendPeriod === 'yearly' && (
-                <>
-                  <span className="text-xs text-muted-foreground whitespace-nowrap">2 Tahun</span>
-                  <Slider
-                    value={[trendYears]}
-                    onValueChange={(value) => setTrendYears(value[0])}
-                    min={2}
-                    max={10}
-                    step={1}
-                    className="flex-1"
-                  />
-                  <span className="text-xs text-muted-foreground whitespace-nowrap">10 Tahun</span>
-                  <span className="text-sm font-medium text-primary ml-2">{trendYears}T</span>
-                </>
-              )}
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="p-0">
-          <ScrollArea className="w-full">
-            <div 
-              className="h-[300px] p-6" 
-              style={{ 
-                minWidth: trendPeriod === 'daily' 
-                  ? `${Math.max(800, activeTrendData.length * 25)}px` 
-                  : trendPeriod === 'monthly' 
-                    ? `${Math.max(600, activeTrendData.length * 60)}px`
-                    : '100%'
-              }}
-            >
-              {isLoadingTrend ? (
-                <div className="flex items-center justify-center h-full">
-                  <Skeleton className="h-full w-full" />
-                </div>
-              ) : (
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={activeTrendData}>
-                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                    <XAxis 
-                      dataKey="label" 
-                      className="text-xs"
-                      interval={0}
-                      angle={trendPeriod === 'monthly' ? -45 : 0}
-                      textAnchor={trendPeriod === 'monthly' ? 'end' : 'middle'}
-                      height={trendPeriod === 'monthly' ? 60 : 30}
-                    />
-                    <YAxis 
-                      tickFormatter={(v) => v >= 1000000000 ? `${(v / 1000000000).toFixed(1)}B` : `${(v / 1000000).toFixed(1)}M`} 
-                      className="text-xs" 
-                    />
-                    <Tooltip
-                      formatter={(value: number) => [formatRupiah(value), t("dashboard.collection", "Penagihan")]}
-                      labelFormatter={(label) => label}
-                      contentStyle={{ 
-                        backgroundColor: "hsl(var(--card))", 
-                        border: "1px solid hsl(var(--border))" 
-                      }}
-                    />
-                    <Line 
-                      type="monotone" 
-                      dataKey="amount" 
-                      stroke="hsl(var(--primary))" 
-                      strokeWidth={2}
-                      dot={{ fill: "hsl(var(--primary))", strokeWidth: 0, r: trendPeriod === 'daily' ? 3 : 4 }}
-                      activeDot={{ r: 6, fill: "hsl(var(--primary))" }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              )}
-            </div>
-            <ScrollBar orientation="horizontal" />
-          </ScrollArea>
-        </CardContent>
-      </Card>
+      {/* Collection Trend Chart Component */}
+      <CollectionTrendChart />
 
       {/* Operational Expenses Section */}
       <Card>
