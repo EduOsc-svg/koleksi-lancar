@@ -34,7 +34,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { usePagination } from "@/hooks/usePagination";
 import { TablePagination } from "@/components/TablePagination";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -276,8 +276,8 @@ export default function Dashboard() {
             
           </div>
         </CardHeader>
-        <CardContent className="p-0">
-          <ScrollArea className="w-full">
+        <CardContent className="p-0 overflow-hidden">
+          <div className="overflow-x-auto">
             <div 
               className="h-[300px] p-6" 
               style={{ 
@@ -328,8 +328,7 @@ export default function Dashboard() {
                 </ResponsiveContainer>
               )}
             </div>
-            <ScrollBar orientation="horizontal" />
-          </ScrollArea>
+          </div>
         </CardContent>
       </Card>
 
