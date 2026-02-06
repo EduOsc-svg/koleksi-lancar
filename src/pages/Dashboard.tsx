@@ -649,7 +649,6 @@ export default function Dashboard() {
                     <TableRow>
                       <TableHead>{t("dashboard.startDate", "Tanggal Mulai")}</TableHead>
                       <TableHead>{t("dashboard.contract", "Kontrak")}</TableHead>
-                      <TableHead>{t("dashboard.customerCode", "Kode Pelanggan")}</TableHead>
                       <TableHead>{t("dashboard.product", "Produk")}</TableHead>
                       <TableHead className="text-right">{t("dashboard.modal", "Modal")}</TableHead>
                       <TableHead className="text-right">{t("dashboard.omset", "Omset")}</TableHead>
@@ -667,10 +666,9 @@ export default function Dashboard() {
                             year: 'numeric'
                           })}
                         </TableCell>
-                        <TableCell className="font-mono text-sm">{item.contract_ref}</TableCell>
                         <TableCell>
                           <div>
-                            <p className="font-medium">{item.customer_code || 'N/A'}</p>
+                            <p className="font-mono text-sm">{item.contract_ref}</p>
                             <p className="text-xs text-muted-foreground">{item.customer_name}</p>
                           </div>
                         </TableCell>
@@ -691,7 +689,7 @@ export default function Dashboard() {
                     ))}
                     {(!paginatedHistory || paginatedHistory.length === 0) && (
                       <TableRow>
-                        <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
+                        <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
                           {t("dashboard.noData", "Tidak ada data kontrak")}
                         </TableCell>
                       </TableRow>
