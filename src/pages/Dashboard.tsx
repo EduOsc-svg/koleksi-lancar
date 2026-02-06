@@ -38,6 +38,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { usePagination } from "@/hooks/usePagination";
 import { TablePagination } from "@/components/TablePagination";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
 import { format, startOfMonth, addMonths, subMonths } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
 import { StatCard } from "@/components/dashboard/StatCard";
@@ -57,8 +58,11 @@ export default function Dashboard() {
     notes: '',
   });
   
+  // Trend days slider state
+  const [trendDays, setTrendDays] = useState(30);
+  
   // Data hooks
-  const { data: trendData, isLoading: isLoadingTrend } = useCollectionTrend(30);
+  const { data: trendData, isLoading: isLoadingTrend } = useCollectionTrend(trendDays);
   const { data: monthlyData, isLoading: isLoadingMonthly } = useMonthlyPerformance(selectedMonth);
   const { data: yearlyData, isLoading: isLoadingYearly } = useYearlyTarget(selectedYear);
   const { data: yearlyFinancial, isLoading: isLoadingYearlyFinancial } = useYearlyFinancialSummary(selectedYear);
@@ -223,10 +227,26 @@ export default function Dashboard() {
       {/* Collection Trend Chart */}
       <Card>
         <CardHeader>
-          <CardTitle>{t("dashboard.collectionTrend")} - 30 {t("dashboard.days", "Hari")}</CardTitle>
-          <p className="text-sm text-muted-foreground">
-            Total: {formatRupiah(totalCollection)} | {t("dashboard.avgDaily", "Rata-rata Harian")}: {formatRupiah(avgDaily)}
-          </p>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <CardTitle>{t("dashboard.collectionTrend")} - {trendDays} {t("dashboard.days", "Hari")}</CardTitle>
+              <p className="text-sm text-muted-foreground mt-1">
+                Total: {formatRupiah(totalCollection)} | {t("dashboard.avgDaily", "Rata-rata Harian")}: {formatRupiah(avgDaily)}
+              </p>
+            </div>
+            <div className="flex items-center gap-4 min-w-[200px]">
+              <span className="text-xs text-muted-foreground whitespace-nowrap">7</span>
+              <Slider
+                value={[trendDays]}
+                onValueChange={(value) => setTrendDays(value[0])}
+                min={7}
+                max={90}
+                step={1}
+                className="flex-1"
+              />
+              <span className="text-xs text-muted-foreground whitespace-nowrap">90</span>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="h-[300px]">
