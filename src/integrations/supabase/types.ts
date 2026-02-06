@@ -173,6 +173,30 @@ export type Database = {
           },
         ]
       }
+      commission_tiers: {
+        Row: {
+          created_at: string
+          id: string
+          max_amount: number | null
+          min_amount: number
+          percentage: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          max_amount?: number | null
+          min_amount: number
+          percentage: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          max_amount?: number | null
+          min_amount?: number
+          percentage?: number
+        }
+        Relationships: []
+      }
       credit_contracts: {
         Row: {
           contract_ref: string
@@ -441,6 +465,7 @@ export type Database = {
           id: string
           name: string
           phone: string | null
+          use_tiered_commission: boolean
         }
         Insert: {
           agent_code: string
@@ -449,6 +474,7 @@ export type Database = {
           id?: string
           name: string
           phone?: string | null
+          use_tiered_commission?: boolean
         }
         Update: {
           agent_code?: string
@@ -457,6 +483,7 @@ export type Database = {
           id?: string
           name?: string
           phone?: string | null
+          use_tiered_commission?: boolean
         }
         Relationships: []
       }

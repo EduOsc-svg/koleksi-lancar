@@ -8,6 +8,7 @@ export interface SalesAgent {
   name: string;
   phone: string | null;
   commission_percentage: number | null;
+  use_tiered_commission: boolean;
   created_at: string;
 }
 
