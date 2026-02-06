@@ -121,6 +121,58 @@ export type Database = {
         }
         Relationships: []
       }
+      commission_payments: {
+        Row: {
+          amount: number
+          contract_id: string
+          created_at: string
+          id: string
+          notes: string | null
+          payment_date: string
+          sales_agent_id: string
+        }
+        Insert: {
+          amount?: number
+          contract_id: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          payment_date?: string
+          sales_agent_id: string
+        }
+        Update: {
+          amount?: number
+          contract_id?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          payment_date?: string
+          sales_agent_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commission_payments_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: true
+            referencedRelation: "credit_contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commission_payments_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: true
+            referencedRelation: "invoice_details"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commission_payments_sales_agent_id_fkey"
+            columns: ["sales_agent_id"]
+            isOneToOne: false
+            referencedRelation: "sales_agents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       credit_contracts: {
         Row: {
           contract_ref: string
