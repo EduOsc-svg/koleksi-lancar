@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Plus, Pencil, Trash2, Download } from "lucide-react";
+import { Plus, Pencil, Trash2, Download, Wallet } from "lucide-react";
 import ExcelJS from "exceljs";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
@@ -45,6 +45,7 @@ import { usePagination } from "@/hooks/usePagination";
 import { TablePagination } from "@/components/TablePagination";
 import { formatRupiah } from "@/lib/format";
 import { SearchInput } from "@/components/ui/search-input";
+import { CommissionPaymentDialog } from "@/components/salesAgent/CommissionPaymentDialog";
 
 export default function SalesAgents() {
   const { t } = useTranslation();
@@ -71,6 +72,7 @@ export default function SalesAgents() {
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [commissionDialogOpen, setCommissionDialogOpen] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState<SalesAgent | null>(null);
   const [highlightedRowId, setHighlightedRowId] = useState<string | null>(null);
   const highlightedRowRef = useRef<HTMLTableRowElement>(null);
@@ -339,6 +341,17 @@ export default function SalesAgents() {
                       {formatRupiah(omsetData?.total_commission || 0)}
                     </TableCell>
                     <TableCell className="text-right">
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        title="Kelola Komisi"
+                        onClick={() => {
+                          setSelectedAgent(agent);
+                          setCommissionDialogOpen(true);
+                        }}
+                      >
+                        <Wallet className="h-4 w-4" />
+                      </Button>
                       <Button variant="ghost" size="icon" onClick={() => handleOpenEdit(agent)}>
                         <Pencil className="h-4 w-4" />
                       </Button>
@@ -439,6 +452,17 @@ export default function SalesAgents() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Commission Payment Dialog */}
+      {selectedAgent && (
+        <CommissionPaymentDialog
+          open={commissionDialogOpen}
+          onOpenChange={setCommissionDialogOpen}
+          agentId={selectedAgent.id}
+          agentName={selectedAgent.name}
+          agentCode={selectedAgent.agent_code}
+        />
+      )}
     </div>
   );
 }
