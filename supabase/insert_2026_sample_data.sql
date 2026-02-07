@@ -1,16 +1,17 @@
 -- =========================================
 -- INSERT 200 SAMPLE DATA FOR 2026
 -- Management System Kredit
+-- Business Logic: Omset - Keuntungan (20%) = Modal
 -- =========================================
 
--- First, ensure we have enough sales agents
-INSERT INTO public.sales_agents (id, name, agent_code, phone, commission_percentage)
+-- First, ensure we have sales agents
+INSERT INTO public.sales_agents (id, name, agent_code, phone, use_tiered_commission)
 VALUES 
-  ('a1000001-0000-0000-0000-000000000001', 'Ahmad Susanto', 'S001', '081234567801', 5),
-  ('a1000001-0000-0000-0000-000000000002', 'Budi Hartono', 'S002', '081234567802', 5),
-  ('a1000001-0000-0000-0000-000000000003', 'Citra Dewi', 'S003', '081234567803', 5),
-  ('a1000001-0000-0000-0000-000000000004', 'Dedi Prasetyo', 'S004', '081234567804', 5),
-  ('a1000001-0000-0000-0000-000000000005', 'Eka Putra', 'S005', '081234567805', 5)
+  ('a1000001-0000-0000-0000-000000000001', 'Ahmad Susanto', 'S001', '081234567801', true),
+  ('a1000001-0000-0000-0000-000000000002', 'Budi Hartono', 'S002', '081234567802', true),
+  ('a1000001-0000-0000-0000-000000000003', 'Citra Dewi', 'S003', '081234567803', true),
+  ('a1000001-0000-0000-0000-000000000004', 'Dedi Prasetyo', 'S004', '081234567804', true),
+  ('a1000001-0000-0000-0000-000000000005', 'Eka Putra', 'S005', '081234567805', true)
 ON CONFLICT (id) DO NOTHING;
 
 -- Ensure we have collectors
@@ -21,7 +22,7 @@ VALUES
   ('c1000001-0000-0000-0000-000000000003', 'Kolektor Cahyo', 'K003', '081345678903')
 ON CONFLICT (id) DO NOTHING;
 
--- Generate 200 customers for 2026
+-- Generate 200 customers and contracts for 2026
 DO $$
 DECLARE
   v_customer_id UUID;
@@ -31,8 +32,8 @@ DECLARE
   v_customer_code TEXT;
   v_contract_ref TEXT;
   v_start_date DATE;
-  v_modal NUMERIC;
   v_omset NUMERIC;
+  v_modal NUMERIC;
   v_tenor INTEGER;
   v_daily_amount NUMERIC;
   v_current_date DATE;
@@ -42,20 +43,36 @@ DECLARE
   v_recurring_weekdays INTEGER[];
   i INTEGER;
   j INTEGER;
+  v_first_idx INTEGER;
+  v_last_idx INTEGER;
   
-  -- Arrays for random names
-  v_first_names TEXT[] := ARRAY['Agus', 'Bambang', 'Cahyadi', 'Dewi', 'Eko', 'Fitri', 'Gunawan', 'Hendra', 'Indra', 'Joko', 
-                                 'Kartini', 'Lukman', 'Maya', 'Nugroho', 'Oktavia', 'Putra', 'Qori', 'Rini', 'Surya', 'Tono',
-                                 'Udin', 'Vina', 'Wahyu', 'Xena', 'Yanto', 'Zahra', 'Arief', 'Bima', 'Candra', 'Dian',
-                                 'Endang', 'Faisal', 'Galih', 'Hani', 'Irwan', 'Juli', 'Kusuma', 'Lina', 'Mulyadi', 'Ningsih'];
-  v_last_names TEXT[] := ARRAY['Pratama', 'Wijaya', 'Santoso', 'Kusuma', 'Saputra', 'Hidayat', 'Nugraha', 'Permana', 'Setiawan', 'Wibowo',
-                                'Hartono', 'Suharto', 'Suryadi', 'Pranoto', 'Budiman', 'Supriyadi', 'Handoko', 'Susanto', 'Purnama', 'Gunawan'];
-  v_streets TEXT[] := ARRAY['Jl. Merdeka', 'Jl. Sudirman', 'Jl. Thamrin', 'Jl. Gatot Subroto', 'Jl. Ahmad Yani', 
-                            'Jl. Diponegoro', 'Jl. Imam Bonjol', 'Jl. Hayam Wuruk', 'Jl. Gajah Mada', 'Jl. Pemuda',
-                            'Jl. Pahlawan', 'Jl. Veteran', 'Jl. Kartini', 'Jl. Slamet Riyadi', 'Jl. Panglima Sudirman'];
-  v_areas TEXT[] := ARRAY['Menteng', 'Kemang', 'Kelapa Gading', 'Senayan', 'Kuningan', 'Tebet', 'Cikini', 'Mangga Dua', 'Tanah Abang', 'Glodok'];
-  v_products TEXT[] := ARRAY['HP Samsung', 'HP iPhone', 'HP Xiaomi', 'Laptop Asus', 'Laptop HP', 'TV LED 32"', 'TV LED 43"', 
-                              'Kulkas 2 Pintu', 'AC 1 PK', 'Mesin Cuci', 'Kompor Gas', 'Dispenser', 'Blender', 'Rice Cooker', 'Setrika'];
+  -- Arrays for random Indonesian names (200+ combinations possible)
+  v_first_names TEXT[] := ARRAY[
+    'Agus', 'Bambang', 'Cahyadi', 'Dewi', 'Eko', 'Fitri', 'Gunawan', 'Hendra', 'Indra', 'Joko',
+    'Kartini', 'Lukman', 'Maya', 'Nugroho', 'Oktavia', 'Putra', 'Qori', 'Rini', 'Surya', 'Tono',
+    'Udin', 'Vina', 'Wahyu', 'Yanto', 'Zahra', 'Arief', 'Bima', 'Candra', 'Dian', 'Endang',
+    'Faisal', 'Galih', 'Hani', 'Irwan', 'Juli', 'Kusuma', 'Lina', 'Mulyadi', 'Ningsih', 'Omar',
+    'Putri', 'Ratna', 'Sinta', 'Taufik', 'Utami', 'Vera', 'Wawan', 'Yudi', 'Zaki', 'Adit',
+    'Bayu', 'Cindy', 'Doni', 'Elsa', 'Fajar', 'Gita', 'Hasan', 'Intan', 'Jihan', 'Kiki'
+  ];
+  
+  v_last_names TEXT[] := ARRAY[
+    'Pratama', 'Wijaya', 'Santoso', 'Kusuma', 'Saputra', 'Hidayat', 'Nugraha', 'Permana', 'Setiawan', 'Wibowo',
+    'Hartono', 'Suharto', 'Suryadi', 'Pranoto', 'Budiman', 'Supriyadi', 'Handoko', 'Susanto', 'Purnama', 'Gunawan',
+    'Halim', 'Wicaksono', 'Kurniawan', 'Firmansyah', 'Ramadhan', 'Hakim', 'Utomo', 'Prasetya', 'Mahendra', 'Perdana'
+  ];
+  
+  v_streets TEXT[] := ARRAY[
+    'Jl. Merdeka', 'Jl. Sudirman', 'Jl. Thamrin', 'Jl. Gatot Subroto', 'Jl. Ahmad Yani',
+    'Jl. Diponegoro', 'Jl. Imam Bonjol', 'Jl. Hayam Wuruk', 'Jl. Gajah Mada', 'Jl. Pemuda',
+    'Jl. Pahlawan', 'Jl. Veteran', 'Jl. Kartini', 'Jl. Slamet Riyadi', 'Jl. Panglima Sudirman'
+  ];
+  
+  v_areas TEXT[] := ARRAY[
+    'Menteng', 'Kemang', 'Kelapa Gading', 'Senayan', 'Kuningan', 
+    'Tebet', 'Cikini', 'Mangga Dua', 'Tanah Abang', 'Glodok',
+    'Cibubur', 'Bekasi', 'Depok', 'Bogor', 'Tangerang'
+  ];
   
   v_sales_agents UUID[] := ARRAY[
     'a1000001-0000-0000-0000-000000000001'::UUID,
@@ -70,6 +87,9 @@ DECLARE
     'c1000001-0000-0000-0000-000000000002'::UUID,
     'c1000001-0000-0000-0000-000000000003'::UUID
   ];
+
+  v_full_name TEXT;
+  v_used_names TEXT[] := ARRAY[]::TEXT[];
 
 BEGIN
   -- Fetch holidays
@@ -99,22 +119,34 @@ BEGIN
     v_sales_agent_id := v_sales_agents[1 + floor(random() * 5)::int];
     v_collector_id := v_collectors[1 + floor(random() * 3)::int];
     
-    -- Generate customer code (A001-A200 format for 2026)
+    -- Generate customer code (B001-B200 format for 2026)
     v_customer_code := 'B' || LPAD(i::text, 3, '0');
     
     -- Generate contract reference
-    v_contract_ref := 'KTR-2026-' || LPAD(i::text, 4, '0');
+    v_contract_ref := 'A' || LPAD(i::text, 3, '0');
     
-    -- Random start date in 2026 (January to December)
+    -- Generate unique name with number suffix if needed
+    v_first_idx := 1 + floor(random() * 60)::int;
+    v_last_idx := 1 + floor(random() * 30)::int;
+    v_full_name := v_first_names[v_first_idx] || ' ' || v_last_names[v_last_idx];
+    
+    -- Add number suffix to ensure uniqueness
+    IF v_full_name = ANY(v_used_names) THEN
+      v_full_name := v_full_name || ' ' || i::text;
+    END IF;
+    v_used_names := array_append(v_used_names, v_full_name);
+    
+    -- Random start date distributed across 2026 (January to December)
     v_start_date := '2026-01-01'::date + (floor(random() * 365)::int);
     
-    -- Random modal between 1,000,000 and 10,000,000
-    v_modal := (1000000 + floor(random() * 9000000)::int);
+    -- Random OMSET (Harga Jual) between 1,200,000 and 12,000,000
+    v_omset := (1200000 + floor(random() * 10800000)::int);
     -- Round to nearest 100,000
-    v_modal := round(v_modal / 100000) * 100000;
+    v_omset := round(v_omset / 100000) * 100000;
     
-    -- Omset = Modal * 1.2 (20% margin)
-    v_omset := v_modal * 1.2;
+    -- MODAL = OMSET / 1.2 (karena Omset = Modal * 1.2, maka Modal = Omset / 1.2)
+    -- Keuntungan 20% dari Modal
+    v_modal := round(v_omset / 1.2, 0);
     
     -- Random tenor: 30, 50, 60, 90, or 100 days
     v_tenor := (ARRAY[30, 50, 60, 90, 100])[1 + floor(random() * 5)::int];
@@ -123,27 +155,35 @@ BEGIN
     v_daily_amount := round(v_omset / v_tenor, 0);
     
     -- Insert customer
-    INSERT INTO public.customers (id, name, customer_code, address, business_address, phone, nik, assigned_sales_id)
+    INSERT INTO public.customers (id, name, customer_code, address, business_address, phone, nik)
     VALUES (
       v_customer_id,
-      v_first_names[1 + floor(random() * 40)::int] || ' ' || v_last_names[1 + floor(random() * 20)::int],
+      v_full_name,
       v_customer_code,
-      v_streets[1 + floor(random() * 15)::int] || ' No. ' || (1 + floor(random() * 200)::int) || ', ' || v_areas[1 + floor(random() * 10)::int],
-      'Pasar ' || v_areas[1 + floor(random() * 10)::int] || ' Blok ' || chr(65 + floor(random() * 10)::int) || (1 + floor(random() * 50)::int),
+      v_streets[1 + floor(random() * 15)::int] || ' No. ' || (1 + floor(random() * 200)::int) || ', ' || v_areas[1 + floor(random() * 15)::int],
+      'Pasar ' || v_areas[1 + floor(random() * 15)::int] || ' Blok ' || chr(65 + floor(random() * 10)::int) || (1 + floor(random() * 50)::int),
       '08' || (11 + floor(random() * 89)::int)::text || (10000000 + floor(random() * 89999999)::int)::text,
-      (31 + floor(random() * 69)::int)::text || (10 + floor(random() * 90)::int)::text || (floor(random() * 3)::int + 1)::text || 
-        (floor(random() * 12)::int + 1)::text || (60 + floor(random() * 40)::int)::text || (1000 + floor(random() * 9000)::int)::text,
-      v_sales_agent_id
+      (31 + floor(random() * 69)::int)::text || (10 + floor(random() * 90)::int)::text || 
+        LPAD((floor(random() * 12)::int + 1)::text, 2, '0') || 
+        LPAD((floor(random() * 28)::int + 1)::text, 2, '0') || 
+        (60 + floor(random() * 40)::int)::text || 
+        LPAD((floor(random() * 9999)::int + 1)::text, 4, '0')
     );
     
     -- Insert contract
-    INSERT INTO public.credit_contracts (id, customer_id, contract_ref, omset, total_loan_amount, tenor_days, daily_installment_amount, start_date, sales_agent_id, status, current_installment_index)
+    -- omset field = Modal (capital)
+    -- total_loan_amount = Omset (selling price / total to be paid)
+    INSERT INTO public.credit_contracts (
+      id, customer_id, contract_ref, omset, total_loan_amount, 
+      tenor_days, daily_installment_amount, start_date, sales_agent_id, 
+      status, current_installment_index
+    )
     VALUES (
       v_contract_id,
       v_customer_id,
       v_contract_ref,
-      v_modal,  -- omset field stores Modal
-      v_omset,  -- total_loan_amount stores Omset (Total Pinjaman)
+      v_modal,           -- omset field stores Modal (capital)
+      v_omset,           -- total_loan_amount stores Omset (selling price)
       v_tenor,
       v_daily_amount,
       v_start_date,
@@ -170,10 +210,10 @@ BEGIN
       v_current_date := v_current_date + INTERVAL '1 day';
     END LOOP;
     
-    -- Generate some payments (random 0-30% of coupons paid)
-    -- Only for contracts that started before Feb 3, 2026 (current date context)
-    IF v_start_date < '2026-02-03'::date THEN
-      v_payment_count := floor(random() * (v_tenor * 0.3))::int;
+    -- Generate some payments for contracts started before current simulation date
+    -- Simulate ~20% payment progress for older contracts
+    IF v_start_date < '2026-02-07'::date THEN
+      v_payment_count := GREATEST(1, floor(random() * (v_tenor * 0.25))::int);
       
       FOR j IN 1..v_payment_count LOOP
         -- Update coupon status
@@ -182,11 +222,6 @@ BEGIN
         WHERE contract_id = v_contract_id 
           AND installment_index = j;
         
-        -- Get the due date for this coupon
-        SELECT due_date INTO v_current_date
-        FROM public.installment_coupons
-        WHERE contract_id = v_contract_id AND installment_index = j;
-        
         -- Insert payment log
         INSERT INTO public.payment_logs (contract_id, coupon_id, installment_index, amount_paid, payment_date, collector_id, notes)
         SELECT 
@@ -194,7 +229,7 @@ BEGIN
           ic.id,
           j,
           v_daily_amount,
-          ic.due_date + (floor(random() * 3)::int),  -- Paid within 0-2 days of due date
+          ic.due_date + (floor(random() * 3)::int),
           v_collector_id,
           'Pembayaran cicilan ke-' || j
         FROM public.installment_coupons ic
@@ -226,11 +261,14 @@ SELECT 'Payments 2026', COUNT(*) FROM public.payment_logs pl
   WHERE cc.start_date >= '2026-01-01' AND cc.start_date < '2027-01-01';
 
 -- Summary statistics
+-- Omset = total_loan_amount (Harga Jual)
+-- Modal = omset field (Capital)
+-- Keuntungan = Omset - Modal
 SELECT 
   COUNT(*) as total_contracts,
   SUM(omset) as total_modal,
   SUM(total_loan_amount) as total_omset,
-  SUM(total_loan_amount) - SUM(omset) as total_profit,
-  SUM(total_loan_amount) * 0.05 as total_commission
+  SUM(total_loan_amount) - SUM(omset) as total_keuntungan,
+  ROUND((SUM(total_loan_amount) - SUM(omset)) / NULLIF(SUM(omset), 0) * 100, 2) as margin_persen
 FROM public.credit_contracts 
 WHERE start_date >= '2026-01-01' AND start_date < '2027-01-01';
