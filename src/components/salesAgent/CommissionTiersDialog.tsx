@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Plus, Pencil, Trash2, Settings, Info } from "lucide-react";
 import { toast } from "sonner";
 
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -144,7 +145,7 @@ export function CommissionTiersDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Settings className="h-5 w-5" />
@@ -155,13 +156,15 @@ export function CommissionTiersDialog({
             </DialogDescription>
           </DialogHeader>
 
-          <Alert>
-            <Info className="h-4 w-4" />
-            <AlertDescription>
-              Persentase komisi ditentukan berdasarkan nilai <strong>Omset per kontrak</strong>. 
-              Jika nilai kontrak tidak cocok dengan tier manapun, akan menggunakan tier tertinggi.
-            </AlertDescription>
-          </Alert>
+          <ScrollArea className="flex-1 pr-4">
+            <div className="space-y-4">
+              <Alert>
+                <Info className="h-4 w-4" />
+                <AlertDescription>
+                  Persentase komisi ditentukan berdasarkan nilai <strong>Omset per kontrak</strong>. 
+                  Jika nilai kontrak tidak cocok dengan tier manapun, akan menggunakan tier tertinggi.
+                </AlertDescription>
+              </Alert>
 
           <div className="flex justify-end">
             <Button onClick={handleOpenCreate} size="sm">
@@ -229,10 +232,12 @@ export function CommissionTiersDialog({
             </Table>
           </div>
 
-          <div className="text-sm text-muted-foreground">
-            <strong>Contoh:</strong> Jika omset kontrak Rp 50.000.000 dan tier menunjukkan 6% untuk rentang Rp 30.000.000 - Rp 70.000.000, 
-            maka komisi = Rp 50.000.000 × 6% = Rp 3.000.000
-          </div>
+              <div className="text-sm text-muted-foreground">
+                <strong>Contoh:</strong> Jika omset kontrak Rp 50.000.000 dan tier menunjukkan 6% untuk rentang Rp 30.000.000 - Rp 70.000.000, 
+                maka komisi = Rp 50.000.000 × 6% = Rp 3.000.000
+              </div>
+            </div>
+          </ScrollArea>
         </DialogContent>
       </Dialog>
 

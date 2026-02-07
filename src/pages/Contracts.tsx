@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Plus, Pencil, Trash2, Eye, Printer } from "lucide-react";
+import { Plus, Pencil, Trash2, Eye, Printer, Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,6 +37,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
@@ -82,6 +95,11 @@ export default function Contracts() {
   const [selectedContract, setSelectedContract] = useState<ContractWithCustomer | null>(null);
   const [highlightedRowId, setHighlightedRowId] = useState<string | null>(null);
   const highlightedRowRef = useRef<HTMLTableRowElement>(null);
+  
+  // Combobox state for searchable dropdowns
+  const [customerOpen, setCustomerOpen] = useState(false);
+  const [salesAgentOpen, setSalesAgentOpen] = useState(false);
+  
   const [formData, setFormData] = useState({
     contract_ref: "",
     customer_id: "",
@@ -531,40 +549,99 @@ export default function Contracts() {
               </div>
               <div>
                 <Label htmlFor="customer">Pelanggan</Label>
-                <Select
-                  value={formData.customer_id}
-                  onValueChange={(v) => setFormData({ ...formData, customer_id: v })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Pilih pelanggan" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {customers?.map((customer) => (
-                      <SelectItem key={customer.id} value={customer.id}>
-                        {customer.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Popover open={customerOpen} onOpenChange={setCustomerOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={customerOpen}
+                      className="w-full justify-between font-normal"
+                    >
+                      {formData.customer_id
+                        ? customers?.find((c) => c.id === formData.customer_id)?.name
+                        : "Cari pelanggan..."}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                    <Command>
+                      <CommandInput placeholder="Ketik nama pelanggan..." />
+                      <CommandList>
+                        <CommandEmpty>Pelanggan tidak ditemukan.</CommandEmpty>
+                        <CommandGroup>
+                          {customers?.map((customer) => (
+                            <CommandItem
+                              key={customer.id}
+                              value={customer.name}
+                              onSelect={() => {
+                                setFormData({ ...formData, customer_id: customer.id });
+                                setCustomerOpen(false);
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  formData.customer_id === customer.id ? "opacity-100" : "opacity-0"
+                                )}
+                              />
+                              {customer.name}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
               </div>
             </div>
             <div>
               <Label htmlFor="sales_agent">Sales Agent</Label>
-              <Select
-                value={formData.sales_agent_id}
-                onValueChange={(v) => setFormData({ ...formData, sales_agent_id: v })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Pilih sales agent" />
-                </SelectTrigger>
-                <SelectContent>
-                  {salesAgents?.map((agent) => (
-                    <SelectItem key={agent.id} value={agent.id}>
-                      {agent.name} ({agent.agent_code})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Popover open={salesAgentOpen} onOpenChange={setSalesAgentOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={salesAgentOpen}
+                    className="w-full justify-between font-normal"
+                  >
+                    {formData.sales_agent_id
+                      ? (() => {
+                          const agent = salesAgents?.find((a) => a.id === formData.sales_agent_id);
+                          return agent ? `${agent.name} (${agent.agent_code})` : "Cari sales agent...";
+                        })()
+                      : "Cari sales agent..."}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                  <Command>
+                    <CommandInput placeholder="Ketik nama atau kode agent..." />
+                    <CommandList>
+                      <CommandEmpty>Sales agent tidak ditemukan.</CommandEmpty>
+                      <CommandGroup>
+                        {salesAgents?.map((agent) => (
+                          <CommandItem
+                            key={agent.id}
+                            value={`${agent.name} ${agent.agent_code}`}
+                            onSelect={() => {
+                              setFormData({ ...formData, sales_agent_id: agent.id });
+                              setSalesAgentOpen(false);
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                formData.sales_agent_id === agent.id ? "opacity-100" : "opacity-0"
+                              )}
+                            />
+                            {agent.name} ({agent.agent_code})
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
               <p className="text-xs text-muted-foreground mt-1">
                 Komisi akan otomatis masuk ke sales ini
               </p>
