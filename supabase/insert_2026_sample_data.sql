@@ -4,23 +4,8 @@
 -- Business Logic: Omset - Keuntungan (20%) = Modal
 -- =========================================
 
--- First, ensure we have sales agents
-INSERT INTO public.sales_agents (id, name, agent_code, phone, use_tiered_commission)
-VALUES 
-  ('a1000001-0000-0000-0000-000000000001', 'Ahmad Susanto', 'S001', '081234567801', true),
-  ('a1000001-0000-0000-0000-000000000002', 'Budi Hartono', 'S002', '081234567802', true),
-  ('a1000001-0000-0000-0000-000000000003', 'Citra Dewi', 'S003', '081234567803', true),
-  ('a1000001-0000-0000-0000-000000000004', 'Dedi Prasetyo', 'S004', '081234567804', true),
-  ('a1000001-0000-0000-0000-000000000005', 'Eka Putra', 'S005', '081234567805', true)
-ON CONFLICT (id) DO NOTHING;
-
--- Ensure we have collectors
-INSERT INTO public.collectors (id, name, collector_code, phone)
-VALUES 
-  ('c1000001-0000-0000-0000-000000000001', 'Kolektor Andi', 'K001', '081345678901'),
-  ('c1000001-0000-0000-0000-000000000002', 'Kolektor Bambang', 'K002', '081345678902'),
-  ('c1000001-0000-0000-0000-000000000003', 'Kolektor Cahyo', 'K003', '081345678903')
-ON CONFLICT (id) DO NOTHING;
+-- NOTE: Script assumes sales_agents and collectors already exist in database
+-- Fetch existing sales agents and collectors dynamically
 
 -- Generate 200 customers and contracts for 2026
 DO $$
@@ -74,24 +59,28 @@ DECLARE
     'Cibubur', 'Bekasi', 'Depok', 'Bogor', 'Tangerang'
   ];
   
-  v_sales_agents UUID[] := ARRAY[
-    'a1000001-0000-0000-0000-000000000001'::UUID,
-    'a1000001-0000-0000-0000-000000000002'::UUID,
-    'a1000001-0000-0000-0000-000000000003'::UUID,
-    'a1000001-0000-0000-0000-000000000004'::UUID,
-    'a1000001-0000-0000-0000-000000000005'::UUID
-  ];
-  
-  v_collectors UUID[] := ARRAY[
-    'c1000001-0000-0000-0000-000000000001'::UUID,
-    'c1000001-0000-0000-0000-000000000002'::UUID,
-    'c1000001-0000-0000-0000-000000000003'::UUID
-  ];
+  v_sales_agents UUID[];
+  v_collectors UUID[];
 
   v_full_name TEXT;
   v_used_names TEXT[] := ARRAY[]::TEXT[];
 
 BEGIN
+  -- Fetch existing sales agents dynamically
+  SELECT ARRAY_AGG(id) INTO v_sales_agents FROM public.sales_agents;
+  
+  -- Fetch existing collectors dynamically
+  SELECT ARRAY_AGG(id) INTO v_collectors FROM public.collectors;
+  
+  -- Validate we have data
+  IF v_sales_agents IS NULL OR array_length(v_sales_agents, 1) IS NULL THEN
+    RAISE EXCEPTION 'No sales agents found. Please add sales agents first!';
+  END IF;
+  
+  IF v_collectors IS NULL OR array_length(v_collectors, 1) IS NULL THEN
+    RAISE EXCEPTION 'No collectors found. Please add collectors first!';
+  END IF;
+
   -- Fetch holidays
   SELECT ARRAY_AGG(holiday_date) INTO v_specific_holidays 
   FROM public.holidays 
@@ -116,8 +105,8 @@ BEGIN
     v_contract_id := gen_random_uuid();
     
     -- Select random sales agent and collector
-    v_sales_agent_id := v_sales_agents[1 + floor(random() * 5)::int];
-    v_collector_id := v_collectors[1 + floor(random() * 3)::int];
+    v_sales_agent_id := v_sales_agents[1 + floor(random() * array_length(v_sales_agents, 1))::int];
+    v_collector_id := v_collectors[1 + floor(random() * array_length(v_collectors, 1))::int];
     
     -- Generate customer code (B001-B200 format for 2026)
     v_customer_code := 'B' || LPAD(i::text, 3, '0');
