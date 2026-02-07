@@ -186,8 +186,7 @@ export const useAgentContractHistory = (agentId: string | null) => {
           status,
           sales_agent_id,
           customers(
-            name,
-            customer_code
+            name
           )
         `)
         .eq('sales_agent_id', agentId)
