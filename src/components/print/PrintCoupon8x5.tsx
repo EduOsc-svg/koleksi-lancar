@@ -199,33 +199,18 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
             0 -2.5mm 0 0 transparent, 0 -2.5mm 0 2px dashed #000 !important,
             -2.5mm 0 0 0 transparent, -2.5mm 0 0 2px dashed #000 !important;
         }
-        
-        /* Consistent underline untuk print */
-        .pos-judul {
-          text-decoration: underline !important;
-          text-decoration-thickness: 1px !important;
-          text-underline-offset: 2px !important;
-        }
-        
-        .pos-lbl-besar-angsuran {
-          text-decoration: underline !important;
-          text-decoration-thickness: 1px !important;
-          text-underline-offset: 2px !important;
-        }
-        }
       }
 
       /* =========================================
-         6. POSISI DATA - KONSISTEN STYLING
+         6. POSISI DATA
          ========================================= */
       .coupon-data {
         position: absolute;
         font-size: 11pt;
-        line-height: 1.4;
+        line-height: 2;
         color: #000;
         z-index: 5;
         white-space: nowrap;
-        font-family: 'Times New Roman', Times, serif;
       }
 
       /* Alignment Label (Agar titik dua lurus) */
@@ -233,17 +218,15 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
         display: inline-block; 
         width: 95px; 
         font-weight: normal; 
-        font-size: 11pt;
       }
 
       .coupon-data span.value {
         font-weight: normal;
-        font-size: 11pt;
       }
 
-      /* --- KOORDINAT POSISI - STYLING KONSISTEN --- */
+      /* --- KOORDINAT POSISI (PIXEL) --- */
 
-      /* Judul Voucher (Hitam Bold & Underline konsisten, Merah hanya untuk urgent) */
+      /* Judul Voucher (Hitam & Underline, Merah hanya untuk urgent) */
       .pos-judul {
         width: 100%;
         text-align: center;
@@ -251,19 +234,16 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
         color: black;
         font-weight: bold;
         text-decoration: underline;
-        text-decoration-thickness: 1px;
-        text-underline-offset: 2px;
-        font-size: 12pt;
-        font-family: 'Times New Roman', Times, serif;
+        font-size: 11pt;
       }
 
-      /* Area Kiri (Data Utama) - Konsisten 11pt */
-      .pos-faktur     { left: 15px; top: 97px; font-size: 11pt; }
-      .pos-nama       { left: 15px; top: 112px; font-size: 11pt; }
-      .pos-kode-kontrak { right: 15px; top: 112px; font-size: 12pt; font-weight: bold; color: #000; }
-      .pos-alamat     { left: 15px; top: 127px; max-width: 230px; overflow: hidden; text-overflow: ellipsis; font-size: 11pt; }
-      .pos-jatuhtempo { left: 15px; top: 142px; font-size: 11pt; }
-      .pos-angsuran   { left: 15px; top: 157px; font-size: 11pt; }
+      /* Area Kiri (Data Utama) */
+      .pos-faktur     { left: 15px; top: 97px; }
+      .pos-nama       { left: 15px; top: 112px; }
+      .pos-kode-kontrak { right: 15px; top: 112px; font-size: 13pt; font-weight: bold; }
+      .pos-alamat     { left: 15px; top: 127px; max-width: 230px; overflow: hidden; text-overflow: ellipsis; }
+      .pos-jatuhtempo { left: 15px; top: 142px; }
+      .pos-angsuran   { left: 15px; top: 157px; }
       
       /* Angka angsuran yang center - posisi terpisah */
       .pos-angka-center {
@@ -271,24 +251,20 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
         left: 50%;
         top: 157px;
         transform: translateX(-50%);
-        font-size: 14pt;
+        font-size: 11pt;
         font-weight: bold;
         color: red;
         z-index: 6;
-        font-family: 'Times New Roman', Times, serif;
       }
 
-      /* Area Kanan (Besar Angsuran) - Konsisten underline styling */
+      /* Area Kanan (Besar Angsuran) */
       .pos-lbl-besar-angsuran {
         right: 10px;
         top: 162px;
         font-size: 11pt;
         font-weight: normal;
         text-decoration: underline;
-        text-decoration-thickness: 1px;
-        text-underline-offset: 2px;
         color: red;
-        font-family: 'Times New Roman', Times, serif;
       }
 
       /* Nominal Rupiah */
@@ -296,10 +272,8 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
         right: 10px;
         top: 184px;
         text-align: right;
-        font-size: 13pt;
-        font-weight: bold;
+        font-size: 11pt;
         color: red;
-        font-family: 'Times New Roman', Times, serif;
       }
 
       /* Footer (Kantor) */
@@ -307,10 +281,9 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
         width: 100%;
         text-align: center;
         bottom: 5px; 
-        font-size: 10pt;
+        font-size: 11pt;
         font-weight: normal;
         color: red;
-        font-family: 'Times New Roman', Times, serif;
       }
 
       /* =========================================
@@ -322,9 +295,6 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
       
       .coupon-urgent .pos-judul {
         color: red !important;
-        text-decoration: underline !important;
-        text-decoration-thickness: 1px !important;
-        text-underline-offset: 2px !important;
       }
       
       .coupon-urgent .pos-angka-center {
@@ -335,13 +305,6 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
       .coupon-urgent .pos-kode-kontrak {
         color: red !important;
         font-weight: bold;
-      }
-
-      .coupon-urgent .pos-lbl-besar-angsuran {
-        color: red !important;
-        text-decoration: underline !important;
-        text-decoration-thickness: 1px !important;
-        text-underline-offset: 2px !important;
       }
     `;
     
