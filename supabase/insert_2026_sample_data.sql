@@ -14,7 +14,7 @@ DECLARE
   v_contract_id UUID;
   v_sales_agent_id UUID;
   v_collector_id UUID;
-  v_customer_code TEXT;
+  
   v_contract_ref TEXT;
   v_start_date DATE;
   v_omset NUMERIC;
@@ -108,8 +108,7 @@ BEGIN
     v_sales_agent_id := v_sales_agents[1 + floor(random() * array_length(v_sales_agents, 1))::int];
     v_collector_id := v_collectors[1 + floor(random() * array_length(v_collectors, 1))::int];
     
-    -- Generate customer code (B001-B200 format for 2026)
-    v_customer_code := 'B' || LPAD(i::text, 3, '0');
+    -- Generate contract reference (A001-A200 format)
     
     -- Generate contract reference
     v_contract_ref := 'A' || LPAD(i::text, 3, '0');
@@ -143,12 +142,11 @@ BEGIN
     -- Daily installment = Omset / Tenor
     v_daily_amount := round(v_omset / v_tenor, 0);
     
-    -- Insert customer
-    INSERT INTO public.customers (id, name, customer_code, address, business_address, phone, nik)
+    -- Insert customer (without customer_code as it doesn't exist in schema)
+    INSERT INTO public.customers (id, name, address, business_address, phone, nik)
     VALUES (
       v_customer_id,
       v_full_name,
-      v_customer_code,
       v_streets[1 + floor(random() * 15)::int] || ' No. ' || (1 + floor(random() * 200)::int) || ', ' || v_areas[1 + floor(random() * 15)::int],
       'Pasar ' || v_areas[1 + floor(random() * 15)::int] || ' Blok ' || chr(65 + floor(random() * 10)::int) || (1 + floor(random() * 50)::int),
       '08' || (11 + floor(random() * 89)::int)::text || (10000000 + floor(random() * 89999999)::int)::text,
@@ -237,7 +235,8 @@ BEGIN
 END $$;
 
 -- Verify the data
-SELECT 'Customers 2026' as entity, COUNT(*) as total FROM public.customers WHERE customer_code LIKE 'B%'
+SELECT 'Customers 2026' as entity, COUNT(*) as total FROM public.customers 
+  WHERE id IN (SELECT customer_id FROM public.credit_contracts WHERE start_date >= '2026-01-01' AND start_date < '2027-01-01')
 UNION ALL
 SELECT 'Contracts 2026', COUNT(*) FROM public.credit_contracts WHERE start_date >= '2026-01-01' AND start_date < '2027-01-01'
 UNION ALL
