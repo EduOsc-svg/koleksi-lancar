@@ -2,7 +2,6 @@ import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { Slider } from "@/components/ui/slider";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BarChart3 } from "lucide-react";
@@ -17,6 +16,29 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { useDailyCollectionTrend, useMonthlyCollectionTrend, useYearlyCollectionTrend, TrendPeriod } from "@/hooks/useCollectionTrendPeriods";
+
+// Preset options for each period type
+const dailyPresets = [
+  { value: 7, label: "7H" },
+  { value: 14, label: "14H" },
+  { value: 30, label: "30H" },
+  { value: 60, label: "60H" },
+  { value: 90, label: "90H" },
+];
+
+const monthlyPresets = [
+  { value: 3, label: "3B" },
+  { value: 6, label: "6B" },
+  { value: 12, label: "12B" },
+  { value: 24, label: "24B" },
+];
+
+const yearlyPresets = [
+  { value: 2, label: "2T" },
+  { value: 3, label: "3T" },
+  { value: 5, label: "5T" },
+  { value: 10, label: "10T" },
+];
 
 export function CollectionTrendChart() {
   const { t } = useTranslation();
@@ -48,6 +70,39 @@ export function CollectionTrendChart() {
   // Collection trend totals
   const totalCollection = activeTrendData.reduce((sum, d) => sum + d.amount, 0);
   const avgPerPeriod = activeTrendData.length > 0 ? totalCollection / activeTrendData.length : 0;
+
+  // Get current presets and value based on period
+  const getCurrentPresets = () => {
+    switch (trendPeriod) {
+      case 'monthly': return monthlyPresets;
+      case 'yearly': return yearlyPresets;
+      default: return dailyPresets;
+    }
+  };
+
+  const getCurrentValue = () => {
+    switch (trendPeriod) {
+      case 'monthly': return trendMonths;
+      case 'yearly': return trendYears;
+      default: return trendDays;
+    }
+  };
+
+  const handlePresetChange = (value: string) => {
+    const numValue = parseInt(value, 10);
+    if (isNaN(numValue)) return;
+    
+    switch (trendPeriod) {
+      case 'monthly':
+        setTrendMonths(numValue);
+        break;
+      case 'yearly':
+        setTrendYears(numValue);
+        break;
+      default:
+        setTrendDays(numValue);
+    }
+  };
 
   return (
     <Card>
@@ -82,53 +137,25 @@ export function CollectionTrendChart() {
             </ToggleGroup>
           </div>
           
-          {/* Period-specific slider */}
-          <div className="flex items-center gap-4">
-            {trendPeriod === 'daily' && (
-              <>
-                <span className="text-xs text-muted-foreground whitespace-nowrap">7 Hari</span>
-                <Slider
-                  value={[trendDays]}
-                  onValueChange={(value) => setTrendDays(value[0])}
-                  min={7}
-                  max={90}
-                  step={1}
-                  className="flex-1"
-                />
-                <span className="text-xs text-muted-foreground whitespace-nowrap">90 Hari</span>
-                <span className="text-sm font-medium text-primary ml-2">{trendDays}H</span>
-              </>
-            )}
-            {trendPeriod === 'monthly' && (
-              <>
-                <span className="text-xs text-muted-foreground whitespace-nowrap">3 Bulan</span>
-                <Slider
-                  value={[trendMonths]}
-                  onValueChange={(value) => setTrendMonths(value[0])}
-                  min={3}
-                  max={24}
-                  step={1}
-                  className="flex-1"
-                />
-                <span className="text-xs text-muted-foreground whitespace-nowrap">24 Bulan</span>
-                <span className="text-sm font-medium text-primary ml-2">{trendMonths}B</span>
-              </>
-            )}
-            {trendPeriod === 'yearly' && (
-              <>
-                <span className="text-xs text-muted-foreground whitespace-nowrap">2 Tahun</span>
-                <Slider
-                  value={[trendYears]}
-                  onValueChange={(value) => setTrendYears(value[0])}
-                  min={2}
-                  max={10}
-                  step={1}
-                  className="flex-1"
-                />
-                <span className="text-xs text-muted-foreground whitespace-nowrap">10 Tahun</span>
-                <span className="text-sm font-medium text-primary ml-2">{trendYears}T</span>
-              </>
-            )}
+          {/* Period-specific preset buttons */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs text-muted-foreground mr-1">Rentang:</span>
+            <ToggleGroup 
+              type="single" 
+              value={getCurrentValue().toString()} 
+              onValueChange={handlePresetChange}
+              className="flex flex-wrap gap-1"
+            >
+              {getCurrentPresets().map((preset) => (
+                <ToggleGroupItem 
+                  key={preset.value} 
+                  value={preset.value.toString()}
+                  className="text-xs px-3 py-1 h-7 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+                >
+                  {preset.label}
+                </ToggleGroupItem>
+              ))}
+            </ToggleGroup>
           </div>
         </div>
       </CardHeader>
