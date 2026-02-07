@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Plus, Pencil, Trash2, Download, Wallet, Settings } from "lucide-react";
+import { Plus, Pencil, Trash2, Download, Eye, Settings } from "lucide-react";
 import ExcelJS from "exceljs";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
@@ -344,13 +344,13 @@ export default function SalesAgents() {
                       <Button 
                         variant="ghost" 
                         size="icon"
-                        title="Kelola Komisi"
+                        title="Lihat Detail Komisi"
                         onClick={() => {
                           setSelectedAgent(agent);
                           setCommissionDialogOpen(true);
                         }}
                       >
-                        <Wallet className="h-4 w-4" />
+                        <Eye className="h-4 w-4" />
                       </Button>
                       <Button variant="ghost" size="icon" onClick={() => handleOpenEdit(agent)}>
                         <Pencil className="h-4 w-4" />
