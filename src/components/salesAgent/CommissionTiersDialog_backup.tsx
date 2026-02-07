@@ -149,7 +149,6 @@ export function CommissionTiersDialog({
 
   return (
     <>
-      {/* Main Dialog - Enhanced Scrolling Mechanism */}
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
           {/* Fixed Header - tidak ikut scroll */}
@@ -185,25 +184,18 @@ export function CommissionTiersDialog({
             <ScrollArea className="h-full">
               <div className="p-1 pr-4">
                 <div className="space-y-4">
-                  {/* Data Table with dedicated scroll wrapper */}
-                  <div className="relative border rounded-lg">
-                    {/* Scroll Indicator - Top */}
-                    {tiers && tiers.length > 4 && (
-                      <div className="absolute top-12 right-2 z-20 text-xs text-muted-foreground bg-background/80 px-2 py-1 rounded shadow-sm">
-                        ↕ Scroll untuk melihat semua
-                      </div>
-                    )}
-                    
-                    <div className="max-h-80 overflow-auto scroll-smooth scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent">
-                      <Table>
-                        <TableHeader className="sticky top-0 bg-background border-b z-10 shadow-sm">
-                          <TableRow>
-                            <TableHead className="bg-muted/80 font-semibold">Rentang Omset</TableHead>
-                            <TableHead className="text-center bg-muted/80 font-semibold">Persentase Komisi</TableHead>
-                            <TableHead className="text-right bg-muted/80 font-semibold">Aksi</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
+                  {/* Data Table with better scroll handling */}
+                  <div className="border rounded-lg overflow-hidden">
+                    <Table>
+                      <TableHeader className="sticky top-0 bg-muted/50 backdrop-blur-sm border-b">
+                        <TableRow>
+                          <TableHead>Rentang Omset</TableHead>
+                          <TableHead className="text-center">Persentase Komisi</TableHead>
+                          <TableHead className="text-right">Aksi</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                      <TableBody>
                         {isLoading ? (
                           <TableRow>
                             <TableCell colSpan={3} className="text-center py-8">
@@ -262,7 +254,6 @@ export function CommissionTiersDialog({
                         )}
                       </TableBody>
                     </Table>
-                    </div>
                   </div>
 
                   {/* Footer Example - dalam scroll area */}
@@ -293,6 +284,7 @@ export function CommissionTiersDialog({
           <div className="flex-1 overflow-hidden">
             <ScrollArea className="h-full">
               <div className="p-1 pr-4">
+                <div className="space-y-6">
                 <div className="space-y-6">
                   <div className="space-y-2">
                     <Label htmlFor="min_amount">Nominal Minimum</Label>
