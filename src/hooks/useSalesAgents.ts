@@ -31,10 +31,15 @@ export const useCreateSalesAgent = () => {
   const logActivity = useLogActivity();
   
   return useMutation({
-    mutationFn: async (agent: Omit<SalesAgent, 'id' | 'created_at'>) => {
+    mutationFn: async (agent: { agent_code: string; name: string; phone?: string }) => {
       const { data, error } = await supabase
         .from('sales_agents')
-        .insert(agent)
+        .insert({
+          agent_code: agent.agent_code,
+          name: agent.name,
+          phone: agent.phone || null,
+          use_tiered_commission: true, // Always use tiered commission
+        })
         .select()
         .single();
       if (error) throw error;

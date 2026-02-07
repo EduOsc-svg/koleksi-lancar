@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Plus, Pencil, Trash2, Download, Wallet } from "lucide-react";
+import { Plus, Pencil, Trash2, Download, Wallet, Settings } from "lucide-react";
 import ExcelJS from "exceljs";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
@@ -46,6 +46,7 @@ import { TablePagination } from "@/components/TablePagination";
 import { formatRupiah } from "@/lib/format";
 import { SearchInput } from "@/components/ui/search-input";
 import { CommissionPaymentDialog } from "@/components/salesAgent/CommissionPaymentDialog";
+import { CommissionTiersDialog } from "@/components/salesAgent/CommissionTiersDialog";
 
 export default function SalesAgents() {
   const { t } = useTranslation();
@@ -73,10 +74,11 @@ export default function SalesAgents() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [commissionDialogOpen, setCommissionDialogOpen] = useState(false);
+  const [tiersDialogOpen, setTiersDialogOpen] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState<SalesAgent | null>(null);
   const [highlightedRowId, setHighlightedRowId] = useState<string | null>(null);
   const highlightedRowRef = useRef<HTMLTableRowElement>(null);
-  const [formData, setFormData] = useState({ agent_code: "", name: "", phone: "", commission_percentage: 0, use_tiered_commission: true });
+  const [formData, setFormData] = useState({ agent_code: "", name: "", phone: "" });
 
   // Handle highlighting item from global search
   useEffect(() => {
@@ -116,7 +118,7 @@ export default function SalesAgents() {
 
   const handleOpenCreate = () => {
     setSelectedAgent(null);
-    setFormData({ agent_code: "", name: "", phone: "", commission_percentage: 0, use_tiered_commission: true });
+    setFormData({ agent_code: "", name: "", phone: "" });
     setDialogOpen(true);
   };
 
@@ -126,8 +128,6 @@ export default function SalesAgents() {
       agent_code: agent.agent_code,
       name: agent.name,
       phone: agent.phone || "",
-      commission_percentage: agent.commission_percentage || 0,
-      use_tiered_commission: agent.use_tiered_commission ?? true,
     });
     setDialogOpen(true);
   };
@@ -274,6 +274,9 @@ export default function SalesAgents() {
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">{t("salesAgents.title")}</h2>
         <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setTiersDialogOpen(true)}>
+            <Settings className="mr-2 h-4 w-4" /> Ketentuan Komisi
+          </Button>
           <Button variant="outline" onClick={handleExportExcel}>
             <Download className="mr-2 h-4 w-4" /> Export Excel
           </Button>
@@ -291,7 +294,7 @@ export default function SalesAgents() {
           placeholder="Cari sales agent berdasarkan nama, kode, atau telepon..."
           className="max-w-md"
         />
-        <div className="text-sm text-gray-500">
+        <div className="text-sm text-muted-foreground">
           Menampilkan {totalItems} dari {agents?.length || 0} sales agent
         </div>
       </div>
@@ -303,7 +306,6 @@ export default function SalesAgents() {
               <TableHead>{t("salesAgents.agentCode")}</TableHead>
               <TableHead>{t("salesAgents.name")}</TableHead>
               <TableHead>{t("salesAgents.phone")}</TableHead>
-              <TableHead>{t("salesAgents.commissionPct", "Komisi %")}</TableHead>
               <TableHead>{t("salesAgents.totalOmset", "Total Omset")}</TableHead>
               <TableHead>{t("salesAgents.earnings", "Komisi")}</TableHead>
               <TableHead className="text-right">{t("common.actions")}</TableHead>
@@ -312,11 +314,11 @@ export default function SalesAgents() {
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center">{t("common.loading")}</TableCell>
+                <TableCell colSpan={6} className="text-center">{t("common.loading")}</TableCell>
               </TableRow>
             ) : filteredAgents?.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center text-muted-foreground">
+                <TableCell colSpan={6} className="text-center text-muted-foreground">
                   {searchQuery ? `Tidak ada sales agent yang ditemukan dengan kata kunci "${searchQuery}"` : t("common.noData")}
                 </TableCell>
               </TableRow>
@@ -328,13 +330,12 @@ export default function SalesAgents() {
                     key={agent.id}
                     ref={highlightedRowId === agent.id ? highlightedRowRef : null}
                     className={cn(
-                      highlightedRowId === agent.id && "bg-yellow-100 border-yellow-300 animate-pulse"
+                      highlightedRowId === agent.id && "bg-accent border-primary/30 animate-pulse"
                     )}
                   >
                     <TableCell className="font-medium">{agent.agent_code}</TableCell>
                     <TableCell>{agent.name}</TableCell>
                     <TableCell>{agent.phone || "-"}</TableCell>
-                    <TableCell>{agent.commission_percentage || 0}%</TableCell>
                     <TableCell className="font-medium">{formatRupiah(omsetData?.total_omset || 0)}</TableCell>
                     <TableCell className="font-medium text-primary">
                       {formatRupiah(omsetData?.total_commission || 0)}
@@ -412,21 +413,6 @@ export default function SalesAgents() {
                 placeholder={t("salesAgents.phone")}
               />
             </div>
-            <div>
-              <Label htmlFor="commission_percentage">{t("salesAgents.commissionPct", "Persentase Komisi")}</Label>
-              <Input
-                id="commission_percentage"
-                type="number"
-                min={0}
-                max={100}
-                value={formData.commission_percentage}
-                onChange={(e) => setFormData({ ...formData, commission_percentage: Number(e.target.value) })}
-                placeholder="e.g., 10"
-              />
-              <p className="text-xs text-muted-foreground mt-1">
-                {t("salesAgents.commissionHint", "Persentase dari omset yang didapat sales")}
-              </p>
-            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>{t("common.cancel")}</Button>
@@ -462,6 +448,12 @@ export default function SalesAgents() {
           agentCode={selectedAgent.agent_code}
         />
       )}
+
+      {/* Commission Tiers Dialog */}
+      <CommissionTiersDialog
+        open={tiersDialogOpen}
+        onOpenChange={setTiersDialogOpen}
+      />
     </div>
   );
 }
