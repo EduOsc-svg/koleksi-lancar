@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { Label } from "@/components/ui/label";
 import {
   Dialog,
@@ -58,34 +59,38 @@ export function CommissionTiersDialog({
   const [formDialogOpen, setFormDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedTier, setSelectedTier] = useState<CommissionTier | null>(null);
-  const [formData, setFormData] = useState({
-    min_amount: "",
-    max_amount: "",
+  const [formData, setFormData] = useState<{
+    min_amount: number | undefined;
+    max_amount: number | undefined;
+    percentage: string;
+  }>({
+    min_amount: undefined,
+    max_amount: undefined,
     percentage: "",
   });
 
   const handleOpenCreate = () => {
     setSelectedTier(null);
-    setFormData({ min_amount: "", max_amount: "", percentage: "" });
+    setFormData({ min_amount: undefined, max_amount: undefined, percentage: "" });
     setFormDialogOpen(true);
   };
 
   const handleOpenEdit = (tier: CommissionTier) => {
     setSelectedTier(tier);
     setFormData({
-      min_amount: tier.min_amount.toString(),
-      max_amount: tier.max_amount?.toString() || "",
+      min_amount: tier.min_amount,
+      max_amount: tier.max_amount ?? undefined,
       percentage: tier.percentage.toString(),
     });
     setFormDialogOpen(true);
   };
 
   const handleSubmit = async () => {
-    const minAmount = parseFloat(formData.min_amount);
-    const maxAmount = formData.max_amount ? parseFloat(formData.max_amount) : null;
+    const minAmount = formData.min_amount;
+    const maxAmount = formData.max_amount ?? null;
     const percentage = parseFloat(formData.percentage);
 
-    if (isNaN(minAmount) || isNaN(percentage)) {
+    if (minAmount === undefined || isNaN(percentage)) {
       toast.error("Nominal minimum dan persentase harus diisi");
       return;
     }
@@ -250,34 +255,32 @@ export function CommissionTiersDialog({
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <div>
-              <Label htmlFor="min_amount">Nominal Minimum (Rp)</Label>
-              <Input
+            <div className="space-y-2">
+              <Label htmlFor="min_amount">Nominal Minimum</Label>
+              <CurrencyInput
                 id="min_amount"
-                type="number"
                 value={formData.min_amount}
-                onChange={(e) =>
-                  setFormData({ ...formData, min_amount: e.target.value })
+                onValueChange={(value) =>
+                  setFormData({ ...formData, min_amount: value })
                 }
-                placeholder="0"
+                placeholder="Rp 0"
               />
             </div>
-            <div>
-              <Label htmlFor="max_amount">Nominal Maksimum (Rp)</Label>
-              <Input
+            <div className="space-y-2">
+              <Label htmlFor="max_amount">Nominal Maksimum</Label>
+              <CurrencyInput
                 id="max_amount"
-                type="number"
                 value={formData.max_amount}
-                onChange={(e) =>
-                  setFormData({ ...formData, max_amount: e.target.value })
+                onValueChange={(value) =>
+                  setFormData({ ...formData, max_amount: value })
                 }
                 placeholder="Kosongkan untuk tidak ada batas"
               />
-              <p className="text-xs text-muted-foreground mt-1">
+              <p className="text-xs text-muted-foreground">
                 Kosongkan jika ini adalah tier tertinggi (tanpa batas maksimum)
               </p>
             </div>
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="percentage">Persentase Komisi (%)</Label>
               <Input
                 id="percentage"
