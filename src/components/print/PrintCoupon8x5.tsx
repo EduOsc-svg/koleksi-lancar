@@ -278,7 +278,7 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
 
       /* Footer */
       .pos-kantor {
-        width: 100%; text-align: center; bottom: 3px; 
+        width: 100%; text-align: center; bottom: 1px; 
         font-size: 11pt; font-weight: normal; color: red;
       }
       .pos-kantor.field-spacing { /* Gunakan class .field-spacing untuk spacing */ }
