@@ -155,6 +155,12 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
         z-index: 5;
         white-space: nowrap;
       }
+      
+      /* Override default color for urgent coupons - HIGHEST SPECIFICITY */
+      .coupon-card.coupon-urgent .coupon-data {
+        color: red !important;
+        font-weight: bold !important;
+      }
 
       /* Alignment Label */
       .coupon-data span.label { 
@@ -163,6 +169,13 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
         font-weight: normal; 
       }
       .coupon-data span.value { font-weight: normal; }
+      
+      /* Override label and value for urgent coupons - HIGHEST SPECIFICITY */
+      .coupon-card.coupon-urgent .coupon-data span.label,
+      .coupon-card.coupon-urgent .coupon-data span.value {
+        color: red !important;
+        font-weight: bold !important;
+      }
 
       /* =========================================
          SPACING CONTROL - EDIT SEMUA FIELD DI SINI
@@ -277,29 +290,46 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
       ..field-spacing { /* Gunakan class .field-spacing untuk spacing */ }
       }
 
-      /* URGENT STYLE (Merah) - Teks warna merah untuk hari terakhir */
-      .coupon-urgent .coupon-data, 
-      .coupon-urgent .pos-judul, 
-      .coupon-urgent .pos-faktur,
-      .coupon-urgent .pos-nama,
-      .coupon-urgent .pos-kode-kontrak,
-      .coupon-urgent .pos-alamat,
-      .coupon-urgent .pos-jatuhtempo,
-      .coupon-urgent .pos-angsuran,
-      .coupon-urgent .pos-rekening,
-      .coupon-urgent .pos-angka-center, 
-      .coupon-urgent .pos-lbl-besar-angsuran,
-      .coupon-urgent .pos-val-besar-angsuran,
-      .coupon-urgent .pos-kantor,
-      .coupon-urgent .field-spacing,
-      .coupon-urgent .field-spacing-none {
-        color: red !important; font-weight: bold !important;
+      /* URGENT STYLE (Merah) - SUPER SPECIFICITY untuk override semua CSS */
+      
+      /* Override untuk elemen coupon-data umum */
+      .coupon-card.coupon-urgent .coupon-data,
+      .coupon-card.coupon-urgent .pos-judul, 
+      .coupon-card.coupon-urgent .pos-faktur,
+      .coupon-card.coupon-urgent .pos-nama,
+      .coupon-card.coupon-urgent .pos-kode-kontrak,
+      .coupon-card.coupon-urgent .pos-alamat,
+      .coupon-card.coupon-urgent .pos-jatuhtempo,
+      .coupon-card.coupon-urgent .pos-angsuran,
+      .coupon-card.coupon-urgent .pos-rekening,
+      .coupon-card.coupon-urgent .pos-angka-center, 
+      .coupon-card.coupon-urgent .pos-lbl-besar-angsuran,
+      .coupon-card.coupon-urgent .pos-val-besar-angsuran,
+      .coupon-card.coupon-urgent .pos-kantor,
+      .coupon-card.coupon-urgent .field-spacing,
+      .coupon-card.coupon-urgent .field-spacing-none,
+      .coupon-card.coupon-urgent div {
+        color: red !important; 
+        font-weight: bold !important;
       }
       
-      /* Pastikan label dan value dalam urgent juga merah */
-      .coupon-urgent .label,
-      .coupon-urgent .value {
-        color: red !important; font-weight: bold !important;
+      /* Override untuk span elements */
+      .coupon-card.coupon-urgent .label,
+      .coupon-card.coupon-urgent .value,
+      .coupon-card.coupon-urgent span,
+      .coupon-card.coupon-urgent .coupon-data span.label,
+      .coupon-card.coupon-urgent .coupon-data span.value {
+        color: red !important; 
+        font-weight: bold !important;
+      }
+      
+      /* Force override untuk elemen yang sudah punya color: black atau color: red */
+      div.coupon-card.coupon-urgent div.pos-lbl-besar-angsuran,
+      div.coupon-card.coupon-urgent div.pos-val-besar-angsuran,
+      div.coupon-card.coupon-urgent div.pos-kantor,
+      div.coupon-card.coupon-urgent div.pos-angka-center {
+        color: red !important; 
+        font-weight: bold !important;
       }
     `;
     
@@ -332,13 +362,19 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
     return text.substring(0, maxLength) + "...";
   };
 
-  // Logic Urgent (10 hari terakhir atau sudah jatuh tempo)
+  // Logic Urgent (TEST: 5 voucher terakhir untuk testing)
   const isUrgentCoupon = (coupon: InstallmentCoupon, tenor: number) => {
     const installmentIndex = coupon.installment_index;
     const remainingInstallments = tenor - installmentIndex;
     
-    // Urgent jika tinggal 10 hari terakhir atau kurang
-    return remainingInstallments <= 10;
+    // Debug: Log untuk melihat nilai
+    console.log(`Coupon ${installmentIndex}: remaining=${remainingInstallments}, tenor=${tenor}`);
+    
+    // TEST: Urgent jika tinggal 5 voucher terakhir (untuk memudahkan testing)
+    const isUrgent = remainingInstallments <= 5;
+    console.log(`Coupon ${installmentIndex} is urgent: ${isUrgent}`);
+    
+    return isUrgent;
   };
 
   // Logic Grouping Halaman (9 per page)
@@ -373,9 +409,14 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
               }
 
               const isUrgent = isUrgentCoupon(coupon, contract.tenor_days);
+              console.log(`Rendering coupon ${coupon.installment_index} with urgent class: ${isUrgent ? 'YES' : 'NO'}`);
               
               return (
-                <div key={coupon.id} className={`coupon-card ${isUrgent ? 'coupon-urgent' : ''}`}>
+                <div 
+                  key={coupon.id} 
+                  className={`coupon-card ${isUrgent ? 'coupon-urgent' : ''}`}
+                  style={isUrgent ? { border: '2px solid red' } : {}}
+                >
                   
                     {/* Judul Voucher */}
                     <div className="coupon-data pos-judul field-spacing-none">VOUCHER ANGSURAN</div>
