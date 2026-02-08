@@ -138,8 +138,6 @@ export function CommissionPaymentDialog({
                         <TableHead>Kode Kontrak</TableHead>
                         <TableHead>Pelanggan</TableHead>
                         <TableHead>Omset</TableHead>
-                        <TableHead>%</TableHead>
-                        <TableHead>Komisi</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -148,12 +146,6 @@ export function CommissionPaymentDialog({
                           <TableCell className="font-medium">{item.contract_ref}</TableCell>
                           <TableCell>{item.customer_name}</TableCell>
                           <TableCell>{formatRupiah(item.omset)}</TableCell>
-                          <TableCell>
-                            <Badge variant="secondary">{item.commission_percentage}%</Badge>
-                          </TableCell>
-                          <TableCell className="font-semibold text-primary">
-                            {formatRupiah(item.commission)}
-                          </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
