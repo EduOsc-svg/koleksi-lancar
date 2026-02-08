@@ -362,7 +362,7 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
     return text.substring(0, maxLength) + "...";
   };
 
-  // Logic Urgent (TEST: 5 voucher terakhir untuk testing)
+  // Logic Urgent (7 hari terakhir - sesuai permintaan user)
   const isUrgentCoupon = (coupon: InstallmentCoupon, tenor: number) => {
     const installmentIndex = coupon.installment_index;
     const remainingInstallments = tenor - installmentIndex;
@@ -370,8 +370,8 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
     // Debug: Log untuk melihat nilai
     console.log(`Coupon ${installmentIndex}: remaining=${remainingInstallments}, tenor=${tenor}`);
     
-    // TEST: Urgent jika tinggal 5 voucher terakhir (untuk memudahkan testing)
-    const isUrgent = remainingInstallments <= 5;
+    // URGENT: 7 hari terakhir sesuai permintaan
+    const isUrgent = remainingInstallments <= 9;
     console.log(`Coupon ${installmentIndex} is urgent: ${isUrgent}`);
     
     return isUrgent;
