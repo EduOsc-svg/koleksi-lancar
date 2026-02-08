@@ -64,6 +64,7 @@ import { useCouponsByContract, useGenerateCoupons, InstallmentCoupon } from "@/h
 import { SearchInput } from "@/components/ui/search-input";
 import { PrintCoupon8x5 } from "@/components/print/PrintCoupon8x5";
 import { CurrencyInput } from "@/components/ui/currency-input";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function Contracts() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -534,267 +535,284 @@ export default function Contracts() {
         />
       </div>
 
-      {/* Create/Edit Dialog */}
+      {/* Create/Edit Dialog - Enhanced with Scrolling Mechanism */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
+        <DialogContent className="max-w-lg max-h-[90vh] flex flex-col overflow-hidden">
+          {/* Fixed Header */}
+          <DialogHeader className="flex-shrink-0 pb-4 border-b">
             <DialogTitle>{selectedContract ? "Edit Kontrak" : "Kontrak Kredit Baru"}</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="contract_ref">Kode Kontrak</Label>
-                <Input
-                  id="contract_ref"
-                  value={formData.contract_ref}
-                  onChange={(e) => setFormData({ ...formData, contract_ref: e.target.value.toUpperCase() })}
-                  placeholder="Contoh: A001"
-                />
-                {!selectedContract && (
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Kode otomatis: A001, A002, dst.
-                  </p>
-                )}
-              </div>
-              <div>
-                <Label htmlFor="customer">Pelanggan</Label>
-                <Popover open={customerOpen} onOpenChange={setCustomerOpen}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      role="combobox"
-                      aria-expanded={customerOpen}
-                      className="w-full justify-between font-normal"
-                    >
-                      {formData.customer_id
-                        ? customers?.find((c) => c.id === formData.customer_id)?.name
-                        : "Cari pelanggan..."}
-                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-                    <Command>
-                      <CommandInput placeholder="Ketik nama pelanggan..." />
-                      <CommandList>
-                        <CommandEmpty>Pelanggan tidak ditemukan.</CommandEmpty>
-                        <CommandGroup>
-                          {customers?.map((customer) => (
-                            <CommandItem
-                              key={customer.id}
-                              value={customer.name}
-                              onSelect={() => {
-                                setFormData({ ...formData, customer_id: customer.id });
-                                setCustomerOpen(false);
-                              }}
-                            >
-                              <Check
-                                className={cn(
-                                  "mr-2 h-4 w-4",
-                                  formData.customer_id === customer.id ? "opacity-100" : "opacity-0"
-                                )}
-                              />
-                              {customer.name}
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
-              </div>
-            </div>
-            <div>
-              <Label htmlFor="sales_agent">Sales Agent</Label>
-              <Popover open={salesAgentOpen} onOpenChange={setSalesAgentOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    role="combobox"
-                    aria-expanded={salesAgentOpen}
-                    className="w-full justify-between font-normal"
-                  >
-                    {formData.sales_agent_id
-                      ? (() => {
-                          const agent = salesAgents?.find((a) => a.id === formData.sales_agent_id);
-                          return agent ? `${agent.name} (${agent.agent_code})` : "Cari sales agent...";
-                        })()
-                      : "Cari sales agent..."}
-                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-                  <Command>
-                    <CommandInput placeholder="Ketik nama atau kode agent..." />
-                    <CommandList>
-                      <CommandEmpty>Sales agent tidak ditemukan.</CommandEmpty>
-                      <CommandGroup>
-                        {salesAgents?.map((agent) => (
-                          <CommandItem
-                            key={agent.id}
-                            value={`${agent.name} ${agent.agent_code}`}
-                            onSelect={() => {
-                              setFormData({ ...formData, sales_agent_id: agent.id });
-                              setSalesAgentOpen(false);
-                            }}
+          
+          {/* Scrollable Content Area */}
+          <div className="flex-1 overflow-hidden">
+            <ScrollArea className="h-full max-h-[calc(90vh-180px)]">
+              <div className="p-1 pr-4">
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="contract_ref">Kode Kontrak</Label>
+                      <Input
+                        id="contract_ref"
+                        value={formData.contract_ref}
+                        onChange={(e) => setFormData({ ...formData, contract_ref: e.target.value.toUpperCase() })}
+                        placeholder="Contoh: A001"
+                      />
+                      {!selectedContract && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Kode otomatis: A001, A002, dst.
+                        </p>
+                      )}
+                    </div>
+                    <div>
+                      <Label htmlFor="customer">Pelanggan</Label>
+                      <Popover open={customerOpen} onOpenChange={setCustomerOpen}>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            aria-expanded={customerOpen}
+                            className="w-full justify-between font-normal"
                           >
-                            <Check
-                              className={cn(
-                                "mr-2 h-4 w-4",
-                                formData.sales_agent_id === agent.id ? "opacity-100" : "opacity-0"
-                              )}
-                            />
-                            {agent.name} ({agent.agent_code})
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
-              <p className="text-xs text-muted-foreground mt-1">
-                Komisi akan otomatis masuk ke sales ini
-              </p>
-            </div>
-            <div>
-              <Label htmlFor="collector">Kolektor</Label>
-              <Popover open={collectorOpen} onOpenChange={setCollectorOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    role="combobox"
-                    aria-expanded={collectorOpen}
-                    className="w-full justify-between font-normal"
-                  >
-                    {formData.collector_id
-                      ? (() => {
-                          const collector = collectors?.find((c) => c.id === formData.collector_id);
-                          return collector ? `${collector.name} (${collector.collector_code})` : "Cari kolektor...";
-                        })()
-                      : "Cari kolektor..."}
-                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-                  <Command>
-                    <CommandInput placeholder="Ketik nama atau kode kolektor..." />
-                    <CommandList>
-                      <CommandEmpty>Kolektor tidak ditemukan.</CommandEmpty>
-                      <CommandGroup>
-                        {collectors?.map((collector) => (
-                          <CommandItem
-                            key={collector.id}
-                            value={`${collector.name} ${collector.collector_code}`}
-                            onSelect={() => {
-                              setFormData({ ...formData, collector_id: collector.id });
-                              setCollectorOpen(false);
-                            }}
-                          >
-                            <Check
-                              className={cn(
-                                "mr-2 h-4 w-4",
-                                formData.collector_id === collector.id ? "opacity-100" : "opacity-0"
-                              )}
-                            />
-                            {collector.name} ({collector.collector_code})
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
-              <p className="text-xs text-muted-foreground mt-1">
-                Kode kolektor akan tampil pada No Faktur kupon
-              </p>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="start_date">Tanggal Mulai</Label>
-                <Input
-                  id="start_date"
-                  type="date"
-                  value={formData.start_date}
-                  onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  Kupon akan dibuat mulai dari tanggal ini
-                </p>
+                            {formData.customer_id
+                              ? customers?.find((c) => c.id === formData.customer_id)?.name
+                              : "Cari pelanggan..."}
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                          <Command>
+                            <CommandInput placeholder="Ketik nama pelanggan..." />
+                            <CommandList>
+                              <CommandEmpty>Pelanggan tidak ditemukan.</CommandEmpty>
+                              <CommandGroup>
+                                {customers?.map((customer) => (
+                                  <CommandItem
+                                    key={customer.id}
+                                    value={customer.name}
+                                    onSelect={() => {
+                                      setFormData({ ...formData, customer_id: customer.id });
+                                      setCustomerOpen(false);
+                                    }}
+                                  >
+                                    <Check
+                                      className={cn(
+                                        "mr-2 h-4 w-4",
+                                        formData.customer_id === customer.id ? "opacity-100" : "opacity-0"
+                                      )}
+                                    />
+                                    {customer.name}
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="sales_agent">Sales Agent</Label>
+                    <Popover open={salesAgentOpen} onOpenChange={setSalesAgentOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={salesAgentOpen}
+                          className="w-full justify-between font-normal"
+                        >
+                          {formData.sales_agent_id
+                            ? (() => {
+                                const agent = salesAgents?.find((a) => a.id === formData.sales_agent_id);
+                                return agent ? `${agent.name} (${agent.agent_code})` : "Cari sales agent...";
+                              })()
+                            : "Cari sales agent..."}
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                        <Command>
+                          <CommandInput placeholder="Ketik nama atau kode agent..." />
+                          <CommandList>
+                            <CommandEmpty>Sales agent tidak ditemukan.</CommandEmpty>
+                            <CommandGroup>
+                              {salesAgents?.map((agent) => (
+                                <CommandItem
+                                  key={agent.id}
+                                  value={`${agent.name} ${agent.agent_code}`}
+                                  onSelect={() => {
+                                    setFormData({ ...formData, sales_agent_id: agent.id });
+                                    setSalesAgentOpen(false);
+                                  }}
+                                >
+                                  <Check
+                                    className={cn(
+                                      "mr-2 h-4 w-4",
+                                      formData.sales_agent_id === agent.id ? "opacity-100" : "opacity-0"
+                                    )}
+                                  />
+                                  {agent.name} ({agent.agent_code})
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Komisi akan otomatis masuk ke sales ini
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="collector">Kolektor</Label>
+                    <Popover open={collectorOpen} onOpenChange={setCollectorOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={collectorOpen}
+                          className="w-full justify-between font-normal"
+                        >
+                          {formData.collector_id
+                            ? (() => {
+                                const collector = collectors?.find((c) => c.id === formData.collector_id);
+                                return collector ? `${collector.name} (${collector.collector_code})` : "Cari kolektor...";
+                              })()
+                            : "Cari kolektor..."}
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                        <Command>
+                          <CommandInput placeholder="Ketik nama atau kode kolektor..." />
+                          <CommandList>
+                            <CommandEmpty>Kolektor tidak ditemukan.</CommandEmpty>
+                            <CommandGroup>
+                              {collectors?.map((collector) => (
+                                <CommandItem
+                                  key={collector.id}
+                                  value={`${collector.name} ${collector.collector_code}`}
+                                  onSelect={() => {
+                                    setFormData({ ...formData, collector_id: collector.id });
+                                    setCollectorOpen(false);
+                                  }}
+                                >
+                                  <Check
+                                    className={cn(
+                                      "mr-2 h-4 w-4",
+                                      formData.collector_id === collector.id ? "opacity-100" : "opacity-0"
+                                    )}
+                                  />
+                                  {collector.name} ({collector.collector_code})
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Kode kolektor akan tampil pada No Faktur kupon
+                    </p>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="start_date">Tanggal Mulai</Label>
+                      <Input
+                        id="start_date"
+                        type="date"
+                        value={formData.start_date}
+                        onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Kupon akan dibuat mulai dari tanggal ini
+                      </p>
+                    </div>
+                    <div>
+                      <Label htmlFor="status">Status</Label>
+                      <Select
+                        value={formData.status}
+                        onValueChange={(v) => setFormData({ ...formData, status: v })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="active">Aktif</SelectItem>
+                          <SelectItem value="completed">Selesai</SelectItem>
+                          <SelectItem value="cancelled">Dibatalkan</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="product_type">Jenis Produk</Label>
+                      <Input
+                        id="product_type"
+                        value={formData.product_type}
+                        onChange={(e) => setFormData({ ...formData, product_type: e.target.value })}
+                        placeholder="Contoh: Elektronik"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="tenor_days">Tenor (Hari)</Label>
+                      <Input
+                        id="tenor_days"
+                        type="number"
+                        value={formData.tenor_days}
+                        onChange={(e) => setFormData({ ...formData, tenor_days: e.target.value })}
+                        placeholder="Contoh: 100"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="total_loan_amount">Total Pinjaman</Label>
+                      <CurrencyInput
+                        id="total_loan_amount"
+                        value={formData.total_loan_amount}
+                        onValueChange={(val) => setFormData({ ...formData, total_loan_amount: val || 0 })}
+                        placeholder="Rp 500.000"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="daily_installment_amount">Cicilan Harian</Label>
+                      <CurrencyInput
+                        id="daily_installment_amount"
+                        value={formData.daily_installment_amount || calculateInstallment()}
+                        onValueChange={(val) => setFormData({ ...formData, daily_installment_amount: val || 0 })}
+                        placeholder="Otomatis"
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Otomatis: {formatRupiah(calculateInstallment())}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="modal">Modal</Label>
+                    <CurrencyInput
+                      id="modal"
+                      value={formData.modal}
+                      onValueChange={(val) => setFormData({ ...formData, modal: val || 0 })}
+                      placeholder="Rp 0"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Modal awal untuk kontrak ini
+                    </p>
+                  </div>
+                </div>
               </div>
-              <div>
-                <Label htmlFor="status">Status</Label>
-                <Select
-                  value={formData.status}
-                  onValueChange={(v) => setFormData({ ...formData, status: v })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="active">Aktif</SelectItem>
-                    <SelectItem value="completed">Selesai</SelectItem>
-                    <SelectItem value="cancelled">Dibatalkan</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="product_type">Jenis Produk</Label>
-                <Input
-                  id="product_type"
-                  value={formData.product_type}
-                  onChange={(e) => setFormData({ ...formData, product_type: e.target.value })}
-                  placeholder="Contoh: Elektronik"
-                />
-              </div>
-              <div>
-                <Label htmlFor="tenor_days">Tenor (Hari)</Label>
-                <Input
-                  id="tenor_days"
-                  type="number"
-                  value={formData.tenor_days}
-                  onChange={(e) => setFormData({ ...formData, tenor_days: e.target.value })}
-                  placeholder="Contoh: 100"
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="total_loan_amount">Total Pinjaman</Label>
-                <CurrencyInput
-                  id="total_loan_amount"
-                  value={formData.total_loan_amount}
-                  onValueChange={(val) => setFormData({ ...formData, total_loan_amount: val || 0 })}
-                  placeholder="Rp 500.000"
-                />
-              </div>
-              <div>
-                <Label htmlFor="daily_installment_amount">Cicilan Harian</Label>
-                <CurrencyInput
-                  id="daily_installment_amount"
-                  value={formData.daily_installment_amount || calculateInstallment()}
-                  onValueChange={(val) => setFormData({ ...formData, daily_installment_amount: val || 0 })}
-                  placeholder="Otomatis"
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  Otomatis: {formatRupiah(calculateInstallment())}
-                </p>
-              </div>
-            </div>
-            <div>
-              <Label htmlFor="modal">Modal</Label>
-              <CurrencyInput
-                id="modal"
-                value={formData.modal}
-                onValueChange={(val) => setFormData({ ...formData, modal: val || 0 })}
-                placeholder="Rp 0"
-              />
-              <p className="text-xs text-muted-foreground mt-1">
-                Modal awal untuk kontrak ini
-              </p>
-            </div>
+            </ScrollArea>
           </div>
-          <DialogFooter>
+          
+          {/* Fixed Footer */}
+          <DialogFooter className="flex-shrink-0 pt-4 border-t">
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Batal</Button>
             <Button onClick={handleSubmit} disabled={createContract.isPending || updateContract.isPending || generateCoupons.isPending}>
               {selectedContract ? "Perbarui" : "Buat & Generate Kupon"}
