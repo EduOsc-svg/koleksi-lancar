@@ -168,28 +168,19 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
          SPACING CONTROL - EDIT SEMUA FIELD DI SINI
          ========================================= */
       
-      /* MASTER SPACING CLASS - Edit nilai ini untuk mengatur spasi semua field */
+      /* MASTER SPACING CLASS - Spacing seragam untuk semua field */
       .field-spacing {
-        /* EDIT: Spasi atas semua field */
+        /* Spasi atas bawah yang sama untuk konsistensi */
         margin-top: 1.5px;
-        /* EDIT: Spasi bawah semua field */ 
         margin-bottom: 1.5px;
-        /* EDIT: Padding internal field */
         padding-top: 0px;
         padding-bottom: 0px;
       }
       
-      /* KHUSUS: Spacing untuk field yang membutuhkan spasi berbeda */
-      .field-spacing-large {
-        margin-top: 3.5px;
-        margin-bottom: 3.5px;
-        padding-top: 1.5px;
-        padding-bottom: 1.5px;
-      }
-      
-      .field-spacing-small {
-        margin-top: 0.5px;
-        margin-bottom: 0px; /* Hapus jarak bawah untuk judul */
+      /* KHUSUS: Tanpa margin untuk judul agar menempel */
+      .field-spacing-none {
+        margin-top: 0px;
+        margin-bottom: 0px;
         padding-top: 0px;
         padding-bottom: 0px;
       }
@@ -368,59 +359,59 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
                 <div key={coupon.id} className={`coupon-card ${isUrgent ? 'coupon-urgent' : ''}`}>
                   
                     {/* Judul Voucher */}
-                    <div className="coupon-data pos-judul field-spacing-small">VOUCHER ANGSURAN</div>
+                    <div className="coupon-data pos-judul field-spacing-none">VOUCHER ANGSURAN</div>
 
                     {/* No. Faktur */}
-                    <div className="coupon-data pos-faktur field-spacing-small">
+                    <div className="coupon-data pos-faktur field-spacing">
                     <span className="label">No. Faktur</span>
                     <span className="value">: {truncateText(noFakturBase, 20)}</span>
                     </div>
 
                   {/* Nama */}
-                  <div className="coupon-data pos-nama field-spacing-large">
+                  <div className="coupon-data pos-nama field-spacing">
                     <span className="label">Nama</span>
                     <span className="value">: {truncateText(contract.customers?.name || "-", 25)}</span>
                   </div>
 
                   {/* Kode Kontrak (Pojok Kanan Nama) */}
-                  <div className="coupon-data pos-kode-kontrak field-spacing-large">
+                  <div className="coupon-data pos-kode-kontrak field-spacing">
                     {contract.contract_ref}
                   </div>
 
                   {/* Alamat */}
-                  <div className="coupon-data pos-alamat field-spacing-large">
+                  <div className="coupon-data pos-alamat field-spacing">
                     <span className="label">Alamat</span>
                     <span className="value">: {truncateText(displayAddress, 28)}</span>
                   </div>
 
                   {/* Jatuh Tempo */}
-                  <div className="coupon-data pos-jatuhtempo field-spacing-large">
+                  <div className="coupon-data pos-jatuhtempo field-spacing">
                     <span className="label">Jatuh Tempo</span>
                     <span className="value">: {formatDate(coupon.due_date)}</span>
                   </div>
 
                   {/* Angsuran Ke- (Label) */}
-                  <div className="coupon-data pos-angsuran field-spacing-large">
+                  <div className="coupon-data pos-angsuran field-spacing">
                     <span className="label">Angsuran Ke-</span>
                     <span className="value">:</span>
                   </div>
                   
                   {/* Angsuran Ke- (Angka Center) */}
-                  <div className="coupon-data pos-angka-center field-spacing-large">
+                  <div className="coupon-data pos-angka-center field-spacing">
                     {coupon.installment_index}
                   </div>
 
                   {/* No Rekening (NEW) */}
-                  <div className="coupon-data pos-rekening field-spacing-large">
+                  <div className="coupon-data pos-rekening field-spacing">
                     <span className="label">No Rekening</span>
                     <span className="value">: {REKENING_NUMBER}</span>
                   </div>
 
                   {/* Besar Angsuran (Label) */}
-                  <div className="coupon-data pos-lbl-besar-angsuran field-spacing-large">Besar Angsuran</div>
+                  <div className="coupon-data pos-lbl-besar-angsuran field-spacing">Besar Angsuran</div>
 
                   {/* Besar Angsuran (Value) */}
-                  <div className="coupon-data pos-val-besar-angsuran field-spacing-large">Rp {formatAmount(coupon.amount)}</div>
+                  <div className="coupon-data pos-val-besar-angsuran field-spacing">Rp {formatAmount(coupon.amount)}</div>
 
                   {/* Footer Kantor (UPDATED) */}
                   <div className="coupon-data pos-kantor field-spacing">KANTOR / {KANTOR_NUMBER}</div>
