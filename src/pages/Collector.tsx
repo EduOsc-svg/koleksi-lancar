@@ -286,15 +286,24 @@ export default function Collector() {
       </div>
 
       {/* Search Input */}
-      <div className="flex justify-between items-center gap-4">
+      <div className="space-y-4">
         <SearchInput
           value={searchQuery}
           onChange={setSearchQuery}
           placeholder="Cari kolektor berdasarkan nama, kode, atau telepon..."
           className="max-w-md"
+          onClear={() => setSearchQuery("")}
         />
         <div className="text-sm text-gray-500">
-          Menampilkan {collectorTotalItems} dari {collectors?.length || 0} kolektor
+          {searchQuery ? (
+            <span>
+              Ditemukan <strong>{collectorTotalItems}</strong> dari {collectors?.length || 0} kolektor
+            </span>
+          ) : (
+            <span>
+              Total <strong>{collectors?.length || 0}</strong> kolektor
+            </span>
+          )}
         </div>
       </div>
 

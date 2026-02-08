@@ -363,11 +363,15 @@ export default function SalesAgents() {
         <SearchInput
           value={searchQuery}
           onChange={setSearchQuery}
+          onClear={() => setSearchQuery("")}
           placeholder="Cari sales agent berdasarkan nama, kode, atau telepon..."
           className="max-w-md"
         />
         <div className="text-sm text-muted-foreground">
-          Menampilkan {totalItems} dari {agents?.length || 0} sales agent
+          {searchQuery
+            ? `Ditemukan ${totalItems} dari ${agents?.length || 0} sales agent`
+            : `Menampilkan ${totalItems} dari ${agents?.length || 0} sales agent`
+          }
         </div>
       </div>
 
