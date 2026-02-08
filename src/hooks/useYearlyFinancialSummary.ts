@@ -62,9 +62,10 @@ export const useYearlyFinancialSummary = (year: Date = new Date()) => {
         { data: commissionTiers, error: tiersError },
       ] = await Promise.all([
         supabase.from('sales_agents').select('id, name, agent_code, commission_percentage, use_tiered_commission').order('name'),
-        // Get contracts started in this year OR completed in this year
+        // Get contracts started in this year
         supabase.from('credit_contracts').select('id, omset, total_loan_amount, sales_agent_id, start_date, status, current_installment_index, tenor_days, created_at')
-          .or(`start_date.gte.${yearStart},start_date.lte.${yearEnd}`),
+          .gte('start_date', yearStart)
+          .lte('start_date', yearEnd),
         supabase.from('payment_logs').select('amount_paid, payment_date, contract_id, credit_contracts!inner(sales_agent_id)').gte('payment_date', yearStart).lte('payment_date', yearEnd),
         supabase.from('operational_expenses').select('amount, expense_date').gte('expense_date', yearStart).lte('expense_date', yearEnd),
         supabase.from('installment_coupons').select('amount, due_date, contract_id').eq('status', 'unpaid').gte('due_date', yearStart).lte('due_date', yearEnd),
