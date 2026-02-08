@@ -47,6 +47,7 @@ import { formatRupiah } from "@/lib/format";
 import { SearchInput } from "@/components/ui/search-input";
 import { CommissionPaymentDialog } from "@/components/salesAgent/CommissionPaymentDialog";
 import { CommissionTiersDialog } from "@/components/salesAgent/CommissionTiersDialog";
+import { useCommissionTiers, calculateTieredCommission } from "@/hooks/useCommissionTiers";
 
 export default function SalesAgents() {
   const { t } = useTranslation();
@@ -54,6 +55,7 @@ export default function SalesAgents() {
   const highlightId = searchParams.get('highlight');
   const { data: agents, isLoading } = useSalesAgents();
   const { data: agentOmsetData } = useAgentOmset();
+  const { data: commissionTiers } = useCommissionTiers();
   const createAgent = useCreateSalesAgent();
   const updateAgent = useUpdateSalesAgent();
   const deleteAgent = useDeleteSalesAgent();
@@ -168,6 +170,11 @@ export default function SalesAgents() {
       return;
     }
 
+    if (!commissionTiers || commissionTiers.length === 0) {
+      toast.error("Ketentuan komisi belum diatur. Silakan atur terlebih dahulu.");
+      return;
+    }
+
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Sales Agents");
 
@@ -177,11 +184,11 @@ export default function SalesAgents() {
       { header: t("salesAgents.agentCode"), key: "agent_code", width: 15 },
       { header: t("salesAgents.name"), key: "name", width: 25 },
       { header: t("salesAgents.phone"), key: "phone", width: 20 },
-      { header: t("salesAgents.commissionPct", "Komisi %"), key: "commission_percentage", width: 15 },
+      { header: "Komisi % (Dinamis)", key: "commission_percentage", width: 18 },
       { header: t("salesAgents.totalOmset", "Total Omset"), key: "total_omset", width: 20 },
       { header: t("salesAgents.totalModal", "Total Modal"), key: "total_modal", width: 20 },
       { header: t("salesAgents.profit", "Keuntungan"), key: "profit", width: 20 },
-      { header: t("salesAgents.earnings", "Komisi"), key: "total_commission", width: 20 },
+      { header: "Komisi (Berdasarkan Tier)", key: "total_commission", width: 25 },
       { header: t("salesAgents.totalContracts", "Jumlah Kontrak"), key: "total_contracts", width: 18 },
     ];
 
@@ -199,11 +206,15 @@ export default function SalesAgents() {
       const omsetData = getAgentOmset(agent.id);
       const rowNumber = index + 2; // Row 1 is header, data starts from row 2
       
+      // Calculate dynamic commission percentage based on omset using tiers
+      const totalOmset = omsetData?.total_omset || 0;
+      const dynamicCommissionPct = calculateTieredCommission(totalOmset, commissionTiers) / 100;
+      
       worksheet.addRow({
         agent_code: agent.agent_code,
         name: agent.name,
         phone: agent.phone || "-",
-        commission_percentage: (agent.commission_percentage || 0) / 100, // Store as decimal for formula
+        commission_percentage: dynamicCommissionPct, // Dynamic percentage from tiers
         total_omset: omsetData?.total_omset || 0,
         total_modal: omsetData?.total_modal || 0,
         profit: null, // Will be set as formula
@@ -257,16 +268,77 @@ export default function SalesAgents() {
     worksheet.getColumn("profit").numFmt = "#,##0";
     worksheet.getColumn("total_commission").numFmt = "#,##0";
 
+    // Add Commission Tiers reference sheet
+    const tiersSheet = workbook.addWorksheet("Ketentuan Komisi");
+    
+    // Commission Tiers columns
+    tiersSheet.columns = [
+      { header: "Rentang Omset Minimum", key: "min_amount", width: 25 },
+      { header: "Rentang Omset Maksimum", key: "max_amount", width: 25 },
+      { header: "Persentase Komisi", key: "percentage", width: 20 },
+      { header: "Keterangan", key: "description", width: 30 },
+    ];
+
+    // Style tiers header
+    tiersSheet.getRow(1).font = { bold: true };
+    tiersSheet.getRow(1).fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FF2F5233" },
+    };
+    tiersSheet.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
+
+    // Add commission tiers data
+    commissionTiers.forEach((tier, index) => {
+      const formatRange = (min: number, max: number | null) => {
+        if (max === null) {
+          return `Rp ${min.toLocaleString('id-ID')}`;
+        }
+        return `Rp ${min.toLocaleString('id-ID')}`;
+      };
+
+      const formatMaxRange = (max: number | null) => {
+        if (max === null) {
+          return "Tidak Terbatas";
+        }
+        return `Rp ${max.toLocaleString('id-ID')}`;
+      };
+
+      const description = tier.max_amount === null 
+        ? "Tier tertinggi untuk omset di atas minimum"
+        : `Tier untuk omset antara ${formatRange(tier.min_amount, tier.max_amount)} - ${formatMaxRange(tier.max_amount)}`;
+
+      tiersSheet.addRow({
+        min_amount: formatRange(tier.min_amount, tier.max_amount),
+        max_amount: formatMaxRange(tier.max_amount),
+        percentage: tier.percentage / 100, // Store as decimal for percentage formatting
+        description: description,
+      });
+    });
+
+    // Format tiers percentage column
+    tiersSheet.getColumn("percentage").numFmt = "0.00%";
+
+    // Add explanation section
+    const explanationRowStart = commissionTiers.length + 3;
+    tiersSheet.getCell(`A${explanationRowStart}`).value = "PENJELASAN SISTEM KOMISI DINAMIS:";
+    tiersSheet.getCell(`A${explanationRowStart}`).font = { bold: true, size: 12 };
+    
+    tiersSheet.getCell(`A${explanationRowStart + 1}`).value = "• Persentase komisi dihitung berdasarkan total omset sales agent";
+    tiersSheet.getCell(`A${explanationRowStart + 2}`).value = "• Semakin tinggi omset, semakin tinggi persentase komisi yang diterima";
+    tiersSheet.getCell(`A${explanationRowStart + 3}`).value = "• Komisi final = Keuntungan × Persentase Komisi (sesuai tier omset)";
+    tiersSheet.getCell(`A${explanationRowStart + 4}`).value = "• Sistem ini memotivasi sales untuk mencapai target omset yang lebih tinggi";
+
     // Generate and download file
     const buffer = await workbook.xlsx.writeBuffer();
     const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `sales-agents-${new Date().toISOString().split("T")[0]}.xlsx`;
+    a.download = `sales-agents-komisi-dinamis-${new Date().toISOString().split("T")[0]}.xlsx`;
     a.click();
     URL.revokeObjectURL(url);
-    toast.success(t("common.exportSuccess", "Data berhasil di-export"));
+    toast.success("Excel berhasil di-export dengan komisi dinamis berdasarkan ketentuan tier!");
   };
 
   return (
