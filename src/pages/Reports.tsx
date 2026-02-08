@@ -323,9 +323,9 @@ export default function Reports() {
             </PopoverTrigger>
             <PopoverContent className="w-[280px] p-0">
               <Command>
-                <CommandInput placeholder="Cari customer..." />
+                <CommandInput placeholder="Cari nama customer atau kode kontrak..." />
                 <CommandList>
-                  <CommandEmpty>Customer tidak ditemukan</CommandEmpty>
+                  <CommandEmpty>Data tidak ditemukan</CommandEmpty>
                   <CommandGroup>
                     <CommandItem
                       value="all"
@@ -342,24 +342,37 @@ export default function Reports() {
                       />
                       Semua Customer
                     </CommandItem>
-                    {customers?.map((customer) => (
-                      <CommandItem
-                        key={customer.id}
-                        value={customer.name}
-                        onSelect={() => {
-                          setCustomerId(customer.id);
-                          setCustomerOpen(false);
-                        }}
-                      >
-                        <Check
-                          className={cn(
-                            "mr-2 h-4 w-4",
-                            customerId === customer.id ? "opacity-100" : "opacity-0"
-                          )}
-                        />
-                        {customer.name}
-                      </CommandItem>
-                    ))}
+                    {customers?.map((customer) => {
+                      // Get contract refs for this customer from payments data
+                      const customerContracts = payments?.filter(p => p.customer_id === customer.id)
+                        .map(p => p.contract_ref)
+                        .filter((ref, idx, arr) => arr.indexOf(ref) === idx) || [];
+                      const contractRefs = customerContracts.join(', ');
+                      
+                      return (
+                        <CommandItem
+                          key={customer.id}
+                          value={`${customer.name} ${contractRefs}`}
+                          onSelect={() => {
+                            setCustomerId(customer.id);
+                            setCustomerOpen(false);
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              customerId === customer.id ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                          <div className="flex flex-col">
+                            <span>{customer.name}</span>
+                            {contractRefs && (
+                              <span className="text-xs text-muted-foreground">{contractRefs}</span>
+                            )}
+                          </div>
+                        </CommandItem>
+                      );
+                    })}
                   </CommandGroup>
                 </CommandList>
               </Command>
@@ -392,7 +405,7 @@ export default function Reports() {
             <TableRow>
               <TableHead>{t("reports.date", "Tanggal")}</TableHead>
               <TableHead>{t("customers.title")}</TableHead>
-              <TableHead>Kode Customer</TableHead>
+              <TableHead>Kode Kontrak</TableHead>
               <TableHead className="text-center">Jumlah Coupon</TableHead>
               <TableHead className="text-right">Nominal Pembayaran</TableHead>
               <TableHead className="text-right">Total</TableHead>
