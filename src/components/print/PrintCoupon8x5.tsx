@@ -369,7 +369,7 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
                     <div className="coupon-data pos-judul">VOUCHER ANGSURAN</div>
 
                     {/* No. Faktur */}
-                    <div className="coupon-data pos-faktur field-spacing-large">
+                    <div className="coupon-data pos-faktur ">
                     <span className="label">No. Faktur</span>
                     <span className="value">: {truncateText(noFakturBase, 20)}</span>
                     </div>
@@ -409,7 +409,7 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
                   </div>
 
                   {/* No Rekening (NEW) */}
-                  <div className="coupon-data pos-rekening field-spacing-large">
+                  <div className="coupon-data pos-rekening ">
                     <span className="label">No Rekening</span>
                     <span className="value">: {REKENING_NUMBER}</span>
                   </div>
