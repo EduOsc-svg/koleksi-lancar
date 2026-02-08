@@ -590,34 +590,60 @@ export default function Dashboard() {
               {/* Agent Performance Table */}
               {yearlyFinancial?.agents && yearlyFinancial.agents.length > 0 && (
                 <div>
-                  <h4 className="text-sm font-medium mb-3">Performa Sales Agent Tahunan</h4>
+                  <div className="flex items-center gap-2 mb-3">
+                    <Users className="h-5 w-5 text-primary" />
+                    <h4 className="text-sm font-medium">Performa Sales Agent Tahunan</h4>
+                  </div>
+                  <p className="text-xs text-muted-foreground mb-3">
+                    Klik untuk melihat kontrak yang didapat
+                  </p>
                   <div className="rounded-md border">
                     <Table>
                       <TableHeader>
                         <TableRow>
                           <TableHead className="w-[50px]">#</TableHead>
-                          <TableHead>Kode</TableHead>
-                          <TableHead>Nama</TableHead>
+                          <TableHead>Kode Sales</TableHead>
                           <TableHead className="text-right">Modal</TableHead>
                           <TableHead className="text-right">Omset</TableHead>
                           <TableHead className="text-right">Keuntungan</TableHead>
+                          <TableHead className="text-right">Margin %</TableHead>
                           <TableHead className="text-right">Komisi</TableHead>
-                          <TableHead className="text-right">Kontrak</TableHead>
+                          <TableHead className="w-[50px]"></TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {yearlyFinancial.agents.map((agent, index) => (
-                          <TableRow key={agent.agent_id}>
-                            <TableCell>{index + 1}</TableCell>
-                            <TableCell className="font-mono">{agent.agent_code}</TableCell>
-                            <TableCell>{agent.agent_name}</TableCell>
-                            <TableCell className="text-right text-blue-600">{formatRupiah(agent.total_modal)}</TableCell>
-                            <TableCell className="text-right">{formatRupiah(agent.total_omset)}</TableCell>
-                            <TableCell className="text-right text-green-600">{formatRupiah(agent.profit)}</TableCell>
-                            <TableCell className="text-right text-purple-600">{formatRupiah(agent.total_commission)}</TableCell>
-                            <TableCell className="text-right">{agent.contracts_count}</TableCell>
-                          </TableRow>
-                        ))}
+                        {yearlyFinancial.agents.map((agent, index) => {
+                          const profitMargin = agent.total_omset > 0 
+                            ? ((agent.profit / agent.total_omset) * 100) 
+                            : 0;
+                          return (
+                            <TableRow 
+                              key={agent.agent_id}
+                              className="cursor-pointer hover:bg-muted/50"
+                              onClick={() => setSelectedAgent({ 
+                                id: agent.agent_id, 
+                                name: agent.agent_name, 
+                                code: agent.agent_code 
+                              })}
+                            >
+                              <TableCell className="font-medium">{index + 1}</TableCell>
+                              <TableCell>
+                                <div>
+                                  <p className="font-medium">{agent.agent_code}</p>
+                                  <p className="text-xs text-muted-foreground">{agent.agent_name} • {agent.contracts_count} kontrak</p>
+                                </div>
+                              </TableCell>
+                              <TableCell className="text-right text-blue-600">{formatRupiah(agent.total_modal)}</TableCell>
+                              <TableCell className="text-right">{formatRupiah(agent.total_omset)}</TableCell>
+                              <TableCell className="text-right text-green-600">{formatRupiah(agent.profit)}</TableCell>
+                              <TableCell className="text-right text-emerald-600">{profitMargin.toFixed(1)}%</TableCell>
+                              <TableCell className="text-right text-purple-600">{formatRupiah(agent.total_commission)}</TableCell>
+                              <TableCell>
+                                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
                       </TableBody>
                     </Table>
                   </div>
