@@ -13,6 +13,7 @@ export interface InstallmentCoupon {
 interface ContractInfo {
   contract_ref: string;
   tenor_days: number;
+  daily_installment_amount: number;
   customers: {
     name: string;
     address: string | null;
