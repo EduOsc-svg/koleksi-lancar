@@ -174,7 +174,7 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
       .pos-angsuran     { left: 15px; top: 163px; } 
       
       /* FIELD REKENING */
-      .pos-rekening     { left: 15px; top: 180px; } 
+      .pos-rekening     { left: 15px; top: 180px; font-weight: bold; margin-top: 1.5px; margin-bottom: 1.5px; } 
 
       /* Angka Angsuran Center */
       .pos-angka-center {
@@ -254,7 +254,7 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
     return pages;
   };
 
-  const noFakturBase = `${contract.tenor_days}/${contract.sales_agents?.agent_code || "-"}/${contract.contract_ref}`;
+  const noFakturBase = `${contract.tenor_days}/${contract.sales_agents?.agent_code || "-"}/${contract.sales_agents?.agent_code || "-"}`;
   const displayAddress = contract.customers?.business_address || contract.customers?.address || "-";
   const couponPages = groupCouponsIntoPages(coupons);
 
