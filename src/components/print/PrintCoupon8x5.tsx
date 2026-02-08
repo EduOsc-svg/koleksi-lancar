@@ -368,7 +368,7 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
                 <div key={coupon.id} className={`coupon-card ${isUrgent ? 'coupon-urgent' : ''}`}>
                   
                     {/* Judul Voucher */}
-                    <div className="coupon-data pos-judul field-spacing-large">VOUCHER ANGSURAN</div>
+                    <div className="coupon-data pos-judul field-spacing">VOUCHER ANGSURAN</div>
 
                     {/* No. Faktur */}
                     <div className="coupon-data pos-faktur field-spacing-large">
