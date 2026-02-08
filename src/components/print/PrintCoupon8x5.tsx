@@ -182,7 +182,7 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
         margin-top: 3px;
         margin-bottom: 3px;
         padding-top: 1.5px;
-        padding-bottom: 1px;
+        padding-bottom: 1.5px;
       }
       
       .field-spacing-small {
