@@ -56,6 +56,7 @@ import { toast } from "sonner";
 import { useContracts, useCreateContract, useUpdateContract, useDeleteContract, useInvoiceDetails, ContractWithCustomer } from "@/hooks/useContracts";
 import { useCustomers } from "@/hooks/useCustomers";
 import { useSalesAgents } from "@/hooks/useSalesAgents";
+import { useCollectors } from "@/hooks/useCollectors";
 import { formatRupiah } from "@/lib/format";
 import { usePagination } from "@/hooks/usePagination";
 import { TablePagination } from "@/components/TablePagination";
@@ -71,6 +72,7 @@ export default function Contracts() {
   const { data: invoiceDetails } = useInvoiceDetails();
   const { data: customers } = useCustomers();
   const { data: salesAgents } = useSalesAgents();
+  const { data: collectors } = useCollectors();
   const createContract = useCreateContract();
   const updateContract = useUpdateContract();
   const deleteContract = useDeleteContract();
@@ -99,11 +101,13 @@ export default function Contracts() {
   // Combobox state for searchable dropdowns
   const [customerOpen, setCustomerOpen] = useState(false);
   const [salesAgentOpen, setSalesAgentOpen] = useState(false);
+  const [collectorOpen, setCollectorOpen] = useState(false);
   
   const [formData, setFormData] = useState({
     contract_ref: "",
     customer_id: "",
     sales_agent_id: "",
+    collector_id: "",
     product_type: "",
     total_loan_amount: 0,
     tenor_days: "100",
@@ -182,6 +186,7 @@ export default function Contracts() {
       contract_ref: generateNextContractCode(),
       customer_id: "",
       sales_agent_id: "",
+      collector_id: "",
       product_type: "",
       total_loan_amount: 0,
       tenor_days: "100",
@@ -199,6 +204,7 @@ export default function Contracts() {
       contract_ref: contract.contract_ref,
       customer_id: contract.customer_id,
       sales_agent_id: contract.sales_agent_id || "",
+      collector_id: contract.collector_id || "",
       product_type: contract.product_type || "",
       total_loan_amount: contract.total_loan_amount,
       tenor_days: contract.tenor_days.toString(),
@@ -240,6 +246,7 @@ export default function Contracts() {
           contract_ref: formData.contract_ref,
           customer_id: formData.customer_id,
           sales_agent_id: formData.sales_agent_id || null,
+          collector_id: formData.collector_id || null,
           product_type: formData.product_type || null,
           total_loan_amount: formData.total_loan_amount || 0,
           tenor_days: tenorDays,
@@ -254,6 +261,7 @@ export default function Contracts() {
           contract_ref: formData.contract_ref,
           customer_id: formData.customer_id,
           sales_agent_id: formData.sales_agent_id || null,
+          collector_id: formData.collector_id || null,
           product_type: formData.product_type || null,
           total_loan_amount: formData.total_loan_amount || 0,
           tenor_days: tenorDays,
@@ -392,6 +400,7 @@ export default function Contracts() {
               business_address: selectedContract.customers.business_address || null,
             } : null,
             sales_agents: selectedContract.sales_agents || null,
+            collectors: selectedContract.collectors || null,
           }}
         />
       )}
@@ -644,6 +653,58 @@ export default function Contracts() {
               </Popover>
               <p className="text-xs text-muted-foreground mt-1">
                 Komisi akan otomatis masuk ke sales ini
+              </p>
+            </div>
+            <div>
+              <Label htmlFor="collector">Kolektor</Label>
+              <Popover open={collectorOpen} onOpenChange={setCollectorOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={collectorOpen}
+                    className="w-full justify-between font-normal"
+                  >
+                    {formData.collector_id
+                      ? (() => {
+                          const collector = collectors?.find((c) => c.id === formData.collector_id);
+                          return collector ? `${collector.name} (${collector.collector_code})` : "Cari kolektor...";
+                        })()
+                      : "Cari kolektor..."}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                  <Command>
+                    <CommandInput placeholder="Ketik nama atau kode kolektor..." />
+                    <CommandList>
+                      <CommandEmpty>Kolektor tidak ditemukan.</CommandEmpty>
+                      <CommandGroup>
+                        {collectors?.map((collector) => (
+                          <CommandItem
+                            key={collector.id}
+                            value={`${collector.name} ${collector.collector_code}`}
+                            onSelect={() => {
+                              setFormData({ ...formData, collector_id: collector.id });
+                              setCollectorOpen(false);
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                formData.collector_id === collector.id ? "opacity-100" : "opacity-0"
+                              )}
+                            />
+                            {collector.name} ({collector.collector_code})
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+              <p className="text-xs text-muted-foreground mt-1">
+                Kode kolektor akan tampil pada No Faktur kupon
               </p>
             </div>
             <div className="grid grid-cols-2 gap-4">

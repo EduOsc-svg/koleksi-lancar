@@ -199,6 +199,7 @@ export type Database = {
       }
       credit_contracts: {
         Row: {
+          collector_id: string | null
           contract_ref: string
           created_at: string
           current_installment_index: number
@@ -214,6 +215,7 @@ export type Database = {
           total_loan_amount: number
         }
         Insert: {
+          collector_id?: string | null
           contract_ref: string
           created_at?: string
           current_installment_index?: number
@@ -229,6 +231,7 @@ export type Database = {
           total_loan_amount?: number
         }
         Update: {
+          collector_id?: string | null
           contract_ref?: string
           created_at?: string
           current_installment_index?: number
@@ -244,6 +247,13 @@ export type Database = {
           total_loan_amount?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "credit_contracts_collector_id_fkey"
+            columns: ["collector_id"]
+            isOneToOne: false
+            referencedRelation: "collectors"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "credit_contracts_customer_id_fkey"
             columns: ["customer_id"]
