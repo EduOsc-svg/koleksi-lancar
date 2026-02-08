@@ -31,7 +31,6 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { useCollectors } from "@/hooks/useCollectors";
-import { useAggregatedPayments } from "@/hooks/useAggregatedPayments";
 import { usePayments } from "@/hooks/usePayments";
 import { formatRupiah } from "@/lib/format";
 import { TablePagination } from "@/components/TablePagination";
@@ -72,7 +71,6 @@ export default function Collector() {
   
   // Fetch payments for the selected period
   const { data: payments, isLoading } = usePayments(dateFrom, dateTo, undefined);
-  const { data: aggregatedPayments } = useAggregatedPayments(dateFrom, dateTo, undefined);
   
   // Calculate collector statistics
   const collectorStats = collectors?.map(collector => {
@@ -99,7 +97,6 @@ export default function Collector() {
   
   // Pagination constants
   const COLLECTOR_ITEMS_PER_PAGE = 5;
-  const PAYMENT_ITEMS_PER_PAGE = 10;
   
   // Pagination for collector stats
   const {
@@ -109,15 +106,6 @@ export default function Collector() {
     totalPages: collectorTotalPages,
     totalItems: collectorTotalItems
   } = usePagination(collectorStats, COLLECTOR_ITEMS_PER_PAGE);
-  
-  // Pagination for payment history
-  const {
-    paginatedItems: paginatedPayments,
-    currentPage: paymentPage,
-    goToPage: setPaymentPage,
-    totalPages: paymentTotalPages,
-    totalItems: paymentTotalItems
-  } = usePagination(aggregatedPayments || [], PAYMENT_ITEMS_PER_PAGE);
   
   // Summary totals
   const totalCollectedThisMonth = payments?.reduce((sum, p) => sum + Number(p.amount_paid), 0) || 0;
@@ -429,70 +417,6 @@ export default function Collector() {
               totalPages={collectorTotalPages}
               onPageChange={setCollectorPage}
               totalItems={collectorTotalItems}
-            />
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Payment History */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Riwayat Pembayaran</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Tanggal</TableHead>
-                <TableHead>Customer</TableHead>
-                <TableHead>Kontrak</TableHead>
-                <TableHead>Kolektor</TableHead>
-                <TableHead className="text-right">Kupon</TableHead>
-                <TableHead className="text-right">Total</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground">
-                    Memuat data...
-                  </TableCell>
-                </TableRow>
-              ) : paginatedPayments.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground">
-                    Belum ada riwayat pembayaran
-                  </TableCell>
-                </TableRow>
-              ) : (
-                paginatedPayments.map((payment, i) => (
-                  <TableRow key={`${payment.customer_id}-${payment.payment_date}-${i}`}>
-                    <TableCell>
-                      {format(new Date(payment.payment_date), "dd MMM yyyy", { locale: localeId })}
-                    </TableCell>
-                    <TableCell className="font-medium">{payment.customer_name}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{payment.contract_ref}</Badge>
-                    </TableCell>
-                    <TableCell>{payment.collector_name || "-"}</TableCell>
-                    <TableCell className="text-right">
-                      <Badge>{payment.coupon_count}x</Badge>
-                    </TableCell>
-                    <TableCell className="text-right font-medium text-primary">
-                      {formatRupiah(payment.total_amount)}
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-          
-          {paymentTotalPages > 1 && (
-            <TablePagination
-              currentPage={paymentPage}
-              totalPages={paymentTotalPages}
-              onPageChange={setPaymentPage}
-              totalItems={paymentTotalItems}
             />
           )}
         </CardContent>
