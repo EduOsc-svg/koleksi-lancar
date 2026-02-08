@@ -2,7 +2,8 @@ import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useMonthlyPerformance, useYearlyTarget } from "@/hooks/useMonthlyPerformance";
-import { useYearlyFinancialSummary } from "@/hooks/useYearlyFinancialSummary";
+import { useYearlyFinancialSummary, ContractStatusFilter } from "@/hooks/useYearlyFinancialSummary";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useOperationalExpenses, useOperationalExpenseMutations, OperationalExpenseInput } from "@/hooks/useOperationalExpenses";
 import { useAgentContractHistory } from "@/hooks/useAgentPerformance";
 import { formatRupiah } from "@/lib/format";
@@ -48,6 +49,7 @@ export default function Dashboard() {
   const [selectedMonth, setSelectedMonth] = useState(new Date());
   const [selectedYear, setSelectedYear] = useState(new Date());
   const [selectedAgent, setSelectedAgent] = useState<{ id: string; name: string; code: string } | null>(null);
+  const [statusFilter, setStatusFilter] = useState<ContractStatusFilter>('all');
   const [expenseDialogOpen, setExpenseDialogOpen] = useState(false);
   const [newExpense, setNewExpense] = useState<OperationalExpenseInput>({
     expense_date: format(new Date(), 'yyyy-MM-dd'),
@@ -59,7 +61,7 @@ export default function Dashboard() {
   
   const { data: monthlyData, isLoading: isLoadingMonthly } = useMonthlyPerformance(selectedMonth);
   const { data: yearlyData, isLoading: isLoadingYearly } = useYearlyTarget(selectedYear);
-  const { data: yearlyFinancial, isLoading: isLoadingYearlyFinancial } = useYearlyFinancialSummary(selectedYear);
+  const { data: yearlyFinancial, isLoading: isLoadingYearlyFinancial } = useYearlyFinancialSummary(selectedYear, statusFilter);
   const { data: expenses, isLoading: isLoadingExpenses } = useOperationalExpenses(selectedMonth);
   const { data: historyData, isLoading: isLoadingHistory } = useAgentContractHistory(selectedAgent?.id || null);
   const { createExpense, deleteExpense } = useOperationalExpenseMutations();
@@ -434,37 +436,66 @@ export default function Dashboard() {
       {/* Yearly Financial Summary Section */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <BarChart3 className="h-5 w-5 text-indigo-500" />
-              <CardTitle>Kalkulasi Keuangan Tahunan</CardTitle>
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5 text-indigo-500" />
+                <CardTitle>Kalkulasi Keuangan Tahunan</CardTitle>
+              </div>
+              <div className="flex items-center gap-2">
+                <Select
+                  value={selectedYear.getFullYear().toString()}
+                  onValueChange={(val) => setSelectedYear(new Date(parseInt(val), 0, 1))}
+                >
+                  <SelectTrigger className="w-[140px] bg-background">
+                    <Calendar className="h-4 w-4 text-muted-foreground mr-2" />
+                    <SelectValue placeholder="Pilih Tahun" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-popover border shadow-md">
+                    {yearOptions.map((year) => (
+                      <SelectItem key={year} value={year.toString()}>
+                        <span className="font-medium">{year}</span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleExportYearlyReport}
+                  disabled={isLoadingYearlyFinancial || !yearlyFinancial}
+                >
+                  <FileSpreadsheet className="h-4 w-4 mr-2" />
+                  Export Excel
+                </Button>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Select
-                value={selectedYear.getFullYear().toString()}
-                onValueChange={(val) => setSelectedYear(new Date(parseInt(val), 0, 1))}
+            
+            {/* Status Filter */}
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-muted-foreground">Filter Status:</span>
+              <ToggleGroup 
+                type="single" 
+                value={statusFilter} 
+                onValueChange={(value) => value && setStatusFilter(value as ContractStatusFilter)}
+                className="gap-1"
               >
-                <SelectTrigger className="w-[140px] bg-background">
-                  <Calendar className="h-4 w-4 text-muted-foreground mr-2" />
-                  <SelectValue placeholder="Pilih Tahun" />
-                </SelectTrigger>
-                <SelectContent className="bg-popover border shadow-md">
-                  {yearOptions.map((year) => (
-                    <SelectItem key={year} value={year.toString()}>
-                      <span className="font-medium">{year}</span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={handleExportYearlyReport}
-                disabled={isLoadingYearlyFinancial || !yearlyFinancial}
-              >
-                <FileSpreadsheet className="h-4 w-4 mr-2" />
-                Export Excel
-              </Button>
+                <ToggleGroupItem value="all" size="sm" className="text-xs px-3">
+                  Semua
+                </ToggleGroupItem>
+                <ToggleGroupItem value="lancar" size="sm" className="text-xs px-3 data-[state=on]:bg-green-100 data-[state=on]:text-green-700">
+                  Lancar
+                </ToggleGroupItem>
+                <ToggleGroupItem value="kurang_lancar" size="sm" className="text-xs px-3 data-[state=on]:bg-yellow-100 data-[state=on]:text-yellow-700">
+                  Kurang Lancar
+                </ToggleGroupItem>
+                <ToggleGroupItem value="macet" size="sm" className="text-xs px-3 data-[state=on]:bg-red-100 data-[state=on]:text-red-700">
+                  Macet
+                </ToggleGroupItem>
+                <ToggleGroupItem value="completed" size="sm" className="text-xs px-3 data-[state=on]:bg-blue-100 data-[state=on]:text-blue-700">
+                  Lunas
+                </ToggleGroupItem>
+              </ToggleGroup>
             </div>
           </div>
         </CardHeader>
@@ -480,8 +511,8 @@ export default function Dashboard() {
                   iconColor="text-blue-500"
                   label="Total Modal"
                   value={yearlyFinancial?.total_modal ?? 0}
-                  subtitle={`Tahun ${selectedYear.getFullYear()}`}
-                  hoverInfo={`Total: ${formatRupiah(yearlyFinancial?.total_modal ?? 0)} | ${yearlyFinancial?.contracts_count ?? 0} kontrak (${yearlyFinancial?.completed_count ?? 0} lunas, ${yearlyFinancial?.active_count ?? 0} aktif)`}
+                  subtitle={statusFilter === 'all' ? `Tahun ${selectedYear.getFullYear()}` : `Filter: ${statusFilter.replace('_', ' ')}`}
+                  hoverInfo={`Total: ${formatRupiah(yearlyFinancial?.total_modal ?? 0)} | ${yearlyFinancial?.contracts_count ?? 0} kontrak • Lancar: ${yearlyFinancial?.lancar_count ?? 0} | K.Lancar: ${yearlyFinancial?.kurang_lancar_count ?? 0} | Macet: ${yearlyFinancial?.macet_count ?? 0} | Lunas: ${yearlyFinancial?.completed_count ?? 0}`}
                 />
                 
                 <StatCard
@@ -489,8 +520,8 @@ export default function Dashboard() {
                   iconColor="text-indigo-500"
                   label="Total Omset"
                   value={yearlyFinancial?.total_omset ?? 0}
-                  subtitle={`Tahun ${selectedYear.getFullYear()}`}
-                  hoverInfo={`Total: ${formatRupiah(yearlyFinancial?.total_omset ?? 0)} | ${yearlyFinancial?.contracts_count ?? 0} kontrak (${yearlyFinancial?.completed_count ?? 0} lunas)`}
+                  subtitle={statusFilter === 'all' ? `Tahun ${selectedYear.getFullYear()}` : `Filter: ${statusFilter.replace('_', ' ')}`}
+                  hoverInfo={`Total: ${formatRupiah(yearlyFinancial?.total_omset ?? 0)} | ${yearlyFinancial?.contracts_count ?? 0} kontrak • Lancar: ${yearlyFinancial?.lancar_count ?? 0} | K.Lancar: ${yearlyFinancial?.kurang_lancar_count ?? 0} | Macet: ${yearlyFinancial?.macet_count ?? 0} | Lunas: ${yearlyFinancial?.completed_count ?? 0}`}
                 />
 
                 <StatCard

@@ -1,8 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { startOfYear, endOfYear, format, eachMonthOfInterval } from 'date-fns';
+import { startOfYear, endOfYear, format, eachMonthOfInterval, differenceInDays } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
 import { calculateTieredCommission, CommissionTier } from './useCommissionTiers';
+
+export type ContractStatusFilter = 'all' | 'lancar' | 'kurang_lancar' | 'macet' | 'completed';
 
 export interface MonthlyBreakdown {
   month: string;
@@ -39,18 +41,46 @@ export interface YearlyFinancialSummary {
   contracts_count: number;
   completed_count: number;
   active_count: number;
+  lancar_count: number;
+  kurang_lancar_count: number;
+  macet_count: number;
   profit_margin: number;
   collection_rate: number;
   monthly_breakdown: MonthlyBreakdown[];
   agents: AgentYearlyPerformance[];
 }
 
-export const useYearlyFinancialSummary = (year: Date = new Date()) => {
+// Calculate dynamic contract status based on days_per_due metric
+const calculateContractStatus = (contract: {
+  status: string;
+  current_installment_index: number;
+  created_at: string;
+}): 'completed' | 'lancar' | 'kurang_lancar' | 'macet' => {
+  if (contract.status === 'completed') return 'completed';
+  
+  const daysSinceCreation = differenceInDays(new Date(), new Date(contract.created_at));
+  const installmentsPaid = contract.current_installment_index;
+  
+  // Avoid division by zero
+  if (installmentsPaid === 0) {
+    // No payments yet - check how long since contract started
+    return daysSinceCreation > 7 ? 'macet' : daysSinceCreation > 3 ? 'kurang_lancar' : 'lancar';
+  }
+  
+  const daysPerDue = daysSinceCreation / installmentsPaid;
+  
+  // Status tiers based on days_per_due metric
+  if (daysPerDue <= 1.2) return 'lancar';
+  if (daysPerDue <= 2.0) return 'kurang_lancar';
+  return 'macet';
+};
+
+export const useYearlyFinancialSummary = (year: Date = new Date(), statusFilter: ContractStatusFilter = 'all') => {
   const yearStart = format(startOfYear(year), 'yyyy-MM-dd');
   const yearEnd = format(endOfYear(year), 'yyyy-MM-dd');
 
   return useQuery({
-    queryKey: ['yearly_financial_summary', yearStart, yearEnd],
+    queryKey: ['yearly_financial_summary', yearStart, yearEnd, statusFilter],
     queryFn: async (): Promise<YearlyFinancialSummary> => {
       // Fetch all data in parallel
       const [
@@ -114,20 +144,32 @@ export const useYearlyFinancialSummary = (year: Date = new Date()) => {
       let totalContractsCount = 0;
       let completedCount = 0;
       let activeCount = 0;
+      let lancarCount = 0;
+      let kurangLancarCount = 0;
+      let macetCount = 0;
 
-      // Filter contracts relevant to the selected year
+      // Filter contracts relevant to the selected year and apply status filter
       const relevantContracts = (contracts || []).filter((contract: any) => {
         const startDate = new Date(contract.start_date);
         const contractYear = startDate.getFullYear();
         const selectedYear = year.getFullYear();
         
-        // Include contracts that:
-        // 1. Started in the selected year, OR
-        // 2. Were active/completed during the selected year
-        return contractYear <= selectedYear;
+        // First check if contract is in the selected year
+        if (contractYear > selectedYear) return false;
+        
+        // Calculate dynamic status
+        const dynamicStatus = calculateContractStatus(contract);
+        
+        // Apply status filter
+        if (statusFilter !== 'all' && dynamicStatus !== statusFilter) {
+          return false;
+        }
+        
+        return true;
       });
 
       relevantContracts.forEach((contract: any) => {
+        const dynamicStatus = calculateContractStatus(contract);
         const monthKey = format(new Date(contract.start_date), 'yyyy-MM');
         const modal = Number(contract.omset || 0);  // omset field is actually Modal
         const omset = Number(contract.total_loan_amount || 0);  // total_loan_amount is Omset
@@ -142,10 +184,23 @@ export const useYearlyFinancialSummary = (year: Date = new Date()) => {
         totalCommission += commission;
         totalContractsCount++;
         
-        if (contract.status === 'completed') {
-          completedCount++;
-        } else if (contract.status === 'active') {
-          activeCount++;
+        // Count by dynamic status
+        switch (dynamicStatus) {
+          case 'completed':
+            completedCount++;
+            break;
+          case 'lancar':
+            lancarCount++;
+            activeCount++;
+            break;
+          case 'kurang_lancar':
+            kurangLancarCount++;
+            activeCount++;
+            break;
+          case 'macet':
+            macetCount++;
+            activeCount++;
+            break;
         }
 
         // Update monthly breakdown
@@ -239,6 +294,9 @@ export const useYearlyFinancialSummary = (year: Date = new Date()) => {
         contracts_count: totalContractsCount,
         completed_count: completedCount,
         active_count: activeCount,
+        lancar_count: lancarCount,
+        kurang_lancar_count: kurangLancarCount,
+        macet_count: macetCount,
         profit_margin: profitMargin,
         collection_rate: collectionRate,
         monthly_breakdown: Array.from(monthlyData.values()),
