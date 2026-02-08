@@ -5,7 +5,7 @@ import { toast } from "sonner";
 
 import { useCollectors } from "@/hooks/useCollectors";
 import { useContracts } from "@/hooks/useContracts";
-import { useCreatePayment } from "@/hooks/usePayments";
+import { useCreatePayment, useCreateBulkPayment } from "@/hooks/usePayments";
 import { usePagination } from "@/hooks/usePagination";
 import { ManifestFilters } from "@/components/collection/ManifestFilters";
 import { ManifestTable } from "@/components/collection/ManifestTable";
@@ -15,6 +15,7 @@ export default function Collection() {
   const { data: collectors } = useCollectors();
   const { data: contracts, isLoading: contractsLoading } = useContracts("active");
   const createPayment = useCreatePayment();
+  const createBulkPayment = useCreateBulkPayment();
 
   // Manifest state
   const [searchQuery, setSearchQuery] = useState("");
@@ -67,6 +68,25 @@ export default function Collection() {
     }
   };
 
+  const handleBulkSubmitPayment = async (data: {
+    contract_id: string;
+    payment_date: string;
+    start_index: number;
+    coupon_count: number;
+    amount_per_coupon: number;
+    collector_id: string | null;
+    notes: string;
+  }) => {
+    try {
+      await createBulkPayment.mutateAsync(data);
+      const endIndex = data.start_index + data.coupon_count - 1;
+      toast.success(`Pembayaran kupon #${data.start_index}-#${endIndex} (${data.coupon_count} kupon) berhasil dicatat`);
+    } catch {
+      toast.error("Gagal menyimpan data bulk payment");
+      throw new Error("Bulk payment failed");
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -113,7 +133,8 @@ export default function Collection() {
               contracts={contracts}
               collectors={collectors}
               onSubmit={handleSubmitPayment}
-              isSubmitting={createPayment.isPending}
+              onBulkSubmit={handleBulkSubmitPayment}
+              isSubmitting={createPayment.isPending || createBulkPayment.isPending}
             />
           </div>
         </TabsContent>
