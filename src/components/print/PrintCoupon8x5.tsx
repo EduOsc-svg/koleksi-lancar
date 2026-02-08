@@ -20,7 +20,6 @@ interface ContractInfo {
     business_address?: string | null;
   } | null;
   sales_agents?: { agent_code: string } | null;
-  collectors?: { collector_code: string } | null;
 }
 
 interface PrintCoupon8x5Props {
@@ -256,7 +255,7 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
     return pages;
   };
 
-  const noFakturBase = `${contract.tenor_days}/${contract.sales_agents?.agent_code || "-"}/${contract.collectors?.collector_code || "-"}`;
+  const noFakturBase = `${contract.tenor_days}/${contract.sales_agents?.agent_code || "-"}/${contract.contract_ref}`;
   const displayAddress = contract.customers?.business_address || contract.customers?.address || "-";
   const couponPages = groupCouponsIntoPages(coupons);
 
