@@ -280,9 +280,17 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
       /* URGENT STYLE (Merah) - Teks warna merah untuk hari terakhir */
       .coupon-urgent .coupon-data, 
       .coupon-urgent .pos-judul, 
-      .coupon-urgent .pos-angka-center, 
+      .coupon-urgent .pos-faktur,
+      .coupon-urgent .pos-nama,
       .coupon-urgent .pos-kode-kontrak,
+      .coupon-urgent .pos-alamat,
+      .coupon-urgent .pos-jatuhtempo,
+      .coupon-urgent .pos-angsuran,
+      .coupon-urgent .pos-rekening,
+      .coupon-urgent .pos-angka-center, 
       .coupon-urgent .pos-lbl-besar-angsuran,
+      .coupon-urgent .pos-val-besar-angsuran,
+      .coupon-urgent .pos-kantor,
       .coupon-urgent .field-spacing,
       .coupon-urgent .field-spacing-none {
         color: red !important; font-weight: bold !important;
