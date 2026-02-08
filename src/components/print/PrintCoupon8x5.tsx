@@ -122,7 +122,7 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
         background-size: cover;
         background-position: center;
         /* Pertajam warna background image */
-        filter: contrast(1.3) brightness(0.9) saturate(1.4);
+        filter: contrast(1.3) brightness(1) saturate(1.4);
         overflow: visible;
       }
 
