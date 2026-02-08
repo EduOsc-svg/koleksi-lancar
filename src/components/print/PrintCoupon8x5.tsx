@@ -210,7 +210,11 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
 
       /* Area Kiri (Loop Data) - SERING DIMODIFIKASI */
       /* SERING: Posisi vertikal nomor faktur */
-      .pos-faktur       { left: 15px; top: 95px; }  
+      .pos-faktur       { left: 15px; top: 95px; 
+       
+        margin-bottom: 3.5px;
+        
+        padding-bottom: 1.5px;}  
       .pos-faktur.field-spacing { /* Gunakan class .field-spacing untuk spacing */ }
       
       /* SERING: Posisi vertikal nama customer */
@@ -371,7 +375,7 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
                     <div className="coupon-data pos-judul field-spacing-small">VOUCHER ANGSURAN</div>
 
                     {/* No. Faktur */}
-                    <div className="coupon-data pos-faktur field-spacing-large">
+                    <div className="coupon-data pos-faktur">
                     <span className="label">No. Faktur</span>
                     <span className="value">: {truncateText(noFakturBase, 20)}</span>
                     </div>
