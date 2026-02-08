@@ -179,9 +179,9 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
       
       /* KHUSUS: Spacing untuk field yang membutuhkan spasi berbeda */
       .field-spacing-large {
-        margin-top: 3.5px;
+        margin-top: 3px;
         margin-bottom: 3px;
-        padding-top: 1px;
+        padding-top: 1.5px;
         padding-bottom: 1px;
       }
       
