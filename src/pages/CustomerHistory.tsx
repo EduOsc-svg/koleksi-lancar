@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useCustomers } from "@/hooks/useCustomers";
 import { useContracts } from "@/hooks/useContracts";
 import { usePaymentsByContract } from "@/hooks/usePayments";
@@ -26,6 +27,51 @@ import { formatRupiah, formatDate } from "@/lib/format";
 import { usePagination } from "@/hooks/usePagination";
 import { TablePagination } from "@/components/TablePagination";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { differenceInDays } from "date-fns";
+
+type ContractStatusFilter = 'all' | 'lancar' | 'kurang_lancar' | 'macet' | 'completed';
+
+// Calculate dynamic contract status based on days_per_due metric
+const calculateContractStatus = (contract: {
+  status: string;
+  current_installment_index: number;
+  created_at: string;
+}): 'completed' | 'lancar' | 'kurang_lancar' | 'macet' => {
+  if (contract.status === 'completed') return 'completed';
+  
+  const daysSinceCreation = differenceInDays(new Date(), new Date(contract.created_at));
+  const installmentsPaid = contract.current_installment_index;
+  
+  if (installmentsPaid === 0) {
+    return daysSinceCreation > 7 ? 'macet' : daysSinceCreation > 3 ? 'kurang_lancar' : 'lancar';
+  }
+  
+  const daysPerDue = daysSinceCreation / installmentsPaid;
+  
+  if (daysPerDue <= 1.2) return 'lancar';
+  if (daysPerDue <= 2.0) return 'kurang_lancar';
+  return 'macet';
+};
+
+const getStatusLabel = (status: 'completed' | 'lancar' | 'kurang_lancar' | 'macet'): string => {
+  const labels: Record<string, string> = {
+    completed: 'Lunas',
+    lancar: 'Lancar',
+    kurang_lancar: 'Kurang Lancar',
+    macet: 'Macet'
+  };
+  return labels[status] || status;
+};
+
+const getStatusBadgeClass = (status: 'completed' | 'lancar' | 'kurang_lancar' | 'macet'): string => {
+  const classes: Record<string, string> = {
+    completed: 'bg-blue-100 text-blue-700',
+    lancar: 'bg-green-100 text-green-700',
+    kurang_lancar: 'bg-yellow-100 text-yellow-700',
+    macet: 'bg-red-100 text-red-700'
+  };
+  return classes[status] || '';
+};
 
 export default function CustomerHistory() {
   const { data: customers } = useCustomers();
@@ -33,17 +79,44 @@ export default function CustomerHistory() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>("");
   const [selectedContractId, setSelectedContractId] = useState<string>("");
+  const [statusFilter, setStatusFilter] = useState<ContractStatusFilter>('all');
 
-  const filteredCustomers = customers?.filter((c) => {
+  // Filter customers based on search term AND status filter
+  const filteredCustomers = useMemo(() => {
+    if (!customers || !contracts) return [];
+    
     const query = searchTerm.toLowerCase();
-    return (
-      c.name.toLowerCase().includes(query)
-    );
-  });
+    
+    return customers.filter((customer) => {
+      // First check name search
+      const matchesSearch = customer.name.toLowerCase().includes(query);
+      if (!matchesSearch) return false;
+      
+      // If status filter is 'all', include all customers matching search
+      if (statusFilter === 'all') return true;
+      
+      // Check if customer has any contract matching the status filter
+      const customerContracts = contracts.filter(c => c.customer_id === customer.id);
+      return customerContracts.some(contract => {
+        const dynamicStatus = calculateContractStatus(contract);
+        return dynamicStatus === statusFilter;
+      });
+    });
+  }, [customers, contracts, searchTerm, statusFilter]);
 
-  const customerContracts = contracts?.filter(
-    (c) => c.customer_id === selectedCustomerId
-  );
+  // Filter contracts for selected customer based on status filter
+  const customerContracts = useMemo(() => {
+    if (!contracts || !selectedCustomerId) return [];
+    
+    const filtered = contracts.filter(c => c.customer_id === selectedCustomerId);
+    
+    if (statusFilter === 'all') return filtered;
+    
+    return filtered.filter(contract => {
+      const dynamicStatus = calculateContractStatus(contract);
+      return dynamicStatus === statusFilter;
+    });
+  }, [contracts, selectedCustomerId, statusFilter]);
 
   const { data: payments, isLoading: loadingPayments } = usePaymentsByContract(
     selectedContractId
@@ -56,19 +129,23 @@ export default function CustomerHistory() {
   const { currentPage, totalPages, paginatedItems: paginatedPayments, goToPage, totalItems } = usePagination(payments, ITEMS_PER_PAGE);
 
   // Add pagination for customer list
-  const displayCustomers = searchTerm ? filteredCustomers : customers;
   const { 
     currentPage: customerPage, 
     totalPages: customerTotalPages, 
     paginatedItems: paginatedCustomers, 
     goToPage: goToCustomerPage,
     totalItems: totalCustomers 
-  } = usePagination(displayCustomers, ITEMS_PER_PAGE);
+  } = usePagination(filteredCustomers, ITEMS_PER_PAGE);
 
   const selectedContract = contracts?.find((c) => c.id === selectedContractId);
   const progress = selectedContract
     ? (selectedContract.current_installment_index / selectedContract.tenor_days) * 100
     : 0;
+
+  // Get dynamic status for selected contract
+  const selectedContractDynamicStatus = selectedContract 
+    ? calculateContractStatus(selectedContract) 
+    : null;
 
   return (
     <div className="space-y-6">
@@ -79,39 +156,111 @@ export default function CustomerHistory() {
           <CardTitle>Cari Pelanggan</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Cari berdasarkan nama atau kode customer..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
+          {/* Search and Filter Row */}
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Cari berdasarkan nama pelanggan..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            
+            {/* Status Filter Toggle */}
+            <ToggleGroup 
+              type="single" 
+              value={statusFilter} 
+              onValueChange={(value) => {
+                if (value) {
+                  setStatusFilter(value as ContractStatusFilter);
+                  setSelectedCustomerId("");
+                  setSelectedContractId("");
+                }
+              }}
+              className="gap-1 flex-wrap justify-start"
+            >
+              <ToggleGroupItem value="all" size="sm" className="text-xs px-3">
+                Semua
+              </ToggleGroupItem>
+              <ToggleGroupItem value="lancar" size="sm" className="text-xs px-3 data-[state=on]:bg-green-100 data-[state=on]:text-green-700">
+                Lancar
+              </ToggleGroupItem>
+              <ToggleGroupItem value="kurang_lancar" size="sm" className="text-xs px-3 data-[state=on]:bg-yellow-100 data-[state=on]:text-yellow-700">
+                K. Lancar
+              </ToggleGroupItem>
+              <ToggleGroupItem value="macet" size="sm" className="text-xs px-3 data-[state=on]:bg-red-100 data-[state=on]:text-red-700">
+                Macet
+              </ToggleGroupItem>
+              <ToggleGroupItem value="completed" size="sm" className="text-xs px-3 data-[state=on]:bg-blue-100 data-[state=on]:text-blue-700">
+                Lunas
+              </ToggleGroupItem>
+            </ToggleGroup>
           </div>
 
           {/* Show filtered list or all customers with pagination */}
           <ScrollArea className="border rounded-lg h-64">
             <div className="space-y-1 p-2">
-              {paginatedCustomers?.map((customer) => (
-                <div
-                  key={customer.id}
-                  className={`p-3 hover:bg-muted cursor-pointer rounded-md ${
-                    selectedCustomerId === customer.id ? "bg-muted" : ""
-                  }`}
-                  onClick={() => {
-                    setSelectedCustomerId(customer.id);
-                    setSelectedContractId("");
-                  }}
-                >
-                <div className="font-medium">{customer.name}</div>
-                  <div className="text-xs text-muted-foreground">
-                    NIK: {customer.nik || "-"}
+              {paginatedCustomers?.map((customer) => {
+                // Get contracts for this customer to show status badges
+                const custContracts = contracts?.filter(c => c.customer_id === customer.id) || [];
+                const statusCounts = custContracts.reduce((acc, c) => {
+                  const status = calculateContractStatus(c);
+                  acc[status] = (acc[status] || 0) + 1;
+                  return acc;
+                }, {} as Record<string, number>);
+                
+                return (
+                  <div
+                    key={customer.id}
+                    className={`p-3 hover:bg-muted cursor-pointer rounded-md ${
+                      selectedCustomerId === customer.id ? "bg-muted" : ""
+                    }`}
+                    onClick={() => {
+                      setSelectedCustomerId(customer.id);
+                      setSelectedContractId("");
+                    }}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="font-medium">{customer.name}</div>
+                        <div className="text-xs text-muted-foreground">
+                          NIK: {customer.nik || "-"} • {custContracts.length} kontrak
+                        </div>
+                      </div>
+                      <div className="flex gap-1">
+                        {statusCounts.lancar && (
+                          <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
+                            {statusCounts.lancar}
+                          </Badge>
+                        )}
+                        {statusCounts.kurang_lancar && (
+                          <Badge variant="outline" className="text-xs bg-yellow-50 text-yellow-700 border-yellow-200">
+                            {statusCounts.kurang_lancar}
+                          </Badge>
+                        )}
+                        {statusCounts.macet && (
+                          <Badge variant="outline" className="text-xs bg-red-50 text-red-700 border-red-200">
+                            {statusCounts.macet}
+                          </Badge>
+                        )}
+                        {statusCounts.completed && (
+                          <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
+                            {statusCounts.completed}
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
               {(!paginatedCustomers || paginatedCustomers.length === 0) && (
                 <div className="p-3 text-center text-muted-foreground">
-                  Pelanggan tidak ditemukan
+                  {statusFilter !== 'all' 
+                    ? `Tidak ada pelanggan dengan status ${statusFilter.replace('_', ' ')}`
+                    : 'Pelanggan tidak ditemukan'
+                  }
                 </div>
               )}
             </div>
@@ -137,11 +286,19 @@ export default function CustomerHistory() {
                   <SelectValue placeholder="Pilih kontrak" />
                 </SelectTrigger>
                 <SelectContent>
-                  {customerContracts?.map((contract) => (
-                    <SelectItem key={contract.id} value={contract.id}>
-                      {contract.contract_ref} - {formatRupiah(contract.total_loan_amount)}
-                    </SelectItem>
-                  ))}
+                  {customerContracts?.map((contract) => {
+                    const contractStatus = calculateContractStatus(contract);
+                    return (
+                      <SelectItem key={contract.id} value={contract.id}>
+                        <div className="flex items-center gap-2">
+                          <span>{contract.contract_ref} - {formatRupiah(contract.total_loan_amount)}</span>
+                          <Badge variant="outline" className={`text-xs ${getStatusBadgeClass(contractStatus)}`}>
+                            {getStatusLabel(contractStatus)}
+                          </Badge>
+                        </div>
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
             </div>
@@ -187,9 +344,11 @@ export default function CustomerHistory() {
                 </div>
 
                 <div className="flex gap-2">
-                  <Badge variant={selectedContract.status === "active" ? "default" : "secondary"}>
-                    {selectedContract.status === "active" ? "Lancar" : "Selesai"}
-                  </Badge>
+                  {selectedContractDynamicStatus && (
+                    <Badge className={getStatusBadgeClass(selectedContractDynamicStatus)}>
+                      {getStatusLabel(selectedContractDynamicStatus)}
+                    </Badge>
+                  )}
                   <Badge variant="outline">
                     {selectedContract.product_type || "N/A"}
                   </Badge>
