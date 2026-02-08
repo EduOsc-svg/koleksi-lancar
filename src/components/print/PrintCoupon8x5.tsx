@@ -121,6 +121,8 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
         background-image: url('https://uploads.onecompiler.io/3zcmc9fyy/448fk8uyf/Background%20WM%20SME2.jpg'); 
         background-size: cover;
         background-position: center;
+        /* Pertajam warna background image */
+        filter: contrast(1.3) brightness(0.9) saturate(1.4);
         overflow: visible;
       }
 
@@ -203,7 +205,7 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
         width: 100%; text-align: center; 
         /* SERING: Posisi vertikal judul voucher */
         top: 70px;
-        color: black; text-decoration: underline; font-size: 11pt;
+        color: black;  font-size: 11pt;
       }
 
       /* Area Kiri (Loop Data) - SERING DIMODIFIKASI */
@@ -263,7 +265,7 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
         right: 10px; 
         /* SERING: Posisi vertikal label "Besar Angsuran" */
         top: 163px;
-        font-size: 11pt; font-weight: normal; text-decoration: underline; color: black;
+        font-size: 11pt; font-weight: normal;  color: black;
       }
       .pos-lbl-besar-angsuran.field-spacing { /* Gunakan class .field-spacing untuk spacing */ }
 
