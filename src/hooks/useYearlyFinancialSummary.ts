@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { startOfYear, endOfYear, format, eachMonthOfInterval } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
+import { calculateTieredCommission, CommissionTier } from './useCommissionTiers';
 
 export interface MonthlyBreakdown {
   month: string;
@@ -58,12 +59,14 @@ export const useYearlyFinancialSummary = (year: Date = new Date()) => {
         { data: payments, error: paymentsError },
         { data: expenses, error: expensesError },
         { data: unpaidCoupons, error: couponsError },
+        { data: commissionTiers, error: tiersError },
       ] = await Promise.all([
-        supabase.from('sales_agents').select('id, name, agent_code, commission_percentage').order('name'),
+        supabase.from('sales_agents').select('id, name, agent_code, commission_percentage, use_tiered_commission').order('name'),
         supabase.from('credit_contracts').select('id, omset, total_loan_amount, sales_agent_id, start_date, status').gte('start_date', yearStart).lte('start_date', yearEnd),
         supabase.from('payment_logs').select('amount_paid, payment_date, contract_id, credit_contracts!inner(sales_agent_id)').gte('payment_date', yearStart).lte('payment_date', yearEnd),
         supabase.from('operational_expenses').select('amount, expense_date').gte('expense_date', yearStart).lte('expense_date', yearEnd),
         supabase.from('installment_coupons').select('amount, due_date, contract_id').eq('status', 'unpaid').gte('due_date', yearStart).lte('due_date', yearEnd),
+        supabase.from('commission_tiers').select('*').order('min_amount', { ascending: true }),
       ]);
 
       if (agentsError) throw agentsError;
@@ -71,6 +74,9 @@ export const useYearlyFinancialSummary = (year: Date = new Date()) => {
       if (paymentsError) throw paymentsError;
       if (expensesError) throw expensesError;
       if (couponsError) throw couponsError;
+      if (tiersError) throw tiersError;
+
+      const tiers = (commissionTiers || []) as CommissionTier[];
 
       // Monthly breakdown calculation
       const months = eachMonthOfInterval({ start: startOfYear(year), end: endOfYear(year) });
@@ -90,16 +96,18 @@ export const useYearlyFinancialSummary = (year: Date = new Date()) => {
         });
       });
 
-      // Agent performance calculation
+      // Agent performance calculation - track per-contract commission
       const agentDataMap = new Map<string, {
         total_modal: number;
         total_omset: number;
+        total_commission: number;
         contracts_count: number;
       }>();
 
       // Process contracts - Modal = omset field, Omset = total_loan_amount
       let totalModal = 0;
       let totalOmset = 0;
+      let totalCommission = 0;
       let totalContractsCount = 0;
       let completedCount = 0;
       let activeCount = 0;
@@ -109,10 +117,14 @@ export const useYearlyFinancialSummary = (year: Date = new Date()) => {
         const modal = Number(contract.omset || 0);  // omset field is actually Modal
         const omset = Number(contract.total_loan_amount || 0);  // total_loan_amount is Omset
         const profit = omset - modal;
-        const commission = omset * 0.05;  // 5% commission
+        
+        // Calculate commission using tiered system based on contract omset
+        const commissionPct = calculateTieredCommission(omset, tiers);
+        const commission = (omset * commissionPct) / 100;
 
         totalModal += modal;
         totalOmset += omset;
+        totalCommission += commission;
         totalContractsCount++;
         
         if (contract.status === 'completed') {
@@ -131,17 +143,19 @@ export const useYearlyFinancialSummary = (year: Date = new Date()) => {
           monthData.contracts_count++;
         }
 
-        // Update agent performance
+        // Update agent performance with per-contract commission
         const salesAgentId = contract.sales_agent_id;
         if (salesAgentId) {
           const existing = agentDataMap.get(salesAgentId) || {
             total_modal: 0,
             total_omset: 0,
+            total_commission: 0,
             contracts_count: 0,
           };
           agentDataMap.set(salesAgentId, {
             total_modal: existing.total_modal + modal,
             total_omset: existing.total_omset + omset,
+            total_commission: existing.total_commission + commission,
             contracts_count: existing.contracts_count + 1,
           });
         }
@@ -162,7 +176,6 @@ export const useYearlyFinancialSummary = (year: Date = new Date()) => {
 
       // Calculate totals
       const totalProfit = totalOmset - totalModal;
-      const totalCommission = totalOmset * 0.05;
       const totalExpenses = (expenses || []).reduce((sum, exp: any) => sum + Number(exp.amount || 0), 0);
       const totalToCollect = (unpaidCoupons || []).reduce((sum, c: any) => sum + Number(c.amount || 0), 0);
       const netProfit = totalProfit - totalCommission - totalExpenses;
@@ -175,20 +188,25 @@ export const useYearlyFinancialSummary = (year: Date = new Date()) => {
         const data = agentDataMap.get(agent.id) || {
           total_modal: 0,
           total_omset: 0,
+          total_commission: 0,
           contracts_count: 0,
         };
         const profit = data.total_omset - data.total_modal;
-        const totalAgentCommission = data.total_omset * (Number(agent.commission_percentage) || 0) / 100;
+
+        // Calculate average commission percentage for display
+        const avgCommissionPct = data.total_omset > 0 
+          ? (data.total_commission / data.total_omset) * 100 
+          : 0;
 
         return {
           agent_id: agent.id,
           agent_name: agent.name,
           agent_code: agent.agent_code,
-          commission_percentage: Number(agent.commission_percentage) || 0,
+          commission_percentage: avgCommissionPct,
           total_modal: data.total_modal,
           total_omset: data.total_omset,
           profit,
-          total_commission: totalAgentCommission,
+          total_commission: data.total_commission,
           contracts_count: data.contracts_count,
         };
       }).filter(a => a.contracts_count > 0)
