@@ -208,7 +208,7 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
       .pos-nama         { left: 15px; top: 112px; } 
       .pos-nama.field-spacing { /* Gunakan class .field-spacing untuk spacing */ }
       
-      .pos-kode-kontrak { right: 15px; top: 112px; font-size: 13pt; font-weight: bold; }
+      .pos-kode-kontrak { right: 15px; top: 112px; font-size: 15pt; font-weight: bold; }
       .pos-kode-kontrak.field-spacing { /* Gunakan class .field-spacing untuk spacing */ }
       
       /* SERING: Posisi vertikal alamat customer */
@@ -277,12 +277,21 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
       ..field-spacing { /* Gunakan class .field-spacing untuk spacing */ }
       }
 
-      /* URGENT STYLE (Merah) */
+      /* URGENT STYLE (Merah) - Teks warna merah untuk hari terakhir */
       .coupon-urgent .coupon-data, 
       .coupon-urgent .pos-judul, 
       .coupon-urgent .pos-angka-center, 
-      .coupon-urgent .pos-kode-kontrak {
-        color: red !important; font-weight: bold;
+      .coupon-urgent .pos-kode-kontrak,
+      .coupon-urgent .pos-lbl-besar-angsuran,
+      .coupon-urgent .field-spacing,
+      .coupon-urgent .field-spacing-none {
+        color: red !important; font-weight: bold !important;
+      }
+      
+      /* Pastikan label dan value dalam urgent juga merah */
+      .coupon-urgent .label,
+      .coupon-urgent .value {
+        color: red !important; font-weight: bold !important;
       }
     `;
     
@@ -315,11 +324,13 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
     return text.substring(0, maxLength) + "...";
   };
 
-  // Logic Urgent (10 hari terakhir)
+  // Logic Urgent (10 hari terakhir atau sudah jatuh tempo)
   const isUrgentCoupon = (coupon: InstallmentCoupon, tenor: number) => {
     const installmentIndex = coupon.installment_index;
-    const remainingDays = tenor - installmentIndex;
-    return remainingDays <= 10;
+    const remainingInstallments = tenor - installmentIndex;
+    
+    // Urgent jika tinggal 10 hari terakhir atau kurang
+    return remainingInstallments <= 10;
   };
 
   // Logic Grouping Halaman (9 per page)
