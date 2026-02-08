@@ -189,7 +189,7 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
       
       .field-spacing-small {
         margin-top: 0.5px;
-        margin-bottom: 0.5px;
+        margin-bottom: 0px; /* Hapus jarak bawah untuk judul */
         padding-top: 0px;
         padding-bottom: 0px;
       }
@@ -368,7 +368,7 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
                 <div key={coupon.id} className={`coupon-card ${isUrgent ? 'coupon-urgent' : ''}`}>
                   
                     {/* Judul Voucher */}
-                    <div className="coupon-data pos-judul field-spacing">VOUCHER ANGSURAN</div>
+                    <div className="coupon-data pos-judul field-spacing-small">VOUCHER ANGSURAN</div>
 
                     {/* No. Faktur */}
                     <div className="coupon-data pos-faktur field-spacing-large">
