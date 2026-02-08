@@ -805,122 +805,159 @@ export default function Contracts() {
 
       {/* Contract Detail Dialog - Progress & Info */}
       <Dialog open={detailDialogOpen} onOpenChange={setDetailDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
+        <DialogContent className="max-w-2xl max-h-[90vh]">
+          <DialogHeader className="sticky top-0 z-10 bg-background pb-4">
             <DialogTitle>Detail Kontrak: {selectedContract?.contract_ref}</DialogTitle>
           </DialogHeader>
-          {selectedContract && (() => {
-            const progress = (selectedContract.current_installment_index / selectedContract.tenor_days) * 100;
-            const paidAmount = selectedContract.current_installment_index * selectedContract.daily_installment_amount;
-            const remainingAmount = (selectedContract.tenor_days - selectedContract.current_installment_index) * selectedContract.daily_installment_amount;
-            const createdAt = new Date(selectedContract.created_at);
-            const today = new Date();
-            const daysElapsed = Math.max(1, Math.floor((today.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24)));
-            const daysPerDue = selectedContract.current_installment_index > 0 
-              ? (daysElapsed / selectedContract.current_installment_index).toFixed(1) 
-              : "0";
+          
+          {/* Scrollable Content with Professional Scrolling */}
+          <div className="relative max-h-[60vh] overflow-hidden">
+            {/* Scroll Indicator - Top Shadow */}
+            <div className="absolute top-0 left-0 right-0 h-4 bg-gradient-to-b from-background via-background/80 to-transparent z-10 opacity-0 transition-opacity duration-300 pointer-events-none" id="contract-scroll-top" />
+            
+            {/* Main Scrollable Content */}
+            <div 
+              className="h-full overflow-y-auto px-1 scrollbar-thin scrollbar-thumb-muted-foreground/20 scrollbar-track-transparent hover:scrollbar-thumb-muted-foreground/40 transition-colors"
+              onScroll={(e) => {
+                const target = e.target as HTMLDivElement;
+                const scrollTop = target.scrollTop;
+                const scrollHeight = target.scrollHeight;
+                const clientHeight = target.clientHeight;
+                
+                // Update scroll indicators
+                const topIndicator = document.getElementById('contract-scroll-top');
+                const bottomIndicator = document.getElementById('contract-scroll-bottom');
+                
+                if (topIndicator) {
+                  topIndicator.style.opacity = scrollTop > 20 ? '1' : '0';
+                }
+                
+                if (bottomIndicator) {
+                  const isNearBottom = scrollTop + clientHeight >= scrollHeight - 20;
+                  bottomIndicator.style.opacity = isNearBottom ? '0' : '1';
+                }
+              }}
+            >
+              <div className="space-y-6 pb-4">
+                {selectedContract && (() => {
+                  const progress = (selectedContract.current_installment_index / selectedContract.tenor_days) * 100;
+                  const paidAmount = selectedContract.current_installment_index * selectedContract.daily_installment_amount;
+                  const remainingAmount = (selectedContract.tenor_days - selectedContract.current_installment_index) * selectedContract.daily_installment_amount;
+                  const createdAt = new Date(selectedContract.created_at);
+                  const today = new Date();
+                  const daysElapsed = Math.max(1, Math.floor((today.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24)));
+                  const daysPerDue = selectedContract.current_installment_index > 0 
+                    ? (daysElapsed / selectedContract.current_installment_index).toFixed(1) 
+                    : "0";
 
-            return (
-              <div className="space-y-6">
-                {/* Customer & Contract Info */}
-                <div className="grid grid-cols-2 gap-4 p-4 bg-muted rounded-lg">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Pelanggan</p>
-                    <p className="font-medium">
-                      {selectedContract.customers?.name}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">No. Faktur</p>
-                    <p className="font-medium font-mono">{getNoFaktur(selectedContract.id)}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Sales Agent</p>
-                    <p className="font-medium">
-                      {salesAgents?.find(a => a.id === selectedContract.sales_agent_id)?.name || "-"}
-                      {(() => {
-                        const agent = salesAgents?.find(a => a.id === selectedContract.sales_agent_id);
-                        return agent?.agent_code ? <span className="ml-2 text-muted-foreground">({agent.agent_code})</span> : null;
-                      })()}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Tanggal Mulai</p>
-                    <p className="font-medium">{selectedContract.start_date ? formatDate(selectedContract.start_date) : "-"}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Jenis Produk</p>
-                    <p className="font-medium">{selectedContract.product_type || "-"}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Status</p>
-                    <Badge variant={selectedContract.status === "active" ? "default" : "secondary"}>
-                      {selectedContract.status === "active" ? "Aktif" : selectedContract.status}
-                    </Badge>
-                  </div>
-                </div>
+                  return (
+                    <>
+                      {/* Customer & Contract Info */}
+                      <div className="grid grid-cols-2 gap-4 p-4 bg-muted rounded-lg">
+                        <div>
+                          <p className="text-sm text-muted-foreground">Pelanggan</p>
+                          <p className="font-medium">
+                            {selectedContract.customers?.name}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">No. Faktur</p>
+                          <p className="font-medium font-mono">{getNoFaktur(selectedContract.id)}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">Sales Agent</p>
+                          <p className="font-medium">
+                            {salesAgents?.find(a => a.id === selectedContract.sales_agent_id)?.name || "-"}
+                            {(() => {
+                              const agent = salesAgents?.find(a => a.id === selectedContract.sales_agent_id);
+                              return agent?.agent_code ? <span className="ml-2 text-muted-foreground">({agent.agent_code})</span> : null;
+                            })()}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">Tanggal Mulai</p>
+                          <p className="font-medium">{selectedContract.start_date ? formatDate(selectedContract.start_date) : "-"}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">Jenis Produk</p>
+                          <p className="font-medium">{selectedContract.product_type || "-"}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">Status</p>
+                          <Badge variant={selectedContract.status === "active" ? "default" : "secondary"}>
+                            {selectedContract.status === "active" ? "Aktif" : selectedContract.status}
+                          </Badge>
+                        </div>
+                      </div>
 
-                {/* Financial Info */}
-                <div className="grid grid-cols-2 gap-4 p-4 border rounded-lg">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Total Pinjaman</p>
-                    <p className="font-semibold text-lg">{formatRupiah(selectedContract.total_loan_amount)}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Modal</p>
-                    <p className="font-semibold text-lg">{formatRupiah(selectedContract.omset || 0)}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Cicilan Harian</p>
-                    <p className="font-medium">{formatRupiah(selectedContract.daily_installment_amount)}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Tenor</p>
-                    <p className="font-medium">{selectedContract.tenor_days} hari</p>
-                  </div>
-                </div>
+                      {/* Financial Info */}
+                      <div className="grid grid-cols-2 gap-4 p-4 border rounded-lg">
+                        <div>
+                          <p className="text-sm text-muted-foreground">Total Pinjaman</p>
+                          <p className="font-semibold text-lg">{formatRupiah(selectedContract.total_loan_amount)}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">Modal</p>
+                          <p className="font-semibold text-lg">{formatRupiah(selectedContract.omset || 0)}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">Cicilan Harian</p>
+                          <p className="font-medium">{formatRupiah(selectedContract.daily_installment_amount)}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">Tenor</p>
+                          <p className="font-medium">{selectedContract.tenor_days} hari</p>
+                        </div>
+                      </div>
 
-                {/* Progress Section */}
-                <div className="p-4 border rounded-lg space-y-4">
-                  <h4 className="font-semibold">Progress Pembayaran</h4>
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span>Cicilan ke-{selectedContract.current_installment_index} dari {selectedContract.tenor_days}</span>
-                      <span className="font-medium">{progress.toFixed(1)}%</span>
-                    </div>
-                    <Progress value={progress} className="h-3" />
-                  </div>
-                  <div className="grid grid-cols-3 gap-4 pt-2">
-                    <div className="text-center p-3 bg-green-50 dark:bg-green-950 rounded-lg">
-                      <p className="text-xs text-muted-foreground">Terbayar</p>
-                      <p className="font-semibold text-green-600 dark:text-green-400">{formatRupiah(paidAmount)}</p>
-                    </div>
-                    <div className="text-center p-3 bg-orange-50 dark:bg-orange-950 rounded-lg">
-                      <p className="text-xs text-muted-foreground">Sisa</p>
-                      <p className="font-semibold text-orange-600 dark:text-orange-400">{formatRupiah(remainingAmount)}</p>
-                    </div>
-                    <div className="text-center p-3 bg-blue-50 dark:bg-blue-950 rounded-lg">
-                      <p className="text-xs text-muted-foreground">Rata-rata</p>
-                      <p className="font-semibold text-blue-600 dark:text-blue-400">{daysPerDue} hari/cicilan</p>
-                    </div>
-                  </div>
-                </div>
+                      {/* Progress Section */}
+                      <div className="p-4 border rounded-lg space-y-4">
+                        <h4 className="font-semibold">Progress Pembayaran</h4>
+                        <div className="space-y-2">
+                          <div className="flex justify-between text-sm">
+                            <span>Cicilan ke-{selectedContract.current_installment_index} dari {selectedContract.tenor_days}</span>
+                            <span className="font-medium">{progress.toFixed(1)}%</span>
+                          </div>
+                          <Progress value={progress} className="h-3" />
+                        </div>
+                        <div className="grid grid-cols-3 gap-4 pt-2">
+                          <div className="text-center p-3 bg-green-50 dark:bg-green-950 rounded-lg">
+                            <p className="text-xs text-muted-foreground">Terbayar</p>
+                            <p className="font-semibold text-green-600 dark:text-green-400">{formatRupiah(paidAmount)}</p>
+                          </div>
+                          <div className="text-center p-3 bg-orange-50 dark:bg-orange-950 rounded-lg">
+                            <p className="text-xs text-muted-foreground">Sisa</p>
+                            <p className="font-semibold text-orange-600 dark:text-orange-400">{formatRupiah(remainingAmount)}</p>
+                          </div>
+                          <div className="text-center p-3 bg-blue-50 dark:bg-blue-950 rounded-lg">
+                            <p className="text-xs text-muted-foreground">Rata-rata</p>
+                            <p className="font-semibold text-blue-600 dark:text-blue-400">{daysPerDue} hari/cicilan</p>
+                          </div>
+                        </div>
+                      </div>
 
-                {/* Print Coupons Section */}
-                <div className="flex justify-between items-center p-4 border rounded-lg">
-                  <div>
-                    <h4 className="font-semibold">Cetak Kupon</h4>
-                    <p className="text-sm text-muted-foreground">{selectedContractCoupons?.length || 0} kupon tersedia</p>
-                  </div>
-                  <Button onClick={handlePrintAllCoupons} disabled={!selectedContractCoupons?.length}>
-                    <Printer className="mr-2 h-4 w-4" />
-                    Cetak Kupon (A4)
-                  </Button>
-                </div>
+                      {/* Print Coupons Section */}
+                      <div className="flex justify-between items-center p-4 border rounded-lg">
+                        <div>
+                          <h4 className="font-semibold">Cetak Kupon</h4>
+                          <p className="text-sm text-muted-foreground">{selectedContractCoupons?.length || 0} kupon tersedia</p>
+                        </div>
+                        <Button onClick={handlePrintAllCoupons} disabled={!selectedContractCoupons?.length}>
+                          <Printer className="mr-2 h-4 w-4" />
+                          Cetak Kupon (A4)
+                        </Button>
+                      </div>
+                    </>
+                  );
+                })()}
               </div>
-            );
-          })()}
-          <DialogFooter>
+            </div>
+            
+            {/* Scroll Indicator - Bottom Shadow */}
+            <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-background via-background/80 to-transparent z-10 opacity-100 transition-opacity duration-300 pointer-events-none" id="contract-scroll-bottom" />
+          </div>
+          
+          <DialogFooter className="sticky bottom-0 z-10 bg-background pt-4 border-t">
             <Button variant="outline" onClick={() => setDetailDialogOpen(false)}>Tutup</Button>
           </DialogFooter>
         </DialogContent>
