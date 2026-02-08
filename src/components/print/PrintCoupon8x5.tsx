@@ -160,7 +160,7 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
       /* Judul Voucher */
       .pos-judul {
         width: 100%; text-align: center; top: 70px;
-        color: black; font-weight: bold; text-decoration: underline; font-size: 11pt;
+        color: black; text-decoration: underline; font-size: 11pt;
       }
 
       /* Area Kiri (Loop Data) */
@@ -174,7 +174,7 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
       .pos-angsuran     { left: 15px; top: 163px; } 
       
       /* FIELD REKENING */
-      .pos-rekening     { left: 15px; top: 180px; font-weight: bold; margin-top: 1.5px; margin-bottom: 1.5px; } 
+      .pos-rekening     { left: 15px; top: 181.5px; font-weight: bold; } 
 
       /* Angka Angsuran Center */
       .pos-angka-center {
@@ -190,7 +190,7 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
 
       /* Nominal Rupiah */
       .pos-val-besar-angsuran {
-        right: 10px; top: 180px;
+        right: 10px; top: 181.5px;
         text-align: right; font-size: 11pt; color: red;
       }
 
