@@ -94,22 +94,27 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
       }
 
       /* =========================================
-         4. GRID LAYOUT (3 x 3)
+         4. GRID LAYOUT (3 x 3) - SERING DIMODIFIKASI
          ========================================= */
       .coupon-grid {
         display: grid;
+        /* SERING: Ukuran kolom grid voucher (lebar total grid) */
         grid-template-columns: repeat(3, 93mm);
+        /* SERING: Ukuran baris grid voucher (tinggi total grid) */
         grid-template-rows: repeat(3, 63mm);
+        /* SERING: Jarak/gap antar voucher dalam grid */
         gap: 1mm; 
         justify-content: center;
         align-content: center;
       }
 
       /* =========================================
-         5. STYLE KARTU VOUCHER
+         5. STYLE KARTU VOUCHER - SERING DIMODIFIKASI
          ========================================= */
       .coupon-card {
+        /* SERING: Lebar voucher individual (horizontal) */
         width: 90mm;
+        /* SERING: Tinggi voucher individual (vertikal) */
         height: 60mm;
         position: relative;
         /* Ganti URL ini dengan path lokal project Anda jika perlu, misal: '/Background WM SME2.jpg' */
@@ -157,49 +162,126 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
       }
       .coupon-data span.value { font-weight: normal; }
 
-      /* --- KOORDINAT POSISI --- */
+      /* =========================================
+         SPACING CONTROL - EDIT SEMUA FIELD DI SINI
+         ========================================= */
+      
+      /* MASTER SPACING CLASS - Edit nilai ini untuk mengatur spasi semua field */
+      .field-spacing {
+        /* EDIT: Spasi atas semua field */
+        margin-top: 1.5px;
+        /* EDIT: Spasi bawah semua field */ 
+        margin-bottom: 1.5px;
+        /* EDIT: Padding internal field */
+        padding-top: 0px;
+        padding-bottom: 0px;
+      }
+      
+      /* KHUSUS: Spacing untuk field yang membutuhkan spasi berbeda */
+      .field-spacing-large {
+        margin-top: 3px;
+        margin-bottom: 3px;
+        padding-top: 1px;
+        padding-bottom: 1px;
+      }
+      
+      .field-spacing-small {
+        margin-top: 0.5px;
+        margin-bottom: 0.5px;
+        padding-top: 0px;
+        padding-bottom: 0px;
+      }
+      
+      /* ========================================= */
+
+      /* ========================================= 
+         KOORDINAT POSISI - SERING DIMODIFIKASI
+         ========================================= */
       
       /* Judul Voucher */
       .pos-judul {
-        width: 100%; text-align: center; top: 70px;
+        width: 100%; text-align: center; 
+        /* SERING: Posisi vertikal judul voucher */
+        top: 70px;
         color: black; text-decoration: underline; font-size: 11pt;
       }
 
-      /* Area Kiri (Loop Data) */
+      /* Area Kiri (Loop Data) - SERING DIMODIFIKASI */
+      /* SERING: Posisi vertikal nomor faktur */
       .pos-faktur       { left: 15px; top: 95px; }  
+      .pos-faktur.field-spacing { /* Gunakan class .field-spacing untuk spacing */ }
       
+      /* SERING: Posisi vertikal nama customer */
       .pos-nama         { left: 15px; top: 112px; } 
+      .pos-nama.field-spacing { /* Gunakan class .field-spacing untuk spacing */ }
+      
       .pos-kode-kontrak { right: 15px; top: 112px; font-size: 13pt; font-weight: bold; }
+      .pos-kode-kontrak.field-spacing { /* Gunakan class .field-spacing untuk spacing */ }
       
+      /* SERING: Posisi vertikal alamat customer */
       .pos-alamat       { left: 15px; top: 129px; max-width: 230px; overflow: hidden; text-overflow: ellipsis; } 
-      .pos-jatuhtempo   { left: 15px; top: 146px; } 
-      .pos-angsuran     { left: 15px; top: 163px; } 
+      .pos-alamat.field-spacing { /* Gunakan class .field-spacing untuk spacing */ }
       
-      /* FIELD REKENING */
-      .pos-rekening     { left: 15px; top: 181.5px; font-weight: bold; } 
+      /* SERING: Posisi vertikal jatuh tempo */
+      .pos-jatuhtempo   { left: 15px; top: 146px; } 
+      .pos-jatuhtempo.field-spacing { /* Gunakan class .field-spacing untuk spacing */ }
+      
+      /* SERING: Posisi vertikal label angsuran ke- */
+      .pos-angsuran     { left: 15px; top: 163px; } 
+      .pos-angsuran.field-spacing { /* Gunakan class .field-spacing untuk spacing */ } 
+      
+      /* ========================================= 
+         FIELD REKENING - SERING DIMODIFIKASI
+         ========================================= */
+      
+      .pos-rekening     { 
+        left: 15px; 
+        top: 181.5px; 
+        font-weight: bold;
+        /* EDIT: Ganti dengan class .field-spacing atau .field-spacing-large */
+      } 
+      .pos-rekening.field-spacing { /* Menggunakan spacing terpusat */ }
+      
+      /* ========================================= */ 
 
       /* Angka Angsuran Center */
       .pos-angka-center {
-        position: absolute; left: 50%; top: 163px; transform: translateX(-50%);
+        position: absolute; left: 50%; 
+        /* SERING: Posisi vertikal angka angsuran tengah */
+        top: 163px; 
+        transform: translateX(-50%);
         font-size: 11pt; font-weight: bold; color: red; z-index: 6;
       }
+      .pos-angka-center.field-spacing { /* Gunakan class .field-spacing untuk spacing */ }
 
+      /* ========================================= 
+         AREA KANAN - SERING DIMODIFIKASI
+         ========================================= */
+      
       /* Area Kanan (Besar Angsuran) */
       .pos-lbl-besar-angsuran {
-        right: 10px; top: 163px;
+        right: 10px; 
+        /* SERING: Posisi vertikal label "Besar Angsuran" */
+        top: 163px;
         font-size: 11pt; font-weight: normal; text-decoration: underline; color: black;
       }
+      .pos-lbl-besar-angsuran.field-spacing { /* Gunakan class .field-spacing untuk spacing */ }
 
       /* Nominal Rupiah */
       .pos-val-besar-angsuran {
-        right: 10px; top: 181.5px;
+        right: 10px; 
+        /* SERING: Posisi vertikal nilai rupiah */
+        top: 181.5px;
         text-align: right; font-size: 11pt; color: red;
       }
+      .pos-val-besar-angsuran.field-spacing { /* Gunakan class .field-spacing untuk spacing */ }
 
       /* Footer */
       .pos-kantor {
         width: 100%; text-align: center; bottom: 3px; 
         font-size: 11pt; font-weight: normal; color: red;
+      }
+      .pos-kantor.field-spacing { /* Gunakan class .field-spacing untuk spacing */ }
       }
 
       /* URGENT STYLE (Merah) */
@@ -283,62 +365,62 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
               return (
                 <div key={coupon.id} className={`coupon-card ${isUrgent ? 'coupon-urgent' : ''}`}>
                   
-                  <div className="coupon-data pos-judul">VOUCHER ANGSURAN</div>
+                  <div className="coupon-data pos-judul field-spacing-large">VOUCHER ANGSURAN</div>
 
                   {/* NO.Faktur */}
-                  <div className="coupon-data pos-faktur">
+                  <div className="coupon-data pos-faktur field-spacing-large">
                     <span className="label">NO.Faktur</span>
                     <span className="value">: {truncateText(noFakturBase, 20)}</span>
                   </div>
 
                   {/* Nama */}
-                  <div className="coupon-data pos-nama">
+                  <div className="coupon-data pos-nama field-spacing-large">
                     <span className="label">Nama</span>
                     <span className="value">: {truncateText(contract.customers?.name || "-", 25)}</span>
                   </div>
 
                   {/* Kode Kontrak (Pojok Kanan Nama) */}
-                  <div className="coupon-data pos-kode-kontrak">
+                  <div className="coupon-data pos-kode-kontrak field-spacing-large">
                     {contract.contract_ref}
                   </div>
 
                   {/* Alamat */}
-                  <div className="coupon-data pos-alamat">
+                  <div className="coupon-data pos-alamat field-spacing-large">
                     <span className="label">Alamat</span>
                     <span className="value">: {truncateText(displayAddress, 28)}</span>
                   </div>
 
                   {/* Jatuh Tempo */}
-                  <div className="coupon-data pos-jatuhtempo">
+                  <div className="coupon-data pos-jatuhtempo field-spacing-large">
                     <span className="label">Jatuh Tempo</span>
                     <span className="value">: {formatDate(coupon.due_date)}</span>
                   </div>
 
                   {/* Angsuran Ke- (Label) */}
-                  <div className="coupon-data pos-angsuran">
+                  <div className="coupon-data pos-angsuran field-spacing-large">
                     <span className="label">Angsuran Ke-</span>
                     <span className="value">:</span>
                   </div>
                   
                   {/* Angsuran Ke- (Angka Center) */}
-                  <div className="coupon-data pos-angka-center">
+                  <div className="coupon-data pos-angka-center field-spacing-large">
                     {coupon.installment_index}
                   </div>
 
                   {/* No Rekening (NEW) */}
-                  <div className="coupon-data pos-rekening">
+                  <div className="coupon-data pos-rekening field-spacing-large">
                     <span className="label">No Rekening</span>
                     <span className="value">: {REKENING_NUMBER}</span>
                   </div>
 
                   {/* Besar Angsuran (Label) */}
-                  <div className="coupon-data pos-lbl-besar-angsuran">Besar Angsuran</div>
+                  <div className="coupon-data pos-lbl-besar-angsuran field-spacing-large">Besar Angsuran</div>
 
                   {/* Besar Angsuran (Value) */}
-                  <div className="coupon-data pos-val-besar-angsuran">Rp {formatAmount(coupon.amount)}</div>
+                  <div className="coupon-data pos-val-besar-angsuran field-spacing-large">Rp {formatAmount(coupon.amount)}</div>
 
                   {/* Footer Kantor (UPDATED) */}
-                  <div className="coupon-data pos-kantor">KANTOR / {KANTOR_NUMBER}</div>
+                  <div className="coupon-data pos-kantor field-spacing-large">KANTOR / {KANTOR_NUMBER}</div>
                 </div>
               );
             })}
