@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { CreditCard, AlertTriangle, CheckCircle2, Info, Check, ChevronsUpDown } from "lucide-react";
+import { CreditCard, AlertTriangle, CheckCircle2, Info, Check, ChevronsUpDown, Layers } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,10 +44,19 @@ interface PaymentFormProps {
     collector_id: string | null;
     notes: string;
   }) => Promise<void>;
+  onBulkSubmit: (data: {
+    contract_id: string;
+    payment_date: string;
+    start_index: number;
+    coupon_count: number;
+    amount_per_coupon: number;
+    collector_id: string | null;
+    notes: string;
+  }) => Promise<void>;
   isSubmitting: boolean;
 }
 
-export function PaymentForm({ contracts, collectors, onSubmit, isSubmitting }: PaymentFormProps) {
+export function PaymentForm({ contracts, collectors, onSubmit, onBulkSubmit, isSubmitting }: PaymentFormProps) {
   const { t } = useTranslation();
   
   const [selectedContract, setSelectedContract] = useState("");
@@ -57,9 +66,12 @@ export function PaymentForm({ contracts, collectors, onSubmit, isSubmitting }: P
   const [paymentCollector, setPaymentCollector] = useState("");
   const [collectorOpen, setCollectorOpen] = useState(false);
   const [paymentNotes, setPaymentNotes] = useState("");
+  const [couponCount, setCouponCount] = useState(1);
 
   const selectedContractData = contracts?.find((c) => c.id === selectedContract);
   const nextCoupon = selectedContractData ? selectedContractData.current_installment_index + 1 : 1;
+  const remainingCoupons = selectedContractData ? selectedContractData.tenor_days - selectedContractData.current_installment_index : 0;
+  const maxCoupons = Math.min(remainingCoupons, 100); // Limit to remaining coupons
 
   const { data: lastPaymentDate } = useLastPaymentDate(selectedContract || null);
   const { data: nextCouponDueDate } = useNextCouponDueDate(selectedContract || null, nextCoupon);
@@ -70,6 +82,13 @@ export function PaymentForm({ contracts, collectors, onSubmit, isSubmitting }: P
     note: string | null;
     dueDate: string | null;
   }>({ isLate: false, lateDays: 0, note: null, dueDate: null });
+
+  // Calculate totals for bulk payment
+  const isBulkPayment = couponCount > 1;
+  const endCoupon = nextCoupon + couponCount - 1;
+  const totalBulkAmount = selectedContractData 
+    ? (paymentAmount || selectedContractData.daily_installment_amount) * couponCount 
+    : 0;
 
   useEffect(() => {
     if (selectedContract && nextCouponDueDate && paymentDate) {
@@ -98,24 +117,43 @@ export function PaymentForm({ contracts, collectors, onSubmit, isSubmitting }: P
     }
 
     const amount = getNumericAmount() || selectedContractData?.daily_installment_amount || 0;
-    const defaultNote = `Pembayaran ke-${nextCoupon}`;
-    const finalNotes = paymentNotes.trim() || defaultNote;
 
     try {
-      await onSubmit({
-        contract_id: selectedContract,
-        payment_date: paymentDate,
-        installment_index: nextCoupon,
-        amount_paid: amount,
-        collector_id: paymentCollector || null,
-        notes: finalNotes,
-      });
+      if (isBulkPayment) {
+        // Bulk payment
+        const defaultNote = `Pembayaran kupon #${nextCoupon}-#${endCoupon}`;
+        const finalNotes = paymentNotes.trim() || defaultNote;
+
+        await onBulkSubmit({
+          contract_id: selectedContract,
+          payment_date: paymentDate,
+          start_index: nextCoupon,
+          coupon_count: couponCount,
+          amount_per_coupon: amount,
+          collector_id: paymentCollector || null,
+          notes: finalNotes,
+        });
+      } else {
+        // Single payment
+        const defaultNote = `Pembayaran ke-${nextCoupon}`;
+        const finalNotes = paymentNotes.trim() || defaultNote;
+
+        await onSubmit({
+          contract_id: selectedContract,
+          payment_date: paymentDate,
+          installment_index: nextCoupon,
+          amount_paid: amount,
+          collector_id: paymentCollector || null,
+          notes: finalNotes,
+        });
+      }
 
       // Reset form
       setSelectedContract("");
       setPaymentAmount(undefined);
       setPaymentNotes("");
       setPaymentCollector("");
+      setCouponCount(1);
     } catch {
       // Error handled by parent
     }
@@ -205,7 +243,7 @@ export function PaymentForm({ contracts, collectors, onSubmit, isSubmitting }: P
               <div className="flex items-center justify-between">
                 <h4 className="font-semibold text-sm">{t("collection.contractDetails")}</h4>
                 <Badge variant="outline" className="text-lg font-bold px-3 py-1">
-                  #{nextCoupon}
+                  {isBulkPayment ? `#${nextCoupon} - #${endCoupon}` : `#${nextCoupon}`}
                 </Badge>
               </div>
 
@@ -279,7 +317,26 @@ export function PaymentForm({ contracts, collectors, onSubmit, isSubmitting }: P
         {/* Payment Details */}
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
-            <Label className="text-sm font-medium">Jumlah Bayar</Label>
+            <Label className="text-sm font-medium flex items-center gap-2">
+              <Layers className="h-4 w-4" />
+              Jumlah Kupon
+            </Label>
+            <Input
+              type="number"
+              min={1}
+              max={maxCoupons}
+              value={couponCount}
+              onChange={(e) => setCouponCount(Math.max(1, Math.min(maxCoupons, parseInt(e.target.value) || 1)))}
+              className="text-center font-semibold"
+            />
+            {selectedContractData && (
+              <p className="text-xs text-muted-foreground">
+                Sisa kupon: {remainingCoupons} (maks {maxCoupons})
+              </p>
+            )}
+          </div>
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">Nominal per Kupon</Label>
             <CurrencyInput
               value={paymentAmount}
               onValueChange={handleAmountChange}
@@ -296,6 +353,26 @@ export function PaymentForm({ contracts, collectors, onSubmit, isSubmitting }: P
               </p>
             )}
           </div>
+        </div>
+
+        {/* Bulk Payment Summary */}
+        {isBulkPayment && selectedContractData && (
+          <Alert className="bg-primary/5 border-primary/20">
+            <Layers className="h-4 w-4 text-primary" />
+            <AlertDescription className="ml-2">
+              <div className="flex justify-between items-center">
+                <span className="font-medium">Total Pembayaran ({couponCount} kupon):</span>
+                <span className="text-lg font-bold text-primary">{formatRupiah(totalBulkAmount)}</span>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Kupon #{nextCoupon} - #{endCoupon} akan dicatat sebagai PAID
+              </p>
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {/* Collector Selection */}
+        <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
             <Label className="text-sm font-medium">{t("collection.collector")}</Label>
             <Popover open={collectorOpen} onOpenChange={setCollectorOpen}>
@@ -356,7 +433,9 @@ export function PaymentForm({ contracts, collectors, onSubmit, isSubmitting }: P
             placeholder={
               lateInfo.isLate
                 ? t("collection.lateNotePlaceholder")
-                : `Default: Pembayaran ke-${nextCoupon}`
+                : isBulkPayment 
+                  ? `Default: Pembayaran kupon #${nextCoupon}-#${endCoupon}`
+                  : `Default: Pembayaran ke-${nextCoupon}`
             }
             rows={2}
             className={lateInfo.isLate ? "border-destructive focus-visible:ring-destructive" : ""}
@@ -377,6 +456,11 @@ export function PaymentForm({ contracts, collectors, onSubmit, isSubmitting }: P
             <>
               <span className="animate-spin mr-2">⏳</span>
               {t("common.processing")}
+            </>
+          ) : isBulkPayment ? (
+            <>
+              <Layers className="mr-2 h-4 w-4" />
+              Catat {couponCount} Kupon Sekaligus
             </>
           ) : (
             <>
