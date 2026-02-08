@@ -281,7 +281,7 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
         width: 100%; text-align: center; bottom: 1px; 
         font-size: 11pt; font-weight: normal; color: red;
       }
-      .pos-kantor.field-spacing { /* Gunakan class .field-spacing untuk spacing */ }
+      ..field-spacing { /* Gunakan class .field-spacing untuk spacing */ }
       }
 
       /* URGENT STYLE (Merah) */
@@ -365,13 +365,14 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
               return (
                 <div key={coupon.id} className={`coupon-card ${isUrgent ? 'coupon-urgent' : ''}`}>
                   
-                  <div className="coupon-data pos-judul field-spacing-large">VOUCHER ANGSURAN</div>
+                    {/* Judul Voucher */}
+                    <div className="coupon-data pos-judul">VOUCHER ANGSURAN</div>
 
-                  {/* NO.Faktur */}
-                  <div className="coupon-data pos-faktur field-spacing-large">
-                    <span className="label">NO.Faktur</span>
+                    {/* No. Faktur */}
+                    <div className="coupon-data pos-faktur field-spacing-large">
+                    <span className="label">No. Faktur</span>
                     <span className="value">: {truncateText(noFakturBase, 20)}</span>
-                  </div>
+                    </div>
 
                   {/* Nama */}
                   <div className="coupon-data pos-nama field-spacing-large">
@@ -420,7 +421,7 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
                   <div className="coupon-data pos-val-besar-angsuran field-spacing-large">Rp {formatAmount(coupon.amount)}</div>
 
                   {/* Footer Kantor (UPDATED) */}
-                  <div className="coupon-data pos-kantor field-spacing-large">KANTOR / {KANTOR_NUMBER}</div>
+                  <div className="coupon-data pos-kantor ">KANTOR / {KANTOR_NUMBER}</div>
                 </div>
               );
             })}
