@@ -62,7 +62,9 @@ export const useYearlyFinancialSummary = (year: Date = new Date()) => {
         { data: commissionTiers, error: tiersError },
       ] = await Promise.all([
         supabase.from('sales_agents').select('id, name, agent_code, commission_percentage, use_tiered_commission').order('name'),
-        supabase.from('credit_contracts').select('id, omset, total_loan_amount, sales_agent_id, start_date, status').gte('start_date', yearStart).lte('start_date', yearEnd),
+        // Get contracts started in this year OR completed in this year
+        supabase.from('credit_contracts').select('id, omset, total_loan_amount, sales_agent_id, start_date, status, current_installment_index, tenor_days, created_at')
+          .or(`start_date.gte.${yearStart},start_date.lte.${yearEnd}`),
         supabase.from('payment_logs').select('amount_paid, payment_date, contract_id, credit_contracts!inner(sales_agent_id)').gte('payment_date', yearStart).lte('payment_date', yearEnd),
         supabase.from('operational_expenses').select('amount, expense_date').gte('expense_date', yearStart).lte('expense_date', yearEnd),
         supabase.from('installment_coupons').select('amount, due_date, contract_id').eq('status', 'unpaid').gte('due_date', yearStart).lte('due_date', yearEnd),
@@ -112,7 +114,19 @@ export const useYearlyFinancialSummary = (year: Date = new Date()) => {
       let completedCount = 0;
       let activeCount = 0;
 
-      (contracts || []).forEach((contract: any) => {
+      // Filter contracts relevant to the selected year
+      const relevantContracts = (contracts || []).filter((contract: any) => {
+        const startDate = new Date(contract.start_date);
+        const contractYear = startDate.getFullYear();
+        const selectedYear = year.getFullYear();
+        
+        // Include contracts that:
+        // 1. Started in the selected year, OR
+        // 2. Were active/completed during the selected year
+        return contractYear <= selectedYear;
+      });
+
+      relevantContracts.forEach((contract: any) => {
         const monthKey = format(new Date(contract.start_date), 'yyyy-MM');
         const modal = Number(contract.omset || 0);  // omset field is actually Modal
         const omset = Number(contract.total_loan_amount || 0);  // total_loan_amount is Omset

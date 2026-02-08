@@ -481,7 +481,7 @@ export default function Dashboard() {
                   label="Total Modal"
                   value={yearlyFinancial?.total_modal ?? 0}
                   subtitle={`Tahun ${selectedYear.getFullYear()}`}
-                  hoverInfo={`${yearlyFinancial?.contracts_count ?? 0} kontrak (${yearlyFinancial?.completed_count ?? 0} lunas, ${yearlyFinancial?.active_count ?? 0} aktif)`}
+                  hoverInfo={`Total: ${formatRupiah(yearlyFinancial?.total_modal ?? 0)} | ${yearlyFinancial?.contracts_count ?? 0} kontrak (${yearlyFinancial?.completed_count ?? 0} lunas, ${yearlyFinancial?.active_count ?? 0} aktif)`}
                 />
                 
                 <StatCard
@@ -490,7 +490,7 @@ export default function Dashboard() {
                   label="Total Omset"
                   value={yearlyFinancial?.total_omset ?? 0}
                   subtitle={`Tahun ${selectedYear.getFullYear()}`}
-                  hoverInfo={`${yearlyFinancial?.contracts_count ?? 0} kontrak (${yearlyFinancial?.completed_count ?? 0} lunas)`}
+                  hoverInfo={`Total: ${formatRupiah(yearlyFinancial?.total_omset ?? 0)} | ${yearlyFinancial?.contracts_count ?? 0} kontrak (${yearlyFinancial?.completed_count ?? 0} lunas)`}
                 />
 
                 <StatCard
@@ -500,7 +500,7 @@ export default function Dashboard() {
                   value={yearlyFinancial?.total_profit ?? 0}
                   valueColor="text-green-600"
                   subtitle={`Tahun ${selectedYear.getFullYear()}`}
-                  hoverInfo={`Margin: ${yearlyFinancial?.profit_margin?.toFixed(1) ?? 0}%`}
+                  hoverInfo={`Total: ${formatRupiah(yearlyFinancial?.total_profit ?? 0)} | Margin: ${yearlyFinancial?.profit_margin?.toFixed(1) ?? 0}%`}
                 />
 
                 <StatCard
@@ -510,7 +510,7 @@ export default function Dashboard() {
                   value={yearlyFinancial?.total_commission ?? 0}
                   valueColor="text-purple-600"
                   subtitle={`Tahun ${selectedYear.getFullYear()}`}
-                  hoverInfo={`Dari ${yearlyFinancial?.contracts_count ?? 0} kontrak`}
+                  hoverInfo={`Total: ${formatRupiah(yearlyFinancial?.total_commission ?? 0)} | Dari ${yearlyFinancial?.contracts_count ?? 0} kontrak`}
                 />
 
                 <StatCard
@@ -521,6 +521,7 @@ export default function Dashboard() {
                   valueColor="text-orange-600"
                   isNegative
                   subtitle={`Tahun ${selectedYear.getFullYear()}`}
+                  hoverInfo={`Total: ${formatRupiah(yearlyFinancial?.total_expenses ?? 0)} | Biaya operasional tahun ${selectedYear.getFullYear()}`}
                 />
 
                 <StatCard
@@ -530,7 +531,7 @@ export default function Dashboard() {
                   value={yearlyFinancial?.net_profit ?? 0}
                   valueColor={(yearlyFinancial?.net_profit ?? 0) >= 0 ? "text-emerald-600" : "text-red-600"}
                   subtitle={`Tahun ${selectedYear.getFullYear()}`}
-                  hoverInfo={`Lunas: ${yearlyFinancial?.completed_count ?? 0} | Aktif: ${yearlyFinancial?.active_count ?? 0}`}
+                  hoverInfo={`Total: ${formatRupiah(yearlyFinancial?.net_profit ?? 0)} | Lunas: ${yearlyFinancial?.completed_count ?? 0} | Aktif: ${yearlyFinancial?.active_count ?? 0}`}
                 />
               </div>
 
