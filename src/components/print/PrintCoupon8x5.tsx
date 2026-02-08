@@ -210,11 +210,7 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
 
       /* Area Kiri (Loop Data) - SERING DIMODIFIKASI */
       /* SERING: Posisi vertikal nomor faktur */
-      .pos-faktur       { left: 15px; top: 95px; 
-       
-        margin-bottom: 3px;
-        
-        padding-bottom: 1px;}  
+      .pos-faktur       { left: 15px; top: 95px;}  
       .pos-faktur.field-spacing { /* Gunakan class .field-spacing untuk spacing */ }
       
       /* SERING: Posisi vertikal nama customer */
