@@ -1,21 +1,26 @@
-import { useMemo, useState, useRef, useCallback, useEffect } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
-import { BarChart3, ChevronLeft, ChevronRight } from "lucide-react";
+import { BarChart3 } from "lucide-react";
 import { formatRupiah } from "@/lib/format";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
+import FusionCharts from "fusioncharts";
+import Charts from "fusioncharts/fusioncharts.charts";
+import ReactFC from "react-fusioncharts";
 import { useDailyCollectionTrend, useMonthlyCollectionTrend, useYearlyCollectionTrend, TrendPeriod } from "@/hooks/useCollectionTrendPeriods";
+
+// Initialize FusionCharts with charts module
+ReactFC.fcRoot(FusionCharts, Charts);
+
+// Type assertion for ReactFC component
+const FusionChart = ReactFC as unknown as React.ComponentType<{
+  type: string;
+  width: string;
+  height: string;
+  dataFormat: string;
+  dataSource: object;
+}>;
 
 // Preset options for each period type
 const dailyPresets = [
@@ -42,9 +47,6 @@ const yearlyPresets = [
 
 export function CollectionTrendChart() {
   const { t } = useTranslation();
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(true);
   
   // Trend period and range state
   const [trendPeriod, setTrendPeriod] = useState<TrendPeriod>('daily');
@@ -69,50 +71,6 @@ export function CollectionTrendChart() {
   const isLoadingTrend = trendPeriod === 'daily' ? isLoadingDailyTrend 
     : trendPeriod === 'monthly' ? isLoadingMonthlyTrend 
     : isLoadingYearlyTrend;
-
-  // Check if chart needs scrolling
-  const needsScrolling = useMemo(() => {
-    if (trendPeriod === 'yearly') return false;
-    return activeTrendData.length > (trendPeriod === 'daily' ? 15 : 8);
-  }, [trendPeriod, activeTrendData.length]);
-
-  // Update scroll button states
-  const updateScrollButtons = useCallback(() => {
-    const container = scrollContainerRef.current;
-    if (!container) return;
-    
-    const canLeft = container.scrollLeft > 10;
-    const canRight = container.scrollLeft + container.clientWidth < container.scrollWidth - 10;
-    
-    setCanScrollLeft(canLeft);
-    setCanScrollRight(canRight);
-  }, []);
-
-  // Initialize scroll buttons on mount and when data changes
-  useEffect(() => {
-    // Small delay to ensure DOM is ready
-    const timer = setTimeout(() => {
-      updateScrollButtons();
-    }, 100);
-    return () => clearTimeout(timer);
-  }, [activeTrendData, trendPeriod, updateScrollButtons]);
-
-  // Scroll handlers
-  const scrollLeft = useCallback(() => {
-    const container = scrollContainerRef.current;
-    if (!container) return;
-    container.scrollBy({ left: -200, behavior: 'smooth' });
-    // Update button states after scroll
-    setTimeout(updateScrollButtons, 300);
-  }, [updateScrollButtons]);
-
-  const scrollRight = useCallback(() => {
-    const container = scrollContainerRef.current;
-    if (!container) return;
-    container.scrollBy({ left: 200, behavior: 'smooth' });
-    // Update button states after scroll
-    setTimeout(updateScrollButtons, 300);
-  }, [updateScrollButtons]);
 
   // Collection trend totals
   const totalCollection = activeTrendData.reduce((sum, d) => sum + d.amount, 0);
@@ -150,6 +108,70 @@ export function CollectionTrendChart() {
         setTrendDays(numValue);
     }
   };
+
+  // Prepare FusionCharts data source
+  const chartDataSource = useMemo(() => {
+    const categories = activeTrendData.map(d => ({ label: d.label }));
+    const dataset = [{
+      seriesname: t("dashboard.collection", "Penagihan"),
+      data: activeTrendData.map(d => ({ value: d.amount.toString() }))
+    }];
+
+    return {
+      chart: {
+        caption: "",
+        xAxisName: "",
+        yAxisName: "",
+        theme: "fusion",
+        showValues: "0",
+        drawCrossLine: "1",
+        crossLineColor: "#888888",
+        crossLineAlpha: "50",
+        lineThickness: "2",
+        lineColor: "#2563eb",
+        anchorRadius: "4",
+        anchorBgColor: "#2563eb",
+        anchorBorderColor: "#ffffff",
+        anchorBorderThickness: "2",
+        showAnchors: "0",
+        anchorHoverEffect: "1",
+        anchorHoverRadius: "6",
+        bgColor: "#ffffff",
+        canvasBgColor: "#ffffff",
+        showBorder: "0",
+        showCanvasBorder: "0",
+        divLineColor: "#e5e7eb",
+        divLineAlpha: "50",
+        showAlternateHGridColor: "0",
+        labelDisplay: trendPeriod === 'monthly' ? "rotate" : "auto",
+        slantLabel: trendPeriod === 'monthly' ? "1" : "0",
+        labelFontSize: "11",
+        labelFontColor: "#6b7280",
+        yAxisValueFontSize: "11",
+        yAxisValueFontColor: "#6b7280",
+        formatNumberScale: "1",
+        numberScaleValue: "1000,1000,1000",
+        numberScaleUnit: " Rb, Jt, M",
+        numberPrefix: "",
+        toolTipBgColor: "#ffffff",
+        toolTipBorderColor: "#e5e7eb",
+        toolTipPadding: "12",
+        toolTipBorderRadius: "6",
+        toolTipBorderThickness: "1",
+        plotToolText: "<b>$label</b><br/>$seriesName: Rp $dataValue",
+        chartLeftMargin: "10",
+        chartRightMargin: "50",
+        chartTopMargin: "20",
+        chartBottomMargin: "20",
+        yAxisPosition: "right",
+        adjustDiv: "1",
+        numDivLines: "4",
+        paletteColors: "#2563eb",
+      },
+      categories: [{ category: categories }],
+      dataset: dataset
+    };
+  }, [activeTrendData, trendPeriod, t]);
 
   return (
     <Card>
@@ -206,116 +228,21 @@ export function CollectionTrendChart() {
           </div>
         </div>
       </CardHeader>
-      <CardContent className="p-0 relative">
-        {/* Navigation Arrows */}
-        {needsScrolling && (
-          <>
-            <Button
-              variant="ghost"
-              size="icon"
-              className={`absolute left-2 top-1/2 -translate-y-1/2 z-20 h-10 w-10 rounded-full bg-background/90 shadow-md border hover:bg-accent transition-all ${
-                !canScrollLeft ? 'opacity-30 cursor-not-allowed' : 'opacity-100'
-              }`}
-              onClick={scrollLeft}
-              disabled={!canScrollLeft}
-              aria-label="Scroll left"
-            >
-              <ChevronLeft className="h-5 w-5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className={`absolute right-2 top-1/2 -translate-y-1/2 z-20 h-10 w-10 rounded-full bg-background/90 shadow-md border hover:bg-accent transition-all ${
-                !canScrollRight ? 'opacity-30 cursor-not-allowed' : 'opacity-100'
-              }`}
-              onClick={scrollRight}
-              disabled={!canScrollRight}
-              aria-label="Scroll right"
-            >
-              <ChevronRight className="h-5 w-5" />
-            </Button>
-          </>
-        )}
-        
-        {/* Scrollable Chart Container */}
-        <div 
-          ref={scrollContainerRef}
-          className="w-full overflow-x-auto scroll-smooth scrollbar-none"
-          style={{ 
-            WebkitOverflowScrolling: 'touch',
-          }}
-          onScroll={updateScrollButtons}
-        >
-          <div 
-            className="h-[300px] p-6" 
-            style={{ 
-              minWidth: trendPeriod === 'daily' 
-                ? `${Math.max(800, activeTrendData.length * 28)}px` 
-                : trendPeriod === 'monthly' 
-                  ? `${Math.max(600, activeTrendData.length * 65)}px`
-                  : '100%'
-            }}
-          >
-            {isLoadingTrend ? (
-              <div className="flex items-center justify-center h-full">
-                <Skeleton className="h-full w-full" />
-              </div>
-            ) : (
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={activeTrendData} margin={{ top: 5, right: 50, left: 10, bottom: 5 }}>
-                  <CartesianGrid 
-                    strokeDasharray="3 3" 
-                    vertical={false} 
-                    stroke="hsl(var(--border))" 
-                    strokeOpacity={0.5}
-                  />
-                  <XAxis 
-                    dataKey="label" 
-                    className="text-xs"
-                    interval={0}
-                    angle={trendPeriod === 'monthly' ? -45 : 0}
-                    textAnchor={trendPeriod === 'monthly' ? 'end' : 'middle'}
-                    height={trendPeriod === 'monthly' ? 60 : 30}
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
-                  />
-                  <YAxis 
-                    orientation="right"
-                    tickFormatter={(v) => {
-                      if (v >= 1000000000) return `${(v / 1000000000).toFixed(1)} M`;
-                      if (v >= 1000000) return `${(v / 1000000).toFixed(1)} Jt`;
-                      if (v >= 1000) return `${(v / 1000).toFixed(0)} Rb`;
-                      return v.toString();
-                    }} 
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
-                    width={55}
-                  />
-                  <Tooltip
-                    formatter={(value: number) => [formatRupiah(value), t("dashboard.collection", "Penagihan")]}
-                    labelFormatter={(label) => label}
-                    cursor={{ stroke: 'hsl(var(--muted-foreground))', strokeWidth: 1, strokeDasharray: '3 3' }}
-                    contentStyle={{ 
-                      backgroundColor: "hsl(var(--card))", 
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: '6px',
-                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-                    }}
-                  />
-                  <Line 
-                    type="monotone" 
-                    dataKey="amount" 
-                    stroke="#2563eb"
-                    strokeWidth={2}
-                    dot={false}
-                    activeDot={{ r: 6, fill: "#2563eb", stroke: "hsl(var(--background))", strokeWidth: 2 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            )}
-          </div>
+      <CardContent className="p-0">
+        <div className="h-[300px] p-6">
+          {isLoadingTrend ? (
+            <div className="flex items-center justify-center h-full">
+              <Skeleton className="h-full w-full" />
+            </div>
+          ) : (
+            <FusionChart
+              type="msline"
+              width="100%"
+              height="100%"
+              dataFormat="JSON"
+              dataSource={chartDataSource}
+            />
+          )}
         </div>
       </CardContent>
     </Card>
