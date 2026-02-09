@@ -101,20 +101,5 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
-    overflow-x: hidden;
-  }
-  
-  html {
-    overflow-x: hidden;
-  }
-  
-  /* Force no horizontal overflow globally */
-  *, *::before, *::after {
-    max-width: 100%;
-  }
-  
-  /* Special handling for charts and scroll areas */
-  .recharts-responsive-container {
-    overflow: hidden !important;
   }
 }
