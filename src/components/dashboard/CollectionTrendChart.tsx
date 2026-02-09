@@ -105,7 +105,7 @@ export function CollectionTrendChart() {
   };
 
   return (
-    <Card>
+    <Card className="overflow-hidden">
       <CardHeader>
         <div className="flex flex-col gap-4">
           {/* Period Toggle - Trading Style */}
@@ -160,24 +160,28 @@ export function CollectionTrendChart() {
         </div>
       </CardHeader>
       <CardContent className="p-0">
-        <ScrollArea className="w-full">
-          <div 
-            className="h-[300px] p-6" 
-            style={{ 
-              minWidth: trendPeriod === 'daily' 
-                ? `${Math.max(800, activeTrendData.length * 25)}px` 
-                : trendPeriod === 'monthly' 
-                  ? `${Math.max(600, activeTrendData.length * 60)}px`
-                  : '100%'
-            }}
-          >
-            {isLoadingTrend ? (
-              <div className="flex items-center justify-center h-full">
-                <Skeleton className="h-full w-full" />
-              </div>
-            ) : (
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={activeTrendData}>
+        <div className="overflow-hidden">
+          <ScrollArea className="w-full">
+            <div 
+              className="h-[300px] p-6" 
+              style={{ 
+                minWidth: trendPeriod === 'daily' 
+                  ? `${Math.max(800, activeTrendData.length * 25)}px` 
+                  : trendPeriod === 'monthly' 
+                    ? `${Math.max(600, activeTrendData.length * 60)}px`
+                    : '100%'
+              }}
+            >
+              {isLoadingTrend ? (
+                <div className="flex items-center justify-center h-full">
+                  <Skeleton className="h-full w-full" />
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart 
+                    data={activeTrendData}
+                    margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                  >
                   <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                   <XAxis 
                     dataKey="label" 
@@ -213,6 +217,7 @@ export function CollectionTrendChart() {
           </div>
           <ScrollBar orientation="horizontal" />
         </ScrollArea>
+        </div>
       </CardContent>
     </Card>
   );

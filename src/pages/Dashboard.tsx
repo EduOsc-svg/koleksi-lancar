@@ -120,7 +120,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 overflow-hidden">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <TrendingUp className="h-6 w-6 text-primary" />
@@ -230,7 +230,9 @@ export default function Dashboard() {
       </Card>
 
       {/* Collection Trend Chart Component */}
-      <CollectionTrendChart />
+      <div className="w-full overflow-hidden">
+        <CollectionTrendChart />
+      </div>
 
       {/* Operational Expenses Section */}
       <Card>
