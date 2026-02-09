@@ -1,4 +1,4 @@
-import { useMemo, useState, useRef, useCallback } from "react";
+import { useMemo, useState, useRef, useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
@@ -81,22 +81,38 @@ export function CollectionTrendChart() {
     const container = scrollContainerRef.current;
     if (!container) return;
     
-    setCanScrollLeft(container.scrollLeft > 10);
-    setCanScrollRight(container.scrollLeft + container.clientWidth < container.scrollWidth - 10);
+    const canLeft = container.scrollLeft > 10;
+    const canRight = container.scrollLeft + container.clientWidth < container.scrollWidth - 10;
+    
+    setCanScrollLeft(canLeft);
+    setCanScrollRight(canRight);
   }, []);
+
+  // Initialize scroll buttons on mount and when data changes
+  useEffect(() => {
+    // Small delay to ensure DOM is ready
+    const timer = setTimeout(() => {
+      updateScrollButtons();
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [activeTrendData, trendPeriod, updateScrollButtons]);
 
   // Scroll handlers
   const scrollLeft = useCallback(() => {
     const container = scrollContainerRef.current;
     if (!container) return;
     container.scrollBy({ left: -200, behavior: 'smooth' });
-  }, []);
+    // Update button states after scroll
+    setTimeout(updateScrollButtons, 300);
+  }, [updateScrollButtons]);
 
   const scrollRight = useCallback(() => {
     const container = scrollContainerRef.current;
     if (!container) return;
     container.scrollBy({ left: 200, behavior: 'smooth' });
-  }, []);
+    // Update button states after scroll
+    setTimeout(updateScrollButtons, 300);
+  }, [updateScrollButtons]);
 
   // Collection trend totals
   const totalCollection = activeTrendData.reduce((sum, d) => sum + d.amount, 0);
