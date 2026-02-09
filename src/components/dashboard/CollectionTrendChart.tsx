@@ -105,7 +105,7 @@ export function CollectionTrendChart() {
   };
 
   return (
-    <Card className="overflow-hidden">
+    <Card className="overflow-hidden max-w-full">
       <CardHeader>
         <div className="flex flex-col gap-4">
           {/* Period Toggle - Trading Style */}
@@ -160,16 +160,18 @@ export function CollectionTrendChart() {
         </div>
       </CardHeader>
       <CardContent className="p-0">
-        <div className="overflow-hidden">
-          <ScrollArea className="w-full">
+        <div className="overflow-hidden max-w-full">
+          <ScrollArea className="w-full max-w-full">
             <div 
               className="h-[300px] p-6" 
               style={{ 
                 minWidth: trendPeriod === 'daily' 
-                  ? `${Math.max(800, activeTrendData.length * 25)}px` 
+                  ? `${Math.min(1200, Math.max(600, activeTrendData.length * 25))}px` 
                   : trendPeriod === 'monthly' 
-                    ? `${Math.max(600, activeTrendData.length * 60)}px`
-                    : '100%'
+                    ? `${Math.min(1000, Math.max(500, activeTrendData.length * 60))}px`
+                    : '100%',
+                width: 'max-content',
+                maxWidth: '100vw'
               }}
             >
               {isLoadingTrend ? (
@@ -177,11 +179,12 @@ export function CollectionTrendChart() {
                   <Skeleton className="h-full w-full" />
                 </div>
               ) : (
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart 
-                    data={activeTrendData}
-                    margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                  >
+                <div style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden' }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart 
+                      data={activeTrendData}
+                      margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                    >
                   <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                   <XAxis 
                     dataKey="label" 
@@ -212,9 +215,10 @@ export function CollectionTrendChart() {
                     activeDot={{ r: 6, fill: "hsl(var(--primary))" }}
                   />
                 </LineChart>
-              </ResponsiveContainer>
-            )}
-          </div>
+                </ResponsiveContainer>
+                </div>
+              )}
+            </div>
           <ScrollBar orientation="horizontal" />
         </ScrollArea>
         </div>

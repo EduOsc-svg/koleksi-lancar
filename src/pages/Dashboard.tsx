@@ -230,7 +230,7 @@ export default function Dashboard() {
       </Card>
 
       {/* Collection Trend Chart Component */}
-      <div className="w-full overflow-hidden">
+      <div className="w-full max-w-full overflow-hidden">
         <CollectionTrendChart />
       </div>
 
