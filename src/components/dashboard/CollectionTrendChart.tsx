@@ -159,15 +159,39 @@ export function CollectionTrendChart() {
           </div>
         </div>
       </CardHeader>
-      <CardContent className="p-0">
-        <ScrollArea className="w-full">
+      <CardContent className="p-0 relative">
+        {/* Scroll Shadow Indicators */}
+        <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-card to-transparent z-10 opacity-0 transition-opacity duration-200" id="scroll-shadow-left" />
+        <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-card to-transparent z-10 opacity-50" id="scroll-shadow-right" />
+        
+        {/* Scrollable Chart Container */}
+        <div 
+          className="w-full overflow-x-auto scroll-smooth scrollbar-thin scrollbar-thumb-muted-foreground/30 scrollbar-track-transparent hover:scrollbar-thumb-muted-foreground/50 transition-colors"
+          style={{ 
+            WebkitOverflowScrolling: 'touch', // Momentum scrolling for iOS
+            scrollbarWidth: 'thin', // Firefox
+          }}
+          onScroll={(e) => {
+            const target = e.currentTarget;
+            const leftShadow = document.getElementById('scroll-shadow-left');
+            const rightShadow = document.getElementById('scroll-shadow-right');
+            
+            if (leftShadow) {
+              leftShadow.style.opacity = target.scrollLeft > 10 ? '0.5' : '0';
+            }
+            if (rightShadow) {
+              const isAtEnd = target.scrollLeft + target.clientWidth >= target.scrollWidth - 10;
+              rightShadow.style.opacity = isAtEnd ? '0' : '0.5';
+            }
+          }}
+        >
           <div 
             className="h-[300px] p-6" 
             style={{ 
               minWidth: trendPeriod === 'daily' 
-                ? `${Math.max(800, activeTrendData.length * 25)}px` 
+                ? `${Math.max(800, activeTrendData.length * 28)}px` 
                 : trendPeriod === 'monthly' 
-                  ? `${Math.max(600, activeTrendData.length * 60)}px`
+                  ? `${Math.max(600, activeTrendData.length * 65)}px`
                   : '100%'
             }}
           >
@@ -231,8 +255,7 @@ export function CollectionTrendChart() {
               </ResponsiveContainer>
             )}
           </div>
-          <ScrollBar orientation="horizontal" />
-        </ScrollArea>
+        </div>
       </CardContent>
     </Card>
   );
