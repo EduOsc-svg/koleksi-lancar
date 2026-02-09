@@ -177,8 +177,13 @@ export function CollectionTrendChart() {
               </div>
             ) : (
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={activeTrendData}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                <LineChart data={activeTrendData} margin={{ top: 5, right: 50, left: 10, bottom: 5 }}>
+                  <CartesianGrid 
+                    strokeDasharray="3 3" 
+                    vertical={false} 
+                    stroke="hsl(var(--border))" 
+                    strokeOpacity={0.5}
+                  />
                   <XAxis 
                     dataKey="label" 
                     className="text-xs"
@@ -186,26 +191,41 @@ export function CollectionTrendChart() {
                     angle={trendPeriod === 'monthly' ? -45 : 0}
                     textAnchor={trendPeriod === 'monthly' ? 'end' : 'middle'}
                     height={trendPeriod === 'monthly' ? 60 : 30}
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
                   />
                   <YAxis 
-                    tickFormatter={(v) => v >= 1000000000 ? `${(v / 1000000000).toFixed(1)}B` : `${(v / 1000000).toFixed(1)}M`} 
-                    className="text-xs" 
+                    orientation="right"
+                    tickFormatter={(v) => {
+                      if (v >= 1000000000) return `${(v / 1000000000).toFixed(1)} M`;
+                      if (v >= 1000000) return `${(v / 1000000).toFixed(1)} Jt`;
+                      if (v >= 1000) return `${(v / 1000).toFixed(0)} Rb`;
+                      return v.toString();
+                    }} 
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
+                    width={55}
                   />
                   <Tooltip
                     formatter={(value: number) => [formatRupiah(value), t("dashboard.collection", "Penagihan")]}
                     labelFormatter={(label) => label}
+                    cursor={{ stroke: 'hsl(var(--muted-foreground))', strokeWidth: 1, strokeDasharray: '3 3' }}
                     contentStyle={{ 
                       backgroundColor: "hsl(var(--card))", 
-                      border: "1px solid hsl(var(--border))" 
+                      border: "1px solid hsl(var(--border))",
+                      borderRadius: '6px',
+                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
                     }}
                   />
                   <Line 
                     type="monotone" 
                     dataKey="amount" 
-                    stroke="hsl(var(--primary))" 
+                    stroke="#2563eb"
                     strokeWidth={2}
-                    dot={{ fill: "hsl(var(--primary))", strokeWidth: 0, r: trendPeriod === 'daily' ? 3 : 4 }}
-                    activeDot={{ r: 6, fill: "hsl(var(--primary))" }}
+                    dot={false}
+                    activeDot={{ r: 6, fill: "#2563eb", stroke: "hsl(var(--background))", strokeWidth: 2 }}
                   />
                 </LineChart>
               </ResponsiveContainer>
