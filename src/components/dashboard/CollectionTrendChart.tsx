@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { BarChart3, ChevronLeft, ChevronRight } from "lucide-react";
+import { BarChart3 } from "lucide-react";
 import { formatRupiah } from "@/lib/format";
 import {
   LineChart,
@@ -14,6 +14,10 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  ReferenceLine,
+  ReferenceArea,
+  Area,
+  ComposedChart
 } from "recharts";
 import { useDailyCollectionTrend, useMonthlyCollectionTrend, useYearlyCollectionTrend, TrendPeriod } from "@/hooks/useCollectionTrendPeriods";
 
@@ -22,22 +26,18 @@ const dailyPresets = [
   { value: 7, label: "7H" },
   { value: 14, label: "14H" },
   { value: 30, label: "30H" },
-  { value: 60, label: "60H" },
-  { value: 90, label: "90H" },
 ];
 
 const monthlyPresets = [
   { value: 3, label: "3B" },
   { value: 6, label: "6B" },
   { value: 12, label: "12B" },
-  { value: 24, label: "24B" },
 ];
 
 const yearlyPresets = [
   { value: 2, label: "2T" },
   { value: 3, label: "3T" },
   { value: 5, label: "5T" },
-  { value: 10, label: "10T" },
 ];
 
 export function CollectionTrendChart() {
@@ -151,42 +151,122 @@ export function CollectionTrendChart() {
     }
   };
 
+  // Custom Active Dot Component - FusionCharts style
+  const CustomActiveDot = (props: any) => {
+    const { cx, cy } = props;
+    return (
+      <g>
+        {/* Outer glow ring */}
+        <circle
+          cx={cx}
+          cy={cy}
+          r={12}
+          fill="none"
+          stroke="#2563eb"
+          strokeWidth={1}
+          strokeOpacity={0.3}
+          className="animate-pulse"
+        />
+        {/* Main dot */}
+        <circle
+          cx={cx}
+          cy={cy}
+          r={6}
+          fill="#2563eb"
+          stroke="#ffffff"
+          strokeWidth={3}
+          filter="drop-shadow(0 2px 8px rgba(37, 99, 235, 0.3))"
+        />
+        {/* Inner highlight */}
+        <circle
+          cx={cx}
+          cy={cy}
+          r={2}
+          fill="#60a5fa"
+        />
+      </g>
+    );
+  };
+
+  // Enhanced Custom Tooltip Component
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      const value = payload[0].value;
+      const date = new Date(label);
+      const formattedDate = trendPeriod === 'daily' 
+        ? date.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long' })
+        : label;
+      
+      return (
+        <div className="bg-slate-800/95 backdrop-blur-sm text-white p-4 rounded-xl shadow-2xl border border-slate-600/50">
+          <p className="text-slate-300 text-xs mb-2 font-medium">{formattedDate}</p>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full bg-blue-400"></div>
+            <p className="text-white font-semibold text-sm">
+              {formatRupiah(value)}
+            </p>
+          </div>
+          <div className="mt-2 pt-2 border-t border-slate-600/30">
+            <p className="text-slate-400 text-xs">
+              {t("dashboard.collection", "Penagihan Harian")}
+            </p>
+          </div>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  // Custom Y-Axis tick formatter
+  const formatYAxisTick = (value: number) => {
+    if (value >= 1000000000) return `${(value / 1000000000).toFixed(1)}M`;
+    if (value >= 1000000) return `${(value / 1000000).toFixed(1)}Jt`;
+    if (value >= 1000) return `${(value / 1000).toFixed(0)}rb`;
+    return value === 0 ? '0' : value.toString();
+  };
+
   return (
-    <Card>
-      <CardHeader>
+    <Card className="shadow-lg border-0 bg-gradient-to-br from-white to-slate-50/30">
+      <CardHeader className="pb-4">
         <div className="flex flex-col gap-4">
-          {/* Period Toggle - Trading Style */}
+          {/* Period Toggle - Enhanced styling */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <CardTitle className="flex items-center gap-2">
-                <BarChart3 className="h-5 w-5 text-primary" />
-                {t("dashboard.collectionTrend")}
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <BarChart3 className="h-5 w-5 text-blue-600" />
+                </div>
+                <span className="bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent font-bold">
+                  {t("dashboard.collectionTrend")}
+                </span>
               </CardTitle>
-              <p className="text-sm text-muted-foreground mt-1">
-                Total: {formatRupiah(totalCollection)} | {trendPeriod === 'daily' ? t("dashboard.avgDaily", "Rata-rata Harian") : trendPeriod === 'monthly' ? 'Rata-rata Bulanan' : 'Rata-rata Tahunan'}: {formatRupiah(avgPerPeriod)}
+              <p className="text-sm text-muted-foreground mt-2 font-medium">
+                Total: <span className="text-blue-600 font-semibold">{formatRupiah(totalCollection)}</span> | 
+                {trendPeriod === 'daily' ? t("dashboard.avgDaily", "Rata-rata Harian") : trendPeriod === 'monthly' ? 'Rata-rata Bulanan' : 'Rata-rata Tahunan'}: 
+                <span className="text-emerald-600 font-semibold"> {formatRupiah(avgPerPeriod)}</span>
               </p>
             </div>
             <ToggleGroup 
               type="single" 
               value={trendPeriod} 
               onValueChange={(value) => value && setTrendPeriod(value as TrendPeriod)}
-              className="bg-muted p-1 rounded-lg"
+              className="bg-slate-100 p-1 rounded-xl shadow-inner"
             >
-              <ToggleGroupItem value="daily" className="text-xs px-3 data-[state=on]:bg-background data-[state=on]:shadow-sm">
-                1H (Harian)
+              <ToggleGroupItem value="daily" className="text-xs px-4 py-2 data-[state=on]:bg-white data-[state=on]:shadow-sm data-[state=on]:text-blue-600 font-medium rounded-lg transition-all">
+                📊 Harian
               </ToggleGroupItem>
-              <ToggleGroupItem value="monthly" className="text-xs px-3 data-[state=on]:bg-background data-[state=on]:shadow-sm">
-                1B (Bulanan)
+              <ToggleGroupItem value="monthly" className="text-xs px-4 py-2 data-[state=on]:bg-white data-[state=on]:shadow-sm data-[state=on]:text-blue-600 font-medium rounded-lg transition-all">
+                📈 Bulanan
               </ToggleGroupItem>
-              <ToggleGroupItem value="yearly" className="text-xs px-3 data-[state=on]:bg-background data-[state=on]:shadow-sm">
-                1T (Tahunan)
+              <ToggleGroupItem value="yearly" className="text-xs px-4 py-2 data-[state=on]:bg-white data-[state=on]:shadow-sm data-[state=on]:text-blue-600 font-medium rounded-lg transition-all">
+                📉 Tahunan
               </ToggleGroupItem>
             </ToggleGroup>
           </div>
           
-          {/* Period-specific preset buttons */}
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-xs text-muted-foreground mr-1">Rentang:</span>
+          {/* Period-specific preset buttons - Enhanced styling */}
+          <div className="flex items-center gap-3 flex-wrap">
+            <span className="text-xs text-muted-foreground font-medium">📅 Rentang Waktu:</span>
             <ToggleGroup 
               type="single" 
               value={getCurrentValue().toString()} 
@@ -197,7 +277,7 @@ export function CollectionTrendChart() {
                 <ToggleGroupItem 
                   key={preset.value} 
                   value={preset.value.toString()}
-                  className="text-xs px-3 py-1 h-7 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+                  className="text-xs px-4 py-2 h-8 data-[state=on]:bg-blue-600 data-[state=on]:text-white font-medium rounded-lg transition-all shadow-sm hover:shadow-md border border-slate-200 data-[state=on]:border-blue-600"
                 >
                   {preset.label}
                 </ToggleGroupItem>
@@ -206,36 +286,7 @@ export function CollectionTrendChart() {
           </div>
         </div>
       </CardHeader>
-      <CardContent className="p-0 relative">
-        {/* Navigation Arrows */}
-        {needsScrolling && (
-          <>
-            <Button
-              variant="ghost"
-              size="icon"
-              className={`absolute left-2 top-1/2 -translate-y-1/2 z-20 h-10 w-10 rounded-full bg-background/90 shadow-md border hover:bg-accent transition-all ${
-                !canScrollLeft ? 'opacity-30 cursor-not-allowed' : 'opacity-100'
-              }`}
-              onClick={scrollLeft}
-              disabled={!canScrollLeft}
-              aria-label="Scroll left"
-            >
-              <ChevronLeft className="h-5 w-5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className={`absolute right-2 top-1/2 -translate-y-1/2 z-20 h-10 w-10 rounded-full bg-background/90 shadow-md border hover:bg-accent transition-all ${
-                !canScrollRight ? 'opacity-30 cursor-not-allowed' : 'opacity-100'
-              }`}
-              onClick={scrollRight}
-              disabled={!canScrollRight}
-              aria-label="Scroll right"
-            >
-              <ChevronRight className="h-5 w-5" />
-            </Button>
-          </>
-        )}
+      <CardContent className="p-0 relative bg-gradient-to-b from-slate-50/50 to-white">
         
         {/* Scrollable Chart Container */}
         <div 
@@ -262,55 +313,93 @@ export function CollectionTrendChart() {
               </div>
             ) : (
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={activeTrendData} margin={{ top: 5, right: 50, left: 10, bottom: 5 }}>
+                <LineChart 
+                  data={activeTrendData} 
+                  margin={{ top: 20, right: 60, left: 10, bottom: 20 }}
+                  style={{
+                    background: "linear-gradient(180deg, #fafafa 0%, #ffffff 100%)"
+                  }}
+                >
+                  {/* Gradient Definitions */}
+                  <defs>
+                    <linearGradient id="lineGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.8}/>
+                      <stop offset="100%" stopColor="#2563eb" stopOpacity={1}/>
+                    </linearGradient>
+                    <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.1}/>
+                      <stop offset="100%" stopColor="#2563eb" stopOpacity={0.02}/>
+                    </linearGradient>
+                    <filter id="dropShadow" x="-20%" y="-20%" width="140%" height="140%">
+                      <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#000000" floodOpacity="0.1"/>
+                    </filter>
+                  </defs>
+                  
+                  {/* Professional Grid - TradingView style */}
                   <CartesianGrid 
-                    strokeDasharray="3 3" 
+                    strokeDasharray="2 2" 
                     vertical={false} 
-                    stroke="hsl(var(--border))" 
-                    strokeOpacity={0.5}
+                    stroke="#e2e8f0" 
+                    strokeOpacity={0.6}
                   />
+                  
+                  {/* X-Axis - Clean styling */}
                   <XAxis 
                     dataKey="label" 
-                    className="text-xs"
+                    axisLine={false}
+                    tickLine={false}
                     interval={0}
                     angle={trendPeriod === 'monthly' ? -45 : 0}
                     textAnchor={trendPeriod === 'monthly' ? 'end' : 'middle'}
                     height={trendPeriod === 'monthly' ? 60 : 30}
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
+                    tick={{ 
+                      fill: '#64748b', 
+                      fontSize: 10,
+                      fontWeight: 500
+                    }}
+                    className="select-none"
                   />
+                  
+                  {/* Y-Axis - Right side like TradingView */}
                   <YAxis 
                     orientation="right"
-                    tickFormatter={(v) => {
-                      if (v >= 1000000000) return `${(v / 1000000000).toFixed(1)} M`;
-                      if (v >= 1000000) return `${(v / 1000000).toFixed(1)} Jt`;
-                      if (v >= 1000) return `${(v / 1000).toFixed(0)} Rb`;
-                      return v.toString();
-                    }} 
                     axisLine={false}
                     tickLine={false}
-                    tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
-                    width={55}
-                  />
-                  <Tooltip
-                    formatter={(value: number) => [formatRupiah(value), t("dashboard.collection", "Penagihan")]}
-                    labelFormatter={(label) => label}
-                    cursor={{ stroke: 'hsl(var(--muted-foreground))', strokeWidth: 1, strokeDasharray: '3 3' }}
-                    contentStyle={{ 
-                      backgroundColor: "hsl(var(--card))", 
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: '6px',
-                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                    tickFormatter={formatYAxisTick}
+                    tick={{ 
+                      fill: '#64748b', 
+                      fontSize: 10,
+                      fontWeight: 500
                     }}
+                    width={50}
+                    className="select-none"
+                    domain={['dataMin - dataMin * 0.1', 'dataMax + dataMax * 0.1']}
                   />
+                  
+                  {/* Custom Tooltip */}
+                  <Tooltip
+                    content={<CustomTooltip />}
+                    cursor={{
+                      stroke: '#64748b',
+                      strokeWidth: 1,
+                      strokeDasharray: '4 4',
+                      strokeOpacity: 0.8
+                    }}
+                    animationDuration={200}
+                  />
+                  
+                  {/* Main Line - Enhanced styling with gradient */}
                   <Line 
                     type="monotone" 
                     dataKey="amount" 
-                    stroke="#2563eb"
-                    strokeWidth={2}
+                    stroke="url(#lineGradient)"
+                    strokeWidth={3}
                     dot={false}
-                    activeDot={{ r: 6, fill: "#2563eb", stroke: "hsl(var(--background))", strokeWidth: 2 }}
+                    activeDot={<CustomActiveDot />}
+                    connectNulls={false}
+                    animationDuration={1200}
+                    animationBegin={0}
+                    filter="url(#dropShadow)"
                   />
                 </LineChart>
               </ResponsiveContainer>
