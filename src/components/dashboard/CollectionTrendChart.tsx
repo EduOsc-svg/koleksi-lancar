@@ -1,10 +1,10 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useRef, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Skeleton } from "@/components/ui/skeleton";
-import { BarChart3 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { BarChart3, ChevronLeft, ChevronRight } from "lucide-react";
 import { formatRupiah } from "@/lib/format";
 import {
   LineChart,
@@ -42,6 +42,9 @@ const yearlyPresets = [
 
 export function CollectionTrendChart() {
   const { t } = useTranslation();
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
   
   // Trend period and range state
   const [trendPeriod, setTrendPeriod] = useState<TrendPeriod>('daily');
@@ -66,6 +69,34 @@ export function CollectionTrendChart() {
   const isLoadingTrend = trendPeriod === 'daily' ? isLoadingDailyTrend 
     : trendPeriod === 'monthly' ? isLoadingMonthlyTrend 
     : isLoadingYearlyTrend;
+
+  // Check if chart needs scrolling
+  const needsScrolling = useMemo(() => {
+    if (trendPeriod === 'yearly') return false;
+    return activeTrendData.length > (trendPeriod === 'daily' ? 15 : 8);
+  }, [trendPeriod, activeTrendData.length]);
+
+  // Update scroll button states
+  const updateScrollButtons = useCallback(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    
+    setCanScrollLeft(container.scrollLeft > 10);
+    setCanScrollRight(container.scrollLeft + container.clientWidth < container.scrollWidth - 10);
+  }, []);
+
+  // Scroll handlers
+  const scrollLeft = useCallback(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    container.scrollBy({ left: -200, behavior: 'smooth' });
+  }, []);
+
+  const scrollRight = useCallback(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    container.scrollBy({ left: 200, behavior: 'smooth' });
+  }, []);
 
   // Collection trend totals
   const totalCollection = activeTrendData.reduce((sum, d) => sum + d.amount, 0);
@@ -160,30 +191,44 @@ export function CollectionTrendChart() {
         </div>
       </CardHeader>
       <CardContent className="p-0 relative">
-        {/* Scroll Shadow Indicators */}
-        <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-card to-transparent z-10 opacity-0 transition-opacity duration-200" id="scroll-shadow-left" />
-        <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-card to-transparent z-10 opacity-50" id="scroll-shadow-right" />
+        {/* Navigation Arrows */}
+        {needsScrolling && (
+          <>
+            <Button
+              variant="ghost"
+              size="icon"
+              className={`absolute left-2 top-1/2 -translate-y-1/2 z-20 h-10 w-10 rounded-full bg-background/90 shadow-md border hover:bg-accent transition-all ${
+                !canScrollLeft ? 'opacity-30 cursor-not-allowed' : 'opacity-100'
+              }`}
+              onClick={scrollLeft}
+              disabled={!canScrollLeft}
+              aria-label="Scroll left"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className={`absolute right-2 top-1/2 -translate-y-1/2 z-20 h-10 w-10 rounded-full bg-background/90 shadow-md border hover:bg-accent transition-all ${
+                !canScrollRight ? 'opacity-30 cursor-not-allowed' : 'opacity-100'
+              }`}
+              onClick={scrollRight}
+              disabled={!canScrollRight}
+              aria-label="Scroll right"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </Button>
+          </>
+        )}
         
         {/* Scrollable Chart Container */}
         <div 
-          className="w-full overflow-x-auto scroll-smooth scrollbar-thin scrollbar-thumb-muted-foreground/30 scrollbar-track-transparent hover:scrollbar-thumb-muted-foreground/50 transition-colors"
+          ref={scrollContainerRef}
+          className="w-full overflow-x-auto scroll-smooth scrollbar-none"
           style={{ 
-            WebkitOverflowScrolling: 'touch', // Momentum scrolling for iOS
-            scrollbarWidth: 'thin', // Firefox
+            WebkitOverflowScrolling: 'touch',
           }}
-          onScroll={(e) => {
-            const target = e.currentTarget;
-            const leftShadow = document.getElementById('scroll-shadow-left');
-            const rightShadow = document.getElementById('scroll-shadow-right');
-            
-            if (leftShadow) {
-              leftShadow.style.opacity = target.scrollLeft > 10 ? '0.5' : '0';
-            }
-            if (rightShadow) {
-              const isAtEnd = target.scrollLeft + target.clientWidth >= target.scrollWidth - 10;
-              rightShadow.style.opacity = isAtEnd ? '0' : '0.5';
-            }
-          }}
+          onScroll={updateScrollButtons}
         >
           <div 
             className="h-[300px] p-6" 
