@@ -160,141 +160,59 @@ export function CollectionTrendChart() {
         </div>
       </CardHeader>
       <CardContent className="p-0">
-        <div className="overflow-hidden max-w-full">
-          <div className="relative">
-            <ScrollArea className="w-full max-w-full">
-              <div 
-                className="h-[300px] p-6 pr-20" 
-                style={{ 
-                  minWidth: trendPeriod === 'daily' 
-                    ? `${Math.min(1200, Math.max(600, activeTrendData.length * 25))}px` 
-                    : trendPeriod === 'monthly' 
-                      ? `${Math.min(1000, Math.max(500, activeTrendData.length * 60))}px`
-                      : '100%',
-                  width: 'max-content',
-                  maxWidth: '100vw'
-                }}
-              >
-                {isLoadingTrend ? (
-                  <div className="flex items-center justify-center h-full">
-                    <Skeleton className="h-full w-full" />
-                  </div>
-                ) : (
-                  <div style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden' }}>
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart 
-                        data={activeTrendData}
-                        margin={{ top: 5, right: 20, left: 20, bottom: 5 }}
-                      >
-                        <CartesianGrid 
-                          strokeDasharray="2 2" 
-                          stroke="#e2e8f0" 
-                          vertical={false}
-                          opacity={0.6}
-                        />
-                        <XAxis 
-                          dataKey="label" 
-                          axisLine={false}
-                          tickLine={false}
-                          tick={{ fontSize: 10, fill: '#64748b' }}
-                          interval={0}
-                          angle={trendPeriod === 'monthly' ? -45 : 0}
-                          textAnchor={trendPeriod === 'monthly' ? 'end' : 'middle'}
-                          height={trendPeriod === 'monthly' ? 60 : 30}
-                          tickFormatter={(value) => {
-                            if (trendPeriod === 'daily') {
-                              const date = new Date(value);
-                              return date.toLocaleDateString('id-ID', { day: '2-digit', month: 'short' });
-                            }
-                            return value;
-                          }}
-                        />
-                        <YAxis hide={true} />
-                        <Tooltip
-                          cursor={{ 
-                            stroke: '#64748b', 
-                            strokeWidth: 1, 
-                            strokeDasharray: '4 4'
-                          }}
-                          formatter={(value: number) => [formatRupiah(value), t("dashboard.collection", "Penagihan")]}
-                          labelFormatter={(label) => {
-                            if (trendPeriod === 'daily') {
-                              const date = new Date(label);
-                              return date.toLocaleDateString('id-ID', { 
-                                weekday: 'long',
-                                day: 'numeric', 
-                                month: 'long',
-                                year: 'numeric'
-                              });
-                            }
-                            return label;
-                          }}
-                          contentStyle={{ 
-                            backgroundColor: "#1e293b", 
-                            border: "none",
-                            borderRadius: "8px",
-                            fontSize: "12px",
-                            color: "#f1f5f9",
-                            boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)"
-                          }}
-                        />
-                        <Line 
-                          type="monotone" 
-                          dataKey="amount" 
-                          stroke="#2563eb"
-                          strokeWidth={2.5}
-                          dot={false}
-                          activeDot={{ 
-                            r: 5, 
-                            fill: "#2563eb",
-                            stroke: "#ffffff",
-                            strokeWidth: 2
-                          }}
-                          connectNulls={false}
-                        />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </div>
-                )}
+        <ScrollArea className="w-full">
+          <div 
+            className="h-[300px] p-6" 
+            style={{ 
+              minWidth: trendPeriod === 'daily' 
+                ? `${Math.max(800, activeTrendData.length * 25)}px` 
+                : trendPeriod === 'monthly' 
+                  ? `${Math.max(600, activeTrendData.length * 60)}px`
+                  : '100%'
+            }}
+          >
+            {isLoadingTrend ? (
+              <div className="flex items-center justify-center h-full">
+                <Skeleton className="h-full w-full" />
               </div>
-              <ScrollBar orientation="horizontal" />
-            </ScrollArea>
-            
-            {/* Sticky Y-Axis Overlay */}
-            {!isLoadingTrend && (
-              <div 
-                className="absolute right-0 top-0 h-full bg-white/95 backdrop-blur-sm border-l border-gray-200 pointer-events-none"
-                style={{ 
-                  width: '80px',
-                  zIndex: 10
-                }}
-              >
-                <div className="h-[300px] p-6 pl-2">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart 
-                      data={activeTrendData}
-                      margin={{ top: 5, right: 10, left: 0, bottom: 5 }}
-                    >
-                      <YAxis 
-                        orientation="right"
-                        axisLine={false}
-                        tickLine={false}
-                        tick={{ fontSize: 10, fill: '#64748b', fontWeight: 500 }}
-                        tickFormatter={(v) => {
-                          if (v >= 1000000000) return `${(v / 1000000000).toFixed(1)}M`;
-                          if (v >= 1000000) return `${(v / 1000000).toFixed(1)}Jt`;
-                          if (v >= 1000) return `${(v / 1000).toFixed(0)}rb`;
-                          return v === 0 ? '0' : v.toString();
-                        }}
-                        width={60}
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={activeTrendData}>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                  <XAxis 
+                    dataKey="label" 
+                    className="text-xs"
+                    interval={0}
+                    angle={trendPeriod === 'monthly' ? -45 : 0}
+                    textAnchor={trendPeriod === 'monthly' ? 'end' : 'middle'}
+                    height={trendPeriod === 'monthly' ? 60 : 30}
+                  />
+                  <YAxis 
+                    tickFormatter={(v) => v >= 1000000000 ? `${(v / 1000000000).toFixed(1)}B` : `${(v / 1000000).toFixed(1)}M`} 
+                    className="text-xs" 
+                  />
+                  <Tooltip
+                    formatter={(value: number) => [formatRupiah(value), t("dashboard.collection", "Penagihan")]}
+                    labelFormatter={(label) => label}
+                    contentStyle={{ 
+                      backgroundColor: "hsl(var(--card))", 
+                      border: "1px solid hsl(var(--border))" 
+                    }}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="amount" 
+                    stroke="hsl(var(--primary))" 
+                    strokeWidth={2}
+                    dot={{ fill: "hsl(var(--primary))", strokeWidth: 0, r: trendPeriod === 'daily' ? 3 : 4 }}
+                    activeDot={{ r: 6, fill: "hsl(var(--primary))" }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
             )}
           </div>
-        </div>
+          <ScrollBar orientation="horizontal" />
+        </ScrollArea>
       </CardContent>
     </Card>
   );
