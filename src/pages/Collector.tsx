@@ -179,19 +179,19 @@ export default function Collector() {
 
     // Data rows with enhanced calculations
     const dataStartRow = 5;
-    const totalCollected = collectorStats.reduce((sum, stat) => sum + stat.total_collected, 0);
-    const totalPayments = collectorStats.reduce((sum, stat) => sum + stat.payment_count, 0);
+    const totalCollected = collectorStats.reduce((sum, stat) => sum + stat.totalCollected, 0);
+    const totalPayments = collectorStats.reduce((sum, stat) => sum + stat.paymentCount, 0);
 
     collectorStats.forEach((stat, index) => {
       const rowNum = dataStartRow + index;
-      const averagePerPayment = stat.payment_count > 0 ? stat.total_collected / stat.payment_count : 0;
-      const efficiency = totalCollected > 0 ? (stat.total_collected / totalCollected) * 100 : 0;
+      const averagePerPayment = stat.paymentCount > 0 ? stat.totalCollected / stat.paymentCount : 0;
+      const efficiency = totalCollected > 0 ? (stat.totalCollected / totalCollected) * 100 : 0;
       
       const row = worksheet.addRow([
         stat.collector_code,
         stat.name,
-        stat.payment_count,
-        stat.total_collected,
+        stat.paymentCount,
+        stat.totalCollected,
         averagePerPayment,
         efficiency / 100
       ]);
@@ -280,7 +280,7 @@ export default function Collector() {
       ['Total Nilai Tertagih', totalCollected, 'Total nilai yang berhasil ditagih'],
       ['Rata-rata per Kolektor', totalCollected / collectorStats.length, 'Rata-rata penagihan per kolektor'],
       ['Rata-rata per Transaksi', totalCollected / totalPayments, 'Rata-rata nilai per transaksi'],
-      ['Kolektor Terbaik', collectorStats.reduce((best, current) => current.total_collected > best.total_collected ? current : best, collectorStats[0])?.name || '-', 'Kolektor dengan penagihan tertinggi']
+      ['Kolektor Terbaik', collectorStats.reduce((best, current) => current.totalCollected > best.totalCollected ? current : best, collectorStats[0])?.name || '-', 'Kolektor dengan penagihan tertinggi']
     ];
 
     summaryData.forEach((rowData, index) => {
