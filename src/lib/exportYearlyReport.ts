@@ -36,7 +36,7 @@ export const exportYearlyReportToExcel = async (
     ['Total Modal', 'B', data.total_modal],
     ['Total Omset', 'B', data.total_omset],
     ['Keuntungan Kotor', 'B', data.total_profit],
-    ['Total Komisi (5%)', 'B', data.total_commission],
+    ['Total Komisi', 'B', data.total_commission],
     ['Biaya Operasional', 'B', data.total_expenses],
     ['Keuntungan Bersih', 'B', data.net_profit],
     ['Jumlah Kontrak', 'B', data.contracts_count],
