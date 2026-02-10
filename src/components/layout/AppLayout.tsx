@@ -1,6 +1,7 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
 import { GlobalSearch } from "@/components/GlobalSearch";
+import { OfflineIndicator } from "@/components/OfflineIndicator";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -18,6 +19,7 @@ export function AppLayout({ children }: AppLayoutProps) {
             <div className="flex-1 max-w-md ml-auto">
               <GlobalSearch />
             </div>
+            <OfflineIndicator />
           </header>
           <div className="flex-1 p-6 overflow-auto print:p-0 print:m-0 print:overflow-visible">
             {children}
