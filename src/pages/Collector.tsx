@@ -120,7 +120,7 @@ export default function Collector() {
     }
   };
 
-  // Export to Excel with dynamic formulas
+  // Export to Excel with enhanced analysis
   const handleExportExcel = async () => {
     if (collectorStats.length === 0) {
       toast.error("Tidak ada data untuk diekspor");
@@ -131,109 +131,185 @@ export default function Collector() {
     workbook.creator = "Credit Management System";
     workbook.created = new Date();
     
+    // ============ Sheet 1: Performa Kolektor ============
     const worksheet = workbook.addWorksheet("Performa Kolektor");
 
-    // Define columns - hanya 4 kolom sesuai permintaan
-    // A: Kode, B: Nama, C: Jumlah Tagihan, D: Total Tertagih
-    worksheet.columns = [
-      { header: "Kode Kolektor", key: "collector_code", width: 18 },
-      { header: "Nama", key: "name", width: 30 },
-      { header: "Jumlah Tagihan", key: "payment_count", width: 18 },
-      { header: "Total Tertagih", key: "total_collected", width: 22 },
-    ];
-
     // Add title and period info
-    worksheet.insertRow(1, [`LAPORAN PERFORMA KOLEKTOR - ${format(selectedDate, "MMMM yyyy", { locale: localeId }).toUpperCase()}`]);
-    worksheet.mergeCells('A1:D1');
+    worksheet.mergeCells('A1:F1');
     const titleCell = worksheet.getCell('A1');
+    titleCell.value = `LAPORAN PERFORMA KOLEKTOR - ${format(selectedDate, "MMMM yyyy", { locale: localeId }).toUpperCase()}`;
     titleCell.font = { bold: true, size: 16 };
     titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
-    titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1F4788' } };
-    titleCell.font = { bold: true, size: 16, color: { argb: 'FFFFFFFF' } };
+    titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4472C4' } };
+    titleCell.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 16 };
 
-    // Add empty row
+    // Periode info row
+    worksheet.mergeCells('A2:F2');
+    const periodCell = worksheet.getCell('A2');
+    periodCell.value = `Periode: ${format(selectedDate, "d MMMM yyyy", { locale: localeId })}`;
+    periodCell.font = { size: 12 };
+    periodCell.alignment = { horizontal: 'center' };
+
+    // Empty row
     worksheet.addRow([]);
 
-    // Style header row (now row 3)
-    worksheet.getRow(3).eachCell((cell) => {
-      cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
-      cell.fill = {
-        type: "pattern",
-        pattern: "solid",
-        fgColor: { argb: "FF4F81BD" },
-      };
-      cell.alignment = { horizontal: "center", vertical: "middle" };
+    // Header row
+    const headerRow = worksheet.addRow([
+      "Kode Kolektor",
+      "Nama", 
+      "Jumlah Tagihan",
+      "Total Tertagih",
+      "Rata-rata per Tagihan",
+      "Efisiensi (%)"
+    ]);
+
+    // Style header
+    headerRow.font = { bold: true };
+    headerRow.eachCell((cell) => {
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF70AD47' } };
+      cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+      cell.alignment = { horizontal: 'center', vertical: 'middle' };
       cell.border = {
-        top: { style: "thin" },
-        left: { style: "thin" },
-        bottom: { style: "thin" },
-        right: { style: "thin" },
+        top: { style: 'thin' },
+        left: { style: 'thin' },
+        bottom: { style: 'thin' },
+        right: { style: 'thin' }
       };
     });
 
-    // Add data rows
-    collectorStats.forEach((collector, index) => {
-      const rowNumber = index + 4; // Starting from row 4 due to title and headers
+    // Data rows with enhanced calculations
+    const dataStartRow = 5;
+    const totalCollected = collectorStats.reduce((sum, stat) => sum + stat.total_collected, 0);
+    const totalPayments = collectorStats.reduce((sum, stat) => sum + stat.payment_count, 0);
+
+    collectorStats.forEach((stat, index) => {
+      const rowNum = dataStartRow + index;
+      const averagePerPayment = stat.payment_count > 0 ? stat.total_collected / stat.payment_count : 0;
+      const efficiency = totalCollected > 0 ? (stat.total_collected / totalCollected) * 100 : 0;
       
-      const row = worksheet.addRow({
-        collector_code: collector.collector_code,
-        name: collector.name,
-        payment_count: collector.paymentCount,
-        total_collected: collector.totalCollected,
-      });
-      
-      // Style each row
-      row.eachCell((cell) => {
+      const row = worksheet.addRow([
+        stat.collector_code,
+        stat.name,
+        stat.payment_count,
+        stat.total_collected,
+        averagePerPayment,
+        efficiency / 100
+      ]);
+
+      // Format cells and add borders
+      row.eachCell((cell, colNumber) => {
         cell.border = {
-          top: { style: "thin" },
-          left: { style: "thin" },
-          bottom: { style: "thin" },
-          right: { style: "thin" },
+          top: { style: 'thin' },
+          left: { style: 'thin' },
+          bottom: { style: 'thin' },
+          right: { style: 'thin' }
         };
+
+        // Format specific columns
+        if (colNumber === 3) {
+          cell.numFmt = '#,##0';
+          cell.alignment = { horizontal: 'center' };
+        } else if (colNumber === 4 || colNumber === 5) {
+          cell.numFmt = '"Rp "#,##0';
+          cell.alignment = { horizontal: 'right' };
+        } else if (colNumber === 6) {
+          cell.numFmt = '0.0%';
+          cell.alignment = { horizontal: 'right' };
+        }
       });
     });
 
-    // Add summary section with formulas
-    const lastDataRow = collectorStats.length + 3; // Adjusted for title
-    const summaryStartRow = lastDataRow + 2;
-    
-    worksheet.addRow([]);
-    
-    // Summary header
-    const summaryHeaderRow = worksheet.addRow(['RINGKASAN']);
-    worksheet.mergeCells(`A${summaryStartRow}:D${summaryStartRow}`);
-    const summaryHeaderCell = worksheet.getCell(`A${summaryStartRow}`);
-    summaryHeaderCell.font = { bold: true, size: 14 };
-    summaryHeaderCell.alignment = { horizontal: 'center' };
-    summaryHeaderCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD9E2F3' } };
+    // Total row with formulas
+    const totalRowNum = dataStartRow + collectorStats.length;
+    const totalRow = worksheet.addRow([
+      '',
+      'TOTAL',
+      { formula: `SUM(C${dataStartRow}:C${totalRowNum - 1})` },
+      { formula: `SUM(D${dataStartRow}:D${totalRowNum - 1})` },
+      { formula: `AVERAGE(E${dataStartRow}:E${totalRowNum - 1})` },
+      '100.0%'
+    ]);
 
-    // Summary rows with formulas
-    const summaryRows = [
-      ['Total Kolektor:', { formula: `COUNTA(A4:A${lastDataRow})` }, '', ''],
-      ['Total Tagihan:', { formula: `SUM(C4:C${lastDataRow})` }, '', ''],
-      ['Total Tertagih:', { formula: `SUM(D4:D${lastDataRow})` }, '', ''],
-      ['Rata² per Kolektor:', { formula: `AVERAGE(D4:D${lastDataRow})` }, '', ''],
+    // Style total row
+    totalRow.font = { bold: true };
+    totalRow.eachCell((cell, colNumber) => {
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD9E2F3' } };
+      cell.border = {
+        top: { style: 'double' },
+        left: { style: 'thin' },
+        bottom: { style: 'double' },
+        right: { style: 'thin' }
+      };
+
+      if (colNumber === 3) {
+        cell.numFmt = '#,##0';
+        cell.alignment = { horizontal: 'center' };
+      } else if (colNumber === 4 || colNumber === 5) {
+        cell.numFmt = '"Rp "#,##0';
+        cell.alignment = { horizontal: 'right' };
+      } else if (colNumber === 6) {
+        cell.alignment = { horizontal: 'right' };
+      }
+    });
+
+    // Set column widths
+    worksheet.getColumn(1).width = 18; // Kode Kolektor
+    worksheet.getColumn(2).width = 30; // Nama
+    worksheet.getColumn(3).width = 18; // Jumlah Tagihan
+    worksheet.getColumn(4).width = 22; // Total Tertagih
+    worksheet.getColumn(5).width = 20; // Rata-rata
+    worksheet.getColumn(6).width = 15; // Efisiensi
+
+    // ============ Sheet 2: Analisis Ringkasan ============
+    const summarySheet = workbook.addWorksheet("Ringkasan Analisis");
+    
+    summarySheet.mergeCells('A1:C1');
+    const summaryTitleCell = summarySheet.getCell('A1');
+    summaryTitleCell.value = `RINGKASAN ANALISIS PERFORMA - ${format(selectedDate, "MMMM yyyy", { locale: localeId }).toUpperCase()}`;
+    summaryTitleCell.font = { bold: true, size: 14 };
+    summaryTitleCell.alignment = { horizontal: 'center' };
+
+    // Summary metrics
+    summarySheet.addRow([]);
+    summarySheet.addRow([]);
+    
+    const summaryData = [
+      ['Metrik', 'Nilai', 'Keterangan'],
+      ['Total Kolektor Aktif', collectorStats.length, 'Jumlah kolektor yang melakukan penagihan'],
+      ['Total Transaksi Penagihan', totalPayments, 'Jumlah seluruh transaksi penagihan'],
+      ['Total Nilai Tertagih', totalCollected, 'Total nilai yang berhasil ditagih'],
+      ['Rata-rata per Kolektor', totalCollected / collectorStats.length, 'Rata-rata penagihan per kolektor'],
+      ['Rata-rata per Transaksi', totalCollected / totalPayments, 'Rata-rata nilai per transaksi'],
+      ['Kolektor Terbaik', collectorStats.reduce((best, current) => current.total_collected > best.total_collected ? current : best, collectorStats[0])?.name || '-', 'Kolektor dengan penagihan tertinggi']
     ];
 
-    summaryRows.forEach(rowData => {
-      const row = worksheet.addRow(rowData);
-      row.getCell(1).font = { bold: true };
-      row.getCell(2).font = { bold: true };
+    summaryData.forEach((rowData, index) => {
+      const row = summarySheet.addRow(rowData);
       
-      row.eachCell((cell) => {
-        cell.border = {
-          top: { style: "thin" },
-          left: { style: "thin" },
-          bottom: { style: "thin" },
-          right: { style: "thin" },
-        };
-      });
+      if (index === 0) {
+        // Header styling
+        row.font = { bold: true };
+        row.eachCell((cell) => {
+          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4472C4' } };
+          cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+          cell.alignment = { horizontal: 'center' };
+        });
+      } else {
+        // Data formatting
+        if (index >= 3 && index <= 5) {
+          row.getCell(2).numFmt = '"Rp "#,##0';
+        } else if (index === 2) {
+          row.getCell(2).numFmt = '#,##0';
+        }
+      }
     });
 
-    // Format number columns
-    worksheet.getColumn("payment_count").numFmt = "#,##0";
-    worksheet.getColumn("total_collected").numFmt = '"Rp "#,##0';
+    // Set column widths
+    summarySheet.getColumn('A').width = 25;
+    summarySheet.getColumn('B').width = 20;
+    summarySheet.getColumn('C').width = 35;
 
+    // Generate and download file
     const buffer = await workbook.xlsx.writeBuffer();
     const blob = new Blob([buffer], {
       type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -241,10 +317,10 @@ export default function Collector() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `performa_kolektor_${format(selectedDate, "yyyy-MM")}.xlsx`;
+    a.download = `performa_kolektor_lengkap_${format(selectedDate, "yyyy-MM")}.xlsx`;
     a.click();
     URL.revokeObjectURL(url);
-    toast.success("Data berhasil diekspor");
+    toast.success("Data berhasil diekspor dengan analisis lengkap");
   };
 
   return (

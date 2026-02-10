@@ -202,21 +202,89 @@ export const exportYearlyReportToExcel = async (
   });
   agentSheet.getColumn(9).width = 15;
 
-  // ============ Sheet 4: Rumus Kalkulasi ============
+  // ============ Sheet 4: Analisis Trend Penagihan ============
+  const trendSheet = workbook.addWorksheet('Trend Penagihan');
+  
+  trendSheet.mergeCells('A1:D1');
+  const trendTitleCell = trendSheet.getCell('A1');
+  trendTitleCell.value = `ANALISIS TREND PENAGIHAN ${year}`;
+  trendTitleCell.font = { bold: true, size: 14 };
+  trendTitleCell.alignment = { horizontal: 'center' };
+
+  // Trend Analysis Headers
+  const trendHeaders = ['Bulan', 'Total Penagihan', 'Rata-rata Harian', 'Target vs Realisasi'];
+  const trendHeaderRow = trendSheet.addRow(['']);
+  trendSheet.addRow(['']);
+  const trendDataHeaderRow = trendSheet.addRow(trendHeaders);
+  
+  trendDataHeaderRow.font = { bold: true };
+  trendDataHeaderRow.eachCell((cell) => {
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4472C4' } };
+    cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+    cell.alignment = { horizontal: 'center' };
+  });
+
+  // Calculate trend data from monthly breakdown
+  const trendStartRow = 4;
+  data.monthly_breakdown.forEach((month, index) => {
+    const rowNum = trendStartRow + index;
+    const daysInMonth = new Date(year, index + 1, 0).getDate();
+    const averageDaily = month.collected / daysInMonth;
+    const targetRealization = (month.collected / month.total_omset) * 100;
+
+    const row = trendSheet.addRow([
+      month.monthLabel,
+      month.collected,
+      averageDaily,
+      targetRealization / 100,
+    ]);
+
+    // Format cells
+    row.getCell(2).numFmt = '"Rp "#,##0';
+    row.getCell(3).numFmt = '"Rp "#,##0';
+    row.getCell(4).numFmt = '0.0%';
+  });
+
+  // Add trend summary
+  const trendSummaryRow = trendStartRow + data.monthly_breakdown.length + 1;
+  trendSheet.getCell(`A${trendSummaryRow}`).value = 'RINGKASAN TREND:';
+  trendSheet.getCell(`A${trendSummaryRow}`).font = { bold: true };
+
+  trendSheet.getCell(`A${trendSummaryRow + 1}`).value = 'Total Penagihan Tahun:';
+  trendSheet.getCell(`B${trendSummaryRow + 1}`).value = data.total_collected;
+  trendSheet.getCell(`B${trendSummaryRow + 1}`).numFmt = '"Rp "#,##0';
+
+  trendSheet.getCell(`A${trendSummaryRow + 2}`).value = 'Rata-rata Bulanan:';
+  trendSheet.getCell(`B${trendSummaryRow + 2}`).value = data.total_collected / 12;
+  trendSheet.getCell(`B${trendSummaryRow + 2}`).numFmt = '"Rp "#,##0';
+
+  trendSheet.getCell(`A${trendSummaryRow + 3}`).value = 'Tingkat Penagihan:';
+  trendSheet.getCell(`B${trendSummaryRow + 3}`).value = data.collection_rate / 100;
+  trendSheet.getCell(`B${trendSummaryRow + 3}`).numFmt = '0.0%';
+
+  // Set column widths for trend sheet
+  trendSheet.getColumn('A').width = 15;
+  trendSheet.getColumn('B').width = 20;
+  trendSheet.getColumn('C').width = 20;
+  trendSheet.getColumn('D').width = 20;
+
+  // ============ Sheet 5: Rumus Kalkulasi ============
   const formulaSheet = workbook.addWorksheet('Rumus Kalkulasi');
   
   formulaSheet.mergeCells('A1:C1');
   formulaSheet.getCell('A1').value = 'RUMUS KALKULASI BISNIS';
   formulaSheet.getCell('A1').font = { bold: true, size: 14 };
+  formulaSheet.getCell('A1').alignment = { horizontal: 'center' };
 
   const formulas = [
     ['Total Pinjaman (Omset)', '= Modal × 1.2', 'Margin keuntungan 20%'],
     ['Keuntungan Kotor', '= Omset - Modal', 'Selisih nilai pinjaman dan modal'],
     ['Cicilan Harian', '= Omset ÷ Tenor', 'Pembagian merata per hari kerja'],
-    ['Komisi Agen', '= Omset × 5%', 'Komisi standar per kontrak'],
+    ['Komisi Agen', '= Omset × Persentase Komisi', 'Komisi berdasarkan tier dinamis'],
     ['Keuntungan Bersih', '= Profit Kotor - Komisi - Operasional', 'Laba setelah semua biaya'],
     ['Margin Keuntungan', '= (Profit Kotor ÷ Omset) × 100%', 'Persentase margin dari omset'],
     ['Tingkat Penagihan', '= Tertagih ÷ (Tertagih + Sisa) × 100%', 'Efektivitas penagihan'],
+    ['Trend Analysis', '= Rata-rata Harian × Hari dalam Bulan', 'Proyeksi penagihan bulanan'],
   ];
 
   formulas.forEach((row, index) => {
@@ -229,9 +297,56 @@ export const exportYearlyReportToExcel = async (
     formulaSheet.getCell(`C${rowNum}`).font = { color: { argb: 'FF666666' } };
   });
 
-  formulaSheet.getColumn('A').width = 25;
-  formulaSheet.getColumn('B').width = 40;
-  formulaSheet.getColumn('C').width = 35;
+  formulaSheet.getColumn('A').width = 30;
+  formulaSheet.getColumn('B').width = 35;
+  formulaSheet.getColumn('C').width = 40;
+
+  // ============ Sheet 6: Status Kontrak ============
+  const statusSheet = workbook.addWorksheet('Status Kontrak');
+  
+  statusSheet.mergeCells('A1:C1');
+  const statusTitleCell = statusSheet.getCell('A1');
+  statusTitleCell.value = `ANALISIS STATUS KONTRAK ${year}`;
+  statusTitleCell.font = { bold: true, size: 14 };
+  statusTitleCell.alignment = { horizontal: 'center' };
+
+  // Status breakdown
+  const statusData = [
+    ['Status', 'Jumlah Kontrak', 'Persentase'],
+    ['Completed', data.completed_count, (data.completed_count / data.contracts_count) * 100],
+    ['Lancar', data.lancar_count, (data.lancar_count / data.contracts_count) * 100],
+    ['Kurang Lancar', data.kurang_lancar_count, (data.kurang_lancar_count / data.contracts_count) * 100],
+    ['Macet', data.macet_count, (data.macet_count / data.contracts_count) * 100],
+    ['TOTAL', data.contracts_count, 100],
+  ];
+
+  statusSheet.addRow([]);
+  statusSheet.addRow([]);
+
+  statusData.forEach((rowData, index) => {
+    const row = statusSheet.addRow(rowData);
+    
+    if (index === 0 || index === statusData.length - 1) {
+      // Header and total row styling
+      row.font = { bold: true };
+      row.eachCell((cell) => {
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: index === 0 ? 'FF4472C4' : 'FFD9E2F3' } };
+        if (index === 0) {
+          cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+        }
+      });
+    }
+    
+    // Format percentage column
+    if (index > 0) {
+      row.getCell(3).numFmt = '0.0%';
+    }
+  });
+
+  // Set column widths
+  statusSheet.getColumn('A').width = 15;
+  statusSheet.getColumn('B').width = 15;
+  statusSheet.getColumn('C').width = 15;
 
   // Generate and download file
   const buffer = await workbook.xlsx.writeBuffer();
@@ -239,7 +354,7 @@ export const exportYearlyReportToExcel = async (
   const url = window.URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = `Laporan_Tahunan_${year}_Management_System_Kredit.xlsx`;
+  link.download = `Laporan_Keuangan_Lengkap_${year}_Management_System_Kredit.xlsx`;
   link.click();
   window.URL.revokeObjectURL(url);
 };

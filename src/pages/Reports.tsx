@@ -95,17 +95,19 @@ export default function Reports() {
       pageSetup: { paperSize: 9, orientation: 'landscape' }
     });
 
-    // Title row
+    // Title row with enhanced styling
     worksheet.mergeCells('A1:H1');
     const titleCell = worksheet.getCell('A1');
-    titleCell.value = 'LAPORAN PEMBAYARAN';
+    titleCell.value = 'LAPORAN PEMBAYARAN LENGKAP';
     titleCell.font = { bold: true, size: 16 };
     titleCell.alignment = { horizontal: 'center' };
+    titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4472C4' } };
+    titleCell.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 16 };
 
-    // Period row
+    // Period row with summary info
     worksheet.mergeCells('A2:H2');
     const periodCell = worksheet.getCell('A2');
-    periodCell.value = `Periode: ${formatDate(dateFrom)} - ${formatDate(dateTo)}`;
+    periodCell.value = `Periode: ${formatDate(dateFrom)} - ${formatDate(dateTo)} | Total: ${formatRupiah(totalAmount)} | ${filteredPayments.length} Transaksi`;
     periodCell.font = { size: 12 };
     periodCell.alignment = { horizontal: 'center' };
 
@@ -261,7 +263,7 @@ export default function Reports() {
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `laporan-pembayaran-${dateFrom}-${dateTo}.xlsx`;
+    link.download = `laporan-pembayaran-lengkap-${dateFrom}-${dateTo}.xlsx`;
     link.click();
     window.URL.revokeObjectURL(url);
     } catch (error) {
