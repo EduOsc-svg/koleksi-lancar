@@ -10,6 +10,8 @@ import { usePagination } from "@/hooks/usePagination";
 import { ManifestFilters } from "@/components/collection/ManifestFilters";
 import { ManifestTable } from "@/components/collection/ManifestTable";
 import { PaymentForm } from "@/components/collection/PaymentForm";
+import { addToQueue } from "@/lib/offlineQueue";
+import { notifyQueueUpdated } from "@/hooks/useOfflineQueue";
 
 export default function Collection() {
   const { data: collectors } = useCollectors();
@@ -59,12 +61,20 @@ export default function Collection() {
     collector_id: string | null;
     notes: string;
   }) => {
+    if (!navigator.onLine) {
+      addToQueue('payment', data as unknown as Record<string, unknown>);
+      notifyQueueUpdated();
+      toast.info(`Pembayaran kupon #${data.installment_index} disimpan offline. Akan disinkronkan saat online.`);
+      return;
+    }
     try {
       await createPayment.mutateAsync(data);
       toast.success(`Pembayaran kupon #${data.installment_index} berhasil dicatat`);
     } catch {
-      toast.error("Gagal menyimpan data");
-      throw new Error("Payment failed");
+      // Fallback to offline queue on network error
+      addToQueue('payment', data as unknown as Record<string, unknown>);
+      notifyQueueUpdated();
+      toast.info("Koneksi gagal. Pembayaran disimpan offline.");
     }
   };
 
@@ -77,13 +87,21 @@ export default function Collection() {
     collector_id: string | null;
     notes: string;
   }) => {
+    if (!navigator.onLine) {
+      addToQueue('bulk_payment', data as unknown as Record<string, unknown>);
+      notifyQueueUpdated();
+      const endIndex = data.start_index + data.coupon_count - 1;
+      toast.info(`Pembayaran kupon #${data.start_index}-#${endIndex} disimpan offline.`);
+      return;
+    }
     try {
       await createBulkPayment.mutateAsync(data);
       const endIndex = data.start_index + data.coupon_count - 1;
       toast.success(`Pembayaran kupon #${data.start_index}-#${endIndex} (${data.coupon_count} kupon) berhasil dicatat`);
     } catch {
-      toast.error("Gagal menyimpan data bulk payment");
-      throw new Error("Bulk payment failed");
+      addToQueue('bulk_payment', data as unknown as Record<string, unknown>);
+      notifyQueueUpdated();
+      toast.info("Koneksi gagal. Pembayaran disimpan offline.");
     }
   };
 
