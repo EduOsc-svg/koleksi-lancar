@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useLogActivity } from './useActivityLog';
+import { saveToCache, loadFromCache } from '@/lib/queryCache';
 
 export interface SalesAgent {
   id: string;
@@ -13,16 +14,21 @@ export interface SalesAgent {
 }
 
 export const useSalesAgents = () => {
+  const queryKey = ['sales_agents'];
   return useQuery({
-    queryKey: ['sales_agents'],
+    queryKey,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('sales_agents')
         .select('*')
         .order('name');
       if (error) throw error;
-      return data as SalesAgent[];
+      const result = data as SalesAgent[];
+      saveToCache(queryKey, result);
+      return result;
     },
+    initialData: () => loadFromCache<SalesAgent[]>(queryKey),
+    initialDataUpdatedAt: 0,
   });
 };
 
