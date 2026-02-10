@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useLogActivity } from './useActivityLog';
+import { saveToCache, loadFromCache } from '@/lib/queryCache';
 
 export interface Collector {
   id: string;
@@ -11,16 +12,21 @@ export interface Collector {
 }
 
 export const useCollectors = () => {
+  const queryKey = ['collectors'];
   return useQuery({
-    queryKey: ['collectors'],
+    queryKey,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('collectors')
         .select('*')
         .order('collector_code');
       if (error) throw error;
-      return data as Collector[];
+      const result = data as Collector[];
+      saveToCache(queryKey, result);
+      return result;
     },
+    initialData: () => loadFromCache<Collector[]>(queryKey),
+    initialDataUpdatedAt: 0,
   });
 };
 

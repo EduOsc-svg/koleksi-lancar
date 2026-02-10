@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useLogActivity } from './useActivityLog';
+import { saveToCache, loadFromCache } from '@/lib/queryCache';
 
 export interface CreditContract {
   id: string;
@@ -31,8 +32,9 @@ export interface ContractWithCustomer extends CreditContract {
 }
 
 export const useContracts = (status?: string) => {
+  const queryKey = ['credit_contracts', status];
   return useQuery({
-    queryKey: ['credit_contracts', status],
+    queryKey,
     queryFn: async () => {
       let query = supabase
         .from('credit_contracts')
@@ -45,8 +47,12 @@ export const useContracts = (status?: string) => {
       
       const { data, error } = await query;
       if (error) throw error;
-      return data as ContractWithCustomer[];
+      const result = data as ContractWithCustomer[];
+      saveToCache(queryKey, result);
+      return result;
     },
+    initialData: () => loadFromCache<ContractWithCustomer[]>(queryKey),
+    initialDataUpdatedAt: 0, // always refetch when online
   });
 };
 
