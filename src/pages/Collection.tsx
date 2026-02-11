@@ -1,15 +1,17 @@
 import { useState, useEffect } from "react";
-import { FileText, CreditCard } from "lucide-react";
+import { FileText, CreditCard, AlertCircle } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 
 import { useCollectors } from "@/hooks/useCollectors";
 import { useContracts } from "@/hooks/useContracts";
 import { useCreatePayment, useCreateBulkPayment } from "@/hooks/usePayments";
+import { useOutstandingCoupons } from "@/hooks/useOutstandingCoupons";
 import { usePagination } from "@/hooks/usePagination";
 import { ManifestFilters } from "@/components/collection/ManifestFilters";
 import { ManifestTable } from "@/components/collection/ManifestTable";
 import { PaymentForm } from "@/components/collection/PaymentForm";
+import { OutstandingCouponsTable } from "@/components/collection/OutstandingCouponsTable";
 import { addToQueue } from "@/lib/offlineQueue";
 import { notifyQueueUpdated } from "@/hooks/useOfflineQueue";
 
@@ -18,6 +20,7 @@ export default function Collection() {
   const { data: contracts, isLoading: contractsLoading } = useContracts("active");
   const createPayment = useCreatePayment();
   const createBulkPayment = useCreateBulkPayment();
+  const { data: outstandingData, isLoading: outstandingLoading } = useOutstandingCoupons();
 
   // Manifest state
   const [searchQuery, setSearchQuery] = useState("");
@@ -115,7 +118,7 @@ export default function Collection() {
 
       {/* Tabs */}
       <Tabs defaultValue="manifest" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 max-w-md">
+        <TabsList className="grid w-full grid-cols-3 max-w-xl">
           <TabsTrigger value="manifest" className="gap-2">
             <FileText className="h-4 w-4" />
             Manifest
@@ -123,6 +126,10 @@ export default function Collection() {
           <TabsTrigger value="payment" className="gap-2">
             <CreditCard className="h-4 w-4" />
             Input Pembayaran
+          </TabsTrigger>
+          <TabsTrigger value="outstanding" className="gap-2">
+            <AlertCircle className="h-4 w-4" />
+            Belum Bayar
           </TabsTrigger>
         </TabsList>
 
@@ -155,6 +162,13 @@ export default function Collection() {
               isSubmitting={createPayment.isPending || createBulkPayment.isPending}
             />
           </div>
+        </TabsContent>
+
+        <TabsContent value="outstanding" className="space-y-4 mt-6">
+          <OutstandingCouponsTable
+            data={outstandingData}
+            isLoading={outstandingLoading}
+          />
         </TabsContent>
       </Tabs>
     </div>
