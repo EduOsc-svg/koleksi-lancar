@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { FileX, Download } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,11 @@ import { usePagination } from "@/hooks/usePagination";
 import { OutstandingCouponSummary } from "@/hooks/useOutstandingCoupons";
 import { exportOutstandingCouponsToExcel } from "@/lib/exportOutstandingCoupons";
 import { toast } from "sonner";
+import { SearchInput } from "@/components/ui/search-input";
+import { Label } from "@/components/ui/label";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 
 interface Props {
   data: OutstandingCouponSummary[] | undefined;
@@ -18,6 +24,23 @@ interface Props {
 }
 
 export function OutstandingCouponsTable({ data, isLoading }: Props) {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+
+  // Filter data
+  const filteredData = (data || []).filter((row) => {
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase().trim();
+      if (
+        !row.customer_name.toLowerCase().includes(q) &&
+        !row.contract_ref.toLowerCase().includes(q)
+      ) return false;
+    }
+    if (statusFilter === "unpaid_only") return row.coupons_unpaid > 0;
+    if (statusFilter === "fully_paid") return row.coupons_unpaid === 0;
+    return true;
+  });
+
   const ITEMS_PER_PAGE = 10;
   const {
     paginatedItems,
@@ -25,12 +48,12 @@ export function OutstandingCouponsTable({ data, isLoading }: Props) {
     goToPage,
     totalPages,
     totalItems,
-  } = usePagination(data || [], ITEMS_PER_PAGE);
+  } = usePagination(filteredData, ITEMS_PER_PAGE);
 
   const handleExport = async () => {
-    if (!data || data.length === 0) return;
+    if (filteredData.length === 0) return;
     try {
-      await exportOutstandingCouponsToExcel(data);
+      await exportOutstandingCouponsToExcel(filteredData);
       toast.success("File Excel berhasil diunduh");
     } catch {
       toast.error("Gagal mengekspor Excel");
@@ -67,30 +90,79 @@ export function OutstandingCouponsTable({ data, isLoading }: Props) {
     );
   }
 
-  if (!data || data.length === 0) {
+  if (!data || filteredData.length === 0) {
     return (
-      <div className="border rounded-lg p-12">
-        <div className="flex flex-col items-center justify-center text-center">
-          <div className="rounded-full bg-muted p-4 mb-4">
-            <FileX className="h-8 w-8 text-muted-foreground" />
+      <div className="space-y-4">
+        {/* Filters even when empty */}
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex-1">
+            <SearchInput
+              value={searchQuery}
+              onChange={setSearchQuery}
+              placeholder="Cari nama konsumen atau kode kontrak..."
+            />
           </div>
-          <h3 className="font-semibold text-lg mb-1">Tidak Ada Kupon Tertunggak</h3>
-          <p className="text-muted-foreground text-sm max-w-sm">
-            Semua kupon yang jatuh tempo sudah terbayar.
-          </p>
+          <div className="w-full sm:w-48">
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="Semua Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Semua</SelectItem>
+                <SelectItem value="unpaid_only">Ada Tunggakan</SelectItem>
+                <SelectItem value="fully_paid">Lunas</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <div className="border rounded-lg p-12">
+          <div className="flex flex-col items-center justify-center text-center">
+            <div className="rounded-full bg-muted p-4 mb-4">
+              <FileX className="h-8 w-8 text-muted-foreground" />
+            </div>
+            <h3 className="font-semibold text-lg mb-1">Tidak Ada Kupon Tertunggak</h3>
+            <p className="text-muted-foreground text-sm max-w-sm">
+              {searchQuery || statusFilter !== "all"
+                ? "Tidak ada data yang cocok dengan filter."
+                : "Semua kupon yang jatuh tempo sudah terbayar."}
+            </p>
+          </div>
         </div>
       </div>
     );
   }
 
-  // Totals
-  const totalCouponsOut = data.reduce((s, r) => s + r.total_coupons_issued, 0);
-  const totalPaid = data.reduce((s, r) => s + r.coupons_paid, 0);
-  const totalUnpaid = data.reduce((s, r) => s + r.coupons_unpaid, 0);
-  const totalUnpaidAmount = data.reduce((s, r) => s + r.total_unpaid_amount, 0);
+  // Totals based on filtered data
+  const totalCouponsOut = filteredData.reduce((s, r) => s + r.total_coupons_issued, 0);
+  const totalPaid = filteredData.reduce((s, r) => s + r.coupons_paid, 0);
+  const totalUnpaid = filteredData.reduce((s, r) => s + r.coupons_unpaid, 0);
+  const totalUnpaidAmount = filteredData.reduce((s, r) => s + r.total_unpaid_amount, 0);
 
   return (
     <div className="space-y-4">
+      {/* Filters */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex-1">
+          <SearchInput
+            value={searchQuery}
+            onChange={setSearchQuery}
+            placeholder="Cari nama konsumen atau kode kontrak..."
+          />
+        </div>
+        <div className="w-full sm:w-48">
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger>
+              <SelectValue placeholder="Semua Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Semua</SelectItem>
+              <SelectItem value="unpaid_only">Ada Tunggakan</SelectItem>
+              <SelectItem value="fully_paid">Lunas</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
           Menampilkan {totalItems} kontrak dengan kupon jatuh tempo
