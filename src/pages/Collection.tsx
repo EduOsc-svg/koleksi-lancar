@@ -168,27 +168,22 @@ export default function Collection() {
           </div>
         </TabsContent>
 
-        <TabsContent value="outstanding" className="space-y-4 mt-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2">
-              <OutstandingCouponsTable
-                data={outstandingData}
-                isLoading={outstandingLoading}
-                handovers={handovers}
-              />
-            </div>
-            <div>
-              <HandoverCouponForm
-                contracts={contracts}
-                collectors={collectors}
-                onSubmit={async (data) => {
-                  await createHandover.mutateAsync(data);
-                  toast.success(`Serah terima ${data.coupon_count} kupon berhasil dicatat`);
-                }}
-                isSubmitting={createHandover.isPending}
-              />
-            </div>
-          </div>
+        <TabsContent value="outstanding" className="space-y-6 mt-6">
+          <HandoverCouponForm
+            contracts={contracts}
+            collectors={collectors}
+            onSubmit={async (data) => {
+              await createHandover.mutateAsync(data);
+              toast.success(`Serah terima ${data.coupon_count} kupon berhasil dicatat`);
+            }}
+            isSubmitting={createHandover.isPending}
+          />
+
+          <OutstandingCouponsTable
+            data={outstandingData}
+            isLoading={outstandingLoading}
+            handovers={handovers}
+          />
         </TabsContent>
       </Tabs>
     </div>
