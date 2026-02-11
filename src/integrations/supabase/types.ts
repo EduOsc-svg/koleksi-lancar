@@ -197,6 +197,64 @@ export type Database = {
         }
         Relationships: []
       }
+      coupon_handovers: {
+        Row: {
+          collector_id: string
+          contract_id: string
+          coupon_count: number
+          created_at: string
+          end_index: number
+          handover_date: string
+          id: string
+          notes: string | null
+          start_index: number
+        }
+        Insert: {
+          collector_id: string
+          contract_id: string
+          coupon_count: number
+          created_at?: string
+          end_index: number
+          handover_date?: string
+          id?: string
+          notes?: string | null
+          start_index: number
+        }
+        Update: {
+          collector_id?: string
+          contract_id?: string
+          coupon_count?: number
+          created_at?: string
+          end_index?: number
+          handover_date?: string
+          id?: string
+          notes?: string | null
+          start_index?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coupon_handovers_collector_id_fkey"
+            columns: ["collector_id"]
+            isOneToOne: false
+            referencedRelation: "collectors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coupon_handovers_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "credit_contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coupon_handovers_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "invoice_details"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       credit_contracts: {
         Row: {
           collector_id: string | null

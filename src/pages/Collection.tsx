@@ -8,10 +8,12 @@ import { useContracts } from "@/hooks/useContracts";
 import { useCreatePayment, useCreateBulkPayment } from "@/hooks/usePayments";
 import { useOutstandingCoupons } from "@/hooks/useOutstandingCoupons";
 import { usePagination } from "@/hooks/usePagination";
+import { useCreateCouponHandover, useCouponHandovers } from "@/hooks/useCouponHandovers";
 import { ManifestFilters } from "@/components/collection/ManifestFilters";
 import { ManifestTable } from "@/components/collection/ManifestTable";
 import { PaymentForm } from "@/components/collection/PaymentForm";
 import { OutstandingCouponsTable } from "@/components/collection/OutstandingCouponsTable";
+import { HandoverCouponForm } from "@/components/collection/HandoverCouponForm";
 import { addToQueue } from "@/lib/offlineQueue";
 import { notifyQueueUpdated } from "@/hooks/useOfflineQueue";
 
@@ -21,6 +23,8 @@ export default function Collection() {
   const createPayment = useCreatePayment();
   const createBulkPayment = useCreateBulkPayment();
   const { data: outstandingData, isLoading: outstandingLoading } = useOutstandingCoupons();
+  const createHandover = useCreateCouponHandover();
+  const { data: handovers } = useCouponHandovers();
 
   // Manifest state
   const [searchQuery, setSearchQuery] = useState("");
@@ -165,10 +169,26 @@ export default function Collection() {
         </TabsContent>
 
         <TabsContent value="outstanding" className="space-y-4 mt-6">
-          <OutstandingCouponsTable
-            data={outstandingData}
-            isLoading={outstandingLoading}
-          />
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2">
+              <OutstandingCouponsTable
+                data={outstandingData}
+                isLoading={outstandingLoading}
+                handovers={handovers}
+              />
+            </div>
+            <div>
+              <HandoverCouponForm
+                contracts={contracts}
+                collectors={collectors}
+                onSubmit={async (data) => {
+                  await createHandover.mutateAsync(data);
+                  toast.success(`Serah terima ${data.coupon_count} kupon berhasil dicatat`);
+                }}
+                isSubmitting={createHandover.isPending}
+              />
+            </div>
+          </div>
         </TabsContent>
       </Tabs>
     </div>

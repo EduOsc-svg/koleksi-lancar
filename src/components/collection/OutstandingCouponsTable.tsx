@@ -17,13 +17,16 @@ import { Label } from "@/components/ui/label";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { CouponHandover } from "@/hooks/useCouponHandovers";
+import { formatDate } from "@/lib/format";
 
 interface Props {
   data: OutstandingCouponSummary[] | undefined;
   isLoading: boolean;
+  handovers?: CouponHandover[];
 }
 
-export function OutstandingCouponsTable({ data, isLoading }: Props) {
+export function OutstandingCouponsTable({ data, isLoading, handovers }: Props) {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
@@ -234,6 +237,50 @@ export function OutstandingCouponsTable({ data, isLoading }: Props) {
           onPageChange={goToPage}
           totalItems={totalItems}
         />
+      )}
+
+      {/* Riwayat Serah Terima */}
+      {handovers && handovers.length > 0 && (
+        <div className="space-y-2">
+          <h3 className="font-semibold text-sm">Riwayat Serah Terima Kupon</h3>
+          <div className="border rounded-lg overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/50">
+                  <TableHead className="font-semibold">Tanggal</TableHead>
+                  <TableHead className="font-semibold">Kolektor</TableHead>
+                  <TableHead className="font-semibold">Kontrak</TableHead>
+                  <TableHead className="font-semibold">Konsumen</TableHead>
+                  <TableHead className="font-semibold text-center">Kupon</TableHead>
+                  <TableHead className="font-semibold text-right">Total Nominal</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {handovers.slice(0, 20).map((h) => {
+                  const amount = h.credit_contracts?.daily_installment_amount || 0;
+                  return (
+                    <TableRow key={h.id}>
+                      <TableCell className="text-sm">{formatDate(h.handover_date)}</TableCell>
+                      <TableCell className="text-sm">
+                        {h.collectors?.name} <span className="text-muted-foreground">({h.collectors?.collector_code})</span>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="font-mono text-xs">{h.credit_contracts?.contract_ref}</Badge>
+                      </TableCell>
+                      <TableCell className="text-sm">{h.credit_contracts?.customers?.name || '-'}</TableCell>
+                      <TableCell className="text-center text-sm">
+                        #{h.start_index}-#{h.end_index} ({h.coupon_count})
+                      </TableCell>
+                      <TableCell className="text-right text-sm font-medium">
+                        {formatRupiah(h.coupon_count * amount)}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
+        </div>
       )}
     </div>
   );
