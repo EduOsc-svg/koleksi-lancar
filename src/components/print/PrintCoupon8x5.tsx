@@ -1,11 +1,11 @@
 import React from 'react';
 import { createPortal } from "react-dom";
 
-// Interface definisi tipe data (sesuaikan dengan project Anda)
+// --- Tipe Data ---
 export interface InstallmentCoupon {
   id: string;
   installment_index: number;
-  due_date: string; // atau Date
+  due_date: string; 
   amount: number;
   status?: string;
 }
@@ -13,14 +13,12 @@ export interface InstallmentCoupon {
 interface ContractInfo {
   contract_ref: string;
   tenor_days: number;
-  daily_installment_amount: number;
   customers: {
     name: string;
     address: string | null;
     business_address?: string | null;
   } | null;
   sales_agents?: { agent_code: string } | null;
-  collectors?: { collector_code: string } | null;
 }
 
 interface PrintCoupon8x5Props {
@@ -29,7 +27,8 @@ interface PrintCoupon8x5Props {
 }
 
 export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
-  // Inject custom print styles saat komponen dimount
+  
+  // --- Inject CSS ---
   React.useEffect(() => {
     const printStyles = `
       /* =========================================
@@ -44,13 +43,15 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
       }
 
       /* =========================================
-         2. MODE PREVIEW (LAYAR)
+         2. PENGATURAN HALAMAN (GRID SYSTEM)
          ========================================= */
+      /* Mode Layar */
       @media screen {
         body {
           background-color: #525659;
           display: flex;
-          justify-content: center;
+          flex-direction: column;
+          align-items: center;
           padding: 40px;
         }
         .print-coupon-wrapper {
@@ -58,19 +59,28 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
           height: 210mm;
           background: white;
           box-shadow: 0 0 15px rgba(0,0,0,0.5);
-          padding: 8mm;
+          padding: 5mm; 
+          margin-bottom: 30px;
           display: flex;
           justify-content: center;
           align-items: center;
+          position: relative;
         }
-        .coupon-card { 
-          border: 1px dashed #ccc; 
+        
+        /* Tombol Print */
+        .print-btn-container {
+            position: fixed; bottom: 30px; right: 30px; z-index: 9999;
         }
+        .print-btn {
+            background-color: #dc3545; color: white; border: none;
+            padding: 15px 30px; border-radius: 50px; font-weight: bold; cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            font-family: sans-serif; display: flex; align-items: center; gap: 8px;
+        }
+        .print-btn:hover { background-color: #c82333; }
       }
 
-      /* =========================================
-         3. MODE CETAK (PRINT)
-         ========================================= */
+      /* Mode Cetak */
       @media print {
         @page { 
           size: A4 landscape; 
@@ -80,259 +90,125 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
         
         .print-coupon-wrapper {
           width: 297mm;
-          height: 209mm;
-          padding: 8mm;
+          height: 210mm;
+          padding: 5mm; 
           margin: 0 auto;
           page-break-after: always;
           page-break-inside: avoid;
           display: flex;
           justify-content: center;
           align-items: center;
+          position: relative;
         }
         .print-coupon-wrapper:last-child { page-break-after: avoid; }
-        .coupon-card { border: none !important; page-break-inside: avoid; }
+        
+        /* Sembunyikan elemen UI */
+        .print-btn-container { display: none !important; }
       }
 
       /* =========================================
-         4. GRID LAYOUT (3 x 3) - SERING DIMODIFIKASI
+         3. GRID LAYOUT & GARIS POTONG
          ========================================= */
       .coupon-grid {
         display: grid;
-        /* SERING: Ukuran kolom grid voucher (lebar total grid) */
-        grid-template-columns: repeat(3, 93mm);
-        /* SERING: Ukuran baris grid voucher (tinggi total grid) */
-        grid-template-rows: repeat(3, 63mm);
-        /* SERING: Jarak/gap antar voucher dalam grid */
-        gap: 1mm; 
-        justify-content: center;
-        align-content: center;
+        /* Ukuran Kartu: 8.4cm x 5.8cm */
+        grid-template-columns: repeat(3, 8.4cm);
+        grid-template-rows: repeat(3, 5.8cm);
+        
+        /* Gap 0 agar garis menyatu */
+        gap: 0; 
+        
+        /* GARIS POTONG LUAR (Atas & Kiri) */
+        border-top: 1px dashed #000;
+        border-left: 1px dashed #000;
       }
 
-      /* =========================================
-         5. STYLE KARTU VOUCHER - SERING DIMODIFIKASI
-         ========================================= */
       .coupon-card {
-        /* SERING: Lebar voucher individual (horizontal) */
-        width: 90mm;
-        /* SERING: Tinggi voucher individual (vertikal) */
-        height: 60mm;
+        width: 8.4cm;
+        height: 5.8cm;
         position: relative;
-        /* Ganti URL ini dengan path lokal project Anda jika perlu, misal: '/Background WM SME2.jpg' */
-        background-image: url('https://uploads.onecompiler.io/3zcmc9fyy/448fk8uyf/Background%20WM%20SME2.jpg'); 
-        background-size: cover;
-        background-position: center;
-        /* Pertajam warna background image */
-        filter: contrast(1) brightness(1) saturate(1.4);
-        overflow: visible;
+        background-color: white;
+        overflow: hidden;
+        
+        /* GARIS POTONG DALAM (Kanan & Bawah) */
+        border-right: 1px dashed #000;
+        border-bottom: 1px dashed #000;
       }
-
-      /* GARIS POTONG (CUT LINES) */
-      .coupon-card::after {
-        content: ''; position: absolute; top: 0; right: -2.5mm; width: 0; height: 100%;
-        border-right: 2px dashed #000; z-index: 10;
-      }
-      .coupon-card::before {
-        content: ''; position: absolute; left: 0; bottom: -2.5mm; width: 100%; height: 0;
-        border-bottom: 2px dashed #000; z-index: 10;
-      }
-      /* Hide cut lines logic */
-      .coupon-card:nth-child(3n)::after { display: none; }
-      .coupon-card:nth-child(n+7)::before { display: none; }
-      
-      /* Extra Cut Lines Logic (Shadows) */
-      .coupon-card:nth-child(-n+3) { box-shadow: 0 -2.5mm 0 0 transparent, 0 -2.5mm 0 2px dashed #000; }
-      .coupon-card:nth-child(3n+1) { box-shadow: -2.5mm 0 0 0 transparent, -2.5mm 0 0 2px dashed #000; }
-      .coupon-card:first-child { box-shadow: 0 -2.5mm 0 0 transparent, 0 -2.5mm 0 2px dashed #000, -2.5mm 0 0 0 transparent, -2.5mm 0 0 2px dashed #000; }
 
       /* =========================================
-         6. POSISI DATA
+         4. BACKGROUND IMAGE (IMG TAG)
          ========================================= */
-      .coupon-data {
+      /* Ini kunci agar gambar tercetak otomatis */
+      .bg-img-layer {
         position: absolute;
-        font-size: 11pt;
-        line-height: 1.2;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        object-fit: fill; 
+        z-index: 1; /* Di bawah teks */
+        opacity: 1; 
+      }
+
+      /* =========================================
+         5. POSISI DATA (TEXT)
+         ========================================= */
+      .content-layer {
+        position: relative;
+        z-index: 10; /* Di atas gambar */
+        width: 100%;
+        height: 100%;
+      }
+
+      .content-area {
+        position: absolute;
+        top: 24mm; /* Jarak dari atas melewati Header Gambar */
+        left: 3mm;
+      }
+
+      .data-row {
+        font-size: 9pt;
+        line-height: 1.35;
         color: #000;
-        z-index: 5;
         white-space: nowrap;
       }
+
+      .data-row .label {
+        display: inline-block;
+        width: 23mm; 
+      }
+      .data-row .value { font-weight: bold; }
+
+      .value-alamat {
+        display: inline-block;
+        max-width: 48mm;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        vertical-align: bottom;
+      }
+
+      .red-text { color: red; font-weight: bold; }
+
+      .right-section {
+        position: absolute;
+        right: 2mm;
+        top: 36mm;
+        text-align: right;
+      }
+      .lbl-besar { font-size: 8pt; color: red; text-decoration: underline; }
+      .val-besar { font-size: 10pt; font-weight: 900; color: red; }
+
+      .footer {
+        position: absolute; bottom: 1.5mm; width: 100%; text-align: center;
+        font-size: 8pt; color: red; font-weight: bold;
+      }
       
-      /* Override default color for urgent coupons - HIGHEST SPECIFICITY */
-      .coupon-card.coupon-urgent .coupon-data {
+      /* Urgent Style Override */
+      .coupon-urgent .data-row,
+      .coupon-urgent .footer {
         color: red !important;
-        font-weight: bold !important;
-      }
-
-      /* Alignment Label */
-      .coupon-data span.label { 
-        display: inline-block; 
-        width: 95px; 
-        font-weight: normal; 
-      }
-      .coupon-data span.value { font-weight: normal; }
-      
-      /* Override label and value for urgent coupons - HIGHEST SPECIFICITY */
-      .coupon-card.coupon-urgent .coupon-data span.label,
-      .coupon-card.coupon-urgent .coupon-data span.value {
-        color: red !important;
-        font-weight: bold !important;
-      }
-
-      /* =========================================
-         SPACING CONTROL - EDIT SEMUA FIELD DI SINI
-         ========================================= */
-      
-      /* MASTER SPACING CLASS - Spacing seragam untuk semua field */
-      .field-spacing {
-        /* Spasi atas bawah yang sama untuk konsistensi */
-        margin-top: 1.5px;
-        margin-bottom: 1.5px;
-        padding-top: 0px;
-        padding-bottom: 0px;
-      }
-      
-      /* KHUSUS: Tanpa margin untuk judul agar menempel */
-      .field-spacing-none {
-        margin-top: 0px;
-        margin-bottom: 0px;
-        padding-top: 0px;
-        padding-bottom: 0px;
-      }
-      
-      /* ========================================= */
-
-      /* ========================================= 
-         KOORDINAT POSISI - SERING DIMODIFIKASI
-         ========================================= */
-      
-      /* Judul Voucher */
-      .pos-judul {
-        width: 100%; text-align: center; 
-        /* SERING: Posisi vertikal judul voucher */
-        top: 70px;
-        color: black;  font-size: 11pt;
-      }
-
-      /* Area Kiri (Loop Data) - SERING DIMODIFIKASI */
-      /* SERING: Posisi vertikal nomor faktur */
-      .pos-faktur       { left: 15px; top: 95px;}  
-      .pos-faktur.field-spacing { /* Gunakan class .field-spacing untuk spacing */ }
-      
-      /* SERING: Posisi vertikal nama customer */
-      .pos-nama         { left: 15px; top: 112px; } 
-      .pos-nama.field-spacing { /* Gunakan class .field-spacing untuk spacing */ }
-      
-      .pos-kode-kontrak { right: 15px; top: 112px; font-size: 15pt; font-weight: bold; }
-      .pos-kode-kontrak.field-spacing { /* Gunakan class .field-spacing untuk spacing */ }
-      
-      /* SERING: Posisi vertikal alamat customer */
-      .pos-alamat       { left: 15px; top: 129px; max-width: 230px; overflow: hidden; text-overflow: ellipsis; } 
-      .pos-alamat.field-spacing { /* Gunakan class .field-spacing untuk spacing */ }
-      
-      /* SERING: Posisi vertikal jatuh tempo */
-      .pos-jatuhtempo   { left: 15px; top: 146px; } 
-      .pos-jatuhtempo.field-spacing { /* Gunakan class .field-spacing untuk spacing */ }
-      
-      /* SERING: Posisi vertikal label angsuran ke- */
-      .pos-angsuran     { left: 15px; top: 163px; } 
-      .pos-angsuran.field-spacing { /* Gunakan class .field-spacing untuk spacing */ } 
-      
-      /* ========================================= 
-         FIELD REKENING - SERING DIMODIFIKASI
-         ========================================= */
-      
-      .pos-rekening     { 
-        left: 15px; 
-        top: 181.5px; 
-        font-weight: bold;
-        /* EDIT: Ganti dengan class .field-spacing atau .field-spacing-large */
-      } 
-      .pos-rekening.field-spacing { /* Menggunakan spacing terpusat */ }
-      
-      /* ========================================= */ 
-
-      /* Angka Angsuran Center */
-      .pos-angka-center {
-        position: absolute; left: 50%; 
-        /* SERING: Posisi vertikal angka angsuran tengah */
-        top: 163px; 
-        transform: translateX(-50%);
-        font-size: 11pt; font-weight: bold; color: red; z-index: 6;
-      }
-      .pos-angka-center.field-spacing { /* Gunakan class .field-spacing untuk spacing */ }
-
-      /* ========================================= 
-         AREA KANAN - SERING DIMODIFIKASI
-         ========================================= */
-      
-      /* Area Kanan (Besar Angsuran) */
-      .pos-lbl-besar-angsuran {
-        right: 10px; 
-        /* SERING: Posisi vertikal label "Besar Angsuran" */
-        top: 163px;
-        font-size: 11pt; font-weight: normal;  color: black;
-      }
-      .pos-lbl-besar-angsuran.field-spacing { /* Gunakan class .field-spacing untuk spacing */ }
-
-      /* Nominal Rupiah */
-      .pos-val-besar-angsuran {
-        right: 10px; 
-        /* SERING: Posisi vertikal nilai rupiah */
-        top: 181.5px;
-        text-align: right; font-size: 11pt; color: red;
-      }
-      .pos-val-besar-angsuran.field-spacing { /* Gunakan class .field-spacing untuk spacing */ }
-
-      /* Footer */
-      .pos-kantor {
-        width: 100%; text-align: center; bottom: 1px; 
-        font-size: 11pt; font-weight: normal; color: red;
-      }
-      ..field-spacing { /* Gunakan class .field-spacing untuk spacing */ }
-      }
-
-      /* URGENT STYLE (Merah) - SUPER SPECIFICITY untuk override semua CSS */
-      
-      /* Override untuk elemen coupon-data umum */
-      .coupon-card.coupon-urgent .coupon-data,
-      .coupon-card.coupon-urgent .pos-judul, 
-      .coupon-card.coupon-urgent .pos-faktur,
-      .coupon-card.coupon-urgent .pos-nama,
-      .coupon-card.coupon-urgent .pos-kode-kontrak,
-      .coupon-card.coupon-urgent .pos-alamat,
-      .coupon-card.coupon-urgent .pos-jatuhtempo,
-      .coupon-card.coupon-urgent .pos-angsuran,
-      .coupon-card.coupon-urgent .pos-rekening,
-      .coupon-card.coupon-urgent .pos-angka-center, 
-      .coupon-card.coupon-urgent .pos-lbl-besar-angsuran,
-      .coupon-card.coupon-urgent .pos-val-besar-angsuran,
-      .coupon-card.coupon-urgent .pos-kantor,
-      .coupon-card.coupon-urgent .field-spacing,
-      .coupon-card.coupon-urgent .field-spacing-none,
-      .coupon-card.coupon-urgent div {
-        color: red !important; 
-        font-weight: bold !important;
-      }
-      
-      /* Override untuk span elements */
-      .coupon-card.coupon-urgent .label,
-      .coupon-card.coupon-urgent .value,
-      .coupon-card.coupon-urgent span,
-      .coupon-card.coupon-urgent .coupon-data span.label,
-      .coupon-card.coupon-urgent .coupon-data span.value {
-        color: red !important; 
-        font-weight: bold !important;
-      }
-      
-      /* Force override untuk elemen yang sudah punya color: black atau color: red */
-      div.coupon-card.coupon-urgent div.pos-lbl-besar-angsuran,
-      div.coupon-card.coupon-urgent div.pos-val-besar-angsuran,
-      div.coupon-card.coupon-urgent div.pos-kantor,
-      div.coupon-card.coupon-urgent div.pos-angka-center {
-        color: red !important; 
-        font-weight: bold !important;
       }
     `;
     
+    // Inject Style
     const styleElement = document.createElement('style');
     styleElement.textContent = printStyles;
     styleElement.setAttribute('data-print-styles', 'true');
@@ -344,12 +220,10 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
     };
   }, []);
 
-  // Helper Formatter
+  // --- Helper Functions ---
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleDateString("id-ID", {
-      day: "2-digit",
-      month: "2-digit", 
-      year: "numeric",
+      day: "2-digit", month: "2-digit", year: "numeric",
     });
   };
 
@@ -362,22 +236,12 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
     return text.substring(0, maxLength) + "...";
   };
 
-  // Logic Urgent (7 hari terakhir - sesuai permintaan user)
   const isUrgentCoupon = (coupon: InstallmentCoupon, tenor: number) => {
     const installmentIndex = coupon.installment_index;
-    const remainingInstallments = tenor - installmentIndex;
-    
-    // Debug: Log untuk melihat nilai
-    console.log(`Coupon ${installmentIndex}: remaining=${remainingInstallments}, tenor=${tenor}`);
-    
-    // URGENT: 7 hari terakhir sesuai permintaan
-    const isUrgent = remainingInstallments <= 9;
-    console.log(`Coupon ${installmentIndex} is urgent: ${isUrgent}`);
-    
-    return isUrgent;
+    const remainingDays = tenor - installmentIndex;
+    return remainingDays <= 10;
   };
 
-  // Logic Grouping Halaman (9 per page)
   const groupCouponsIntoPages = (coupons: InstallmentCoupon[], couponsPerPage: number = 9) => {
     const pages: InstallmentCoupon[][] = [];
     for (let i = 0; i < coupons.length; i += couponsPerPage) {
@@ -386,17 +250,28 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
     return pages;
   };
 
-  const noFakturBase = `${contract.tenor_days}/${contract.sales_agents?.agent_code || "-"}/${contract.collectors?.collector_code || "-"}`;
+  // --- Data Preparation ---
+  const noFakturBase = `${contract.tenor_days}/${contract.sales_agents?.agent_code || "-"}/${contract.contract_ref}`;
   const displayAddress = contract.customers?.business_address || contract.customers?.address || "-";
   const couponPages = groupCouponsIntoPages(coupons);
 
-  // Hardcoded Data
+  // Constants
   const REKENING_NUMBER = "008201003537567";
   const KANTOR_NUMBER = "0821 8802 0656";
+  const BG_IMAGE_URL = "https://uploads.onecompiler.io/3zcmc9fyy/448fk8uyf/Background%20WM%20SME2.jpg";
 
-  // Use portal to render directly into body for proper print isolation
   const printContent = (
     <>
+      {/* Tombol Print */}
+      <div className="print-btn-container">
+        <button onClick={() => window.print()} className="print-btn">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="white">
+                <path d="M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zm-3 11H8v-5h8v5zm3-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-1-9H6v4h12V3z"/>
+            </svg>
+            CETAK HALAMAN
+        </button>
+      </div>
+
       {couponPages.map((pagesCoupons, pageIndex) => (
         <div key={pageIndex} className="print-coupon-wrapper">
           <div className="coupon-grid">
@@ -404,77 +279,54 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
               const coupon = pagesCoupons[index];
               
               if (!coupon) {
-                // Render kartu kosong agar grid tetap rapi
-                return <div key={`empty-${index}`} className="coupon-card" style={{ visibility: 'hidden' }}></div>;
+                // Render kartu kosong agar grid tetap utuh untuk dipotong
+                return <div key={`empty-${index}`} className="coupon-card"></div>;
               }
 
               const isUrgent = isUrgentCoupon(coupon, contract.tenor_days);
-              console.log(`Rendering coupon ${coupon.installment_index} with urgent class: ${isUrgent ? 'YES' : 'NO'}`);
               
               return (
-                <div 
-                  key={coupon.id} 
-                  className={`coupon-card ${isUrgent ? 'coupon-urgent' : ''}`}
-                  style={isUrgent ? { border: '2px solid red' } : {}}
-                >
+                <div key={coupon.id} className={`coupon-card ${isUrgent ? 'coupon-urgent' : ''}`}>
                   
-                    {/* Judul Voucher */}
-                    <div className="coupon-data pos-judul field-spacing-none">VOUCHER ANGSURAN</div>
+                  {/* Layer 1: Background Image (Pakai IMG agar dipaksa cetak) */}
+                  <img src={BG_IMAGE_URL} className="bg-img-layer" alt="background" />
 
-                    {/* No. Faktur */}
-                    <div className="coupon-data pos-faktur field-spacing">
-                    <span className="label">No. Faktur</span>
-                    <span className="value">: {truncateText(noFakturBase, 20)}</span>
+                  {/* Layer 2: Konten Text */}
+                  <div className="content-layer">
+                    <div className="content-area">
+                        <div className="data-row">
+                            <span className="label">NO.Faktur</span>
+                            <span className="value">: {truncateText(noFakturBase, 18)}</span>
+                        </div>
+                        <div className="data-row">
+                            <span className="label">Nama</span>
+                            <span className="value">: {truncateText(contract.customers?.name || "-", 20)}</span>
+                        </div>
+                        <div className="data-row">
+                            <span className="label">Alamat</span>
+                            <span className="value value-alamat">: {truncateText(displayAddress, 22)}</span>
+                        </div>
+                        <div className="data-row">
+                            <span className="label">Jatuh Tempo</span>
+                            <span className="value">: {formatDate(coupon.due_date)}</span>
+                        </div>
+                        <div className="data-row">
+                            <span className="label">Angsuran Ke-</span>
+                            <span className="value">: <span className="red-text">{coupon.installment_index}</span></span>
+                        </div>
+                        <div className="data-row">
+                            <span className="label">No Rekening</span>
+                            <span className="value">: {REKENING_NUMBER}</span>
+                        </div>
                     </div>
 
-                  {/* Nama */}
-                  <div className="coupon-data pos-nama field-spacing">
-                    <span className="label">Nama</span>
-                    <span className="value">: {truncateText(contract.customers?.name || "-", 25)}</span>
+                    <div className="right-section">
+                        <div className="lbl-besar">Besar Angsuran</div>
+                        <div className="val-besar">Rp {formatAmount(coupon.amount)}</div>
+                    </div>
+
+                    <div className="footer">KANTOR / {KANTOR_NUMBER}</div>
                   </div>
-
-                  {/* Kode Kontrak (Pojok Kanan Nama) */}
-                  <div className="coupon-data pos-kode-kontrak field-spacing">
-                    {contract.contract_ref}
-                  </div>
-
-                  {/* Alamat */}
-                  <div className="coupon-data pos-alamat field-spacing">
-                    <span className="label">Alamat</span>
-                    <span className="value">: {truncateText(displayAddress, 28)}</span>
-                  </div>
-
-                  {/* Jatuh Tempo */}
-                  <div className="coupon-data pos-jatuhtempo field-spacing">
-                    <span className="label">Jatuh Tempo</span>
-                    <span className="value">: {formatDate(coupon.due_date)}</span>
-                  </div>
-
-                  {/* Angsuran Ke- (Label) */}
-                  <div className="coupon-data pos-angsuran field-spacing">
-                    <span className="label">Angsuran Ke-</span>
-                    <span className="value">:</span>
-                  </div>
-                  
-                  {/* Angsuran Ke- (Angka Center) */}
-                  <div className="coupon-data pos-angka-center field-spacing">
-                    {coupon.installment_index}
-                  </div>
-
-                  {/* No Rekening (NEW) */}
-                  <div className="coupon-data pos-rekening field-spacing">
-                    <span className="label">No Rekening</span>
-                    <span className="value">: {REKENING_NUMBER}</span>
-                  </div>
-
-                  {/* Besar Angsuran (Label) */}
-                  <div className="coupon-data pos-lbl-besar-angsuran field-spacing">Besar Angsuran</div>
-
-                  {/* Besar Angsuran (Value) */}
-                  <div className="coupon-data pos-val-besar-angsuran field-spacing">Rp {formatAmount(coupon.amount)}</div>
-
-                  {/* Footer Kantor (UPDATED) */}
-                  <div className="coupon-data pos-kantor field-spacing">KANTOR / {KANTOR_NUMBER}</div>
                 </div>
               );
             })}
@@ -484,7 +336,6 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
     </>
   );
 
-  // Render into body for proper print isolation
   return createPortal(printContent, document.body);
 }
 
