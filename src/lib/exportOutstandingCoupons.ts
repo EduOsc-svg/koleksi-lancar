@@ -1,7 +1,15 @@
 import ExcelJS from 'exceljs';
 import type { OutstandingCouponSummary } from '@/hooks/useOutstandingCoupons';
+import type { CouponHandover } from '@/hooks/useCouponHandovers';
 
-export const exportOutstandingCouponsToExcel = async (data: OutstandingCouponSummary[]) => {
+export const exportOutstandingCouponsToExcel = async (data: OutstandingCouponSummary[], handovers?: CouponHandover[]) => {
+  // Aggregate handover counts per contract
+  const handoverMap = new Map<string, number>();
+  if (handovers) {
+    for (const h of handovers) {
+      handoverMap.set(h.contract_id, (handoverMap.get(h.contract_id) || 0) + h.coupon_count);
+    }
+  }
   const workbook = new ExcelJS.Workbook();
   workbook.creator = 'Management System Kredit';
   workbook.created = new Date();
@@ -9,13 +17,13 @@ export const exportOutstandingCouponsToExcel = async (data: OutstandingCouponSum
   const sheet = workbook.addWorksheet('Kupon Belum Bayar');
 
   // Title
-  sheet.mergeCells('A1:H1');
+  sheet.mergeCells('A1:I1');
   const titleCell = sheet.getCell('A1');
   titleCell.value = 'LAPORAN KUPON BELUM TERBAYAR';
   titleCell.font = { bold: true, size: 14 };
   titleCell.alignment = { horizontal: 'center' };
 
-  sheet.mergeCells('A2:H2');
+  sheet.mergeCells('A2:I2');
   const dateCell = sheet.getCell('A2');
   dateCell.value = `Per tanggal: ${new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })}`;
   dateCell.font = { italic: true, size: 10 };
@@ -24,7 +32,7 @@ export const exportOutstandingCouponsToExcel = async (data: OutstandingCouponSum
   // Headers
   const headerRow = sheet.addRow([]);
   sheet.addRow([]);
-  const headers = ['No', 'Nama Konsumen', 'Kode Kontrak', 'Kupon Keluar', 'Nominal Angsuran', 'Terbayar', 'Belum Bayar', 'Total Belum Bayar'];
+  const headers = ['No', 'Nama Konsumen', 'Kode Kontrak', 'Kupon Keluar', 'Kupon di Kolektor', 'Nominal Angsuran', 'Terbayar', 'Belum Bayar', 'Total Belum Bayar'];
   const hRow = sheet.addRow(headers);
   hRow.eachCell((cell) => {
     cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
@@ -39,11 +47,13 @@ export const exportOutstandingCouponsToExcel = async (data: OutstandingCouponSum
   // Data rows
   const startRow = hRow.number + 1;
   data.forEach((row, i) => {
+    const kuponDiKolektor = handoverMap.get(row.contract_id) || 0;
     const r = sheet.addRow([
       i + 1,
       row.customer_name,
       row.contract_ref,
       row.total_coupons_issued,
+      kuponDiKolektor,
       row.daily_installment_amount,
       row.coupons_paid,
       row.coupons_unpaid,
@@ -54,13 +64,13 @@ export const exportOutstandingCouponsToExcel = async (data: OutstandingCouponSum
         top: { style: 'thin' }, bottom: { style: 'thin' },
         left: { style: 'thin' }, right: { style: 'thin' },
       };
-      if (colNumber === 5 || colNumber === 8) {
+      if (colNumber === 6 || colNumber === 9) {
         cell.numFmt = '#,##0';
       }
-      if (colNumber >= 4 && colNumber <= 8) {
+      if (colNumber >= 4 && colNumber <= 9) {
         cell.alignment = { horizontal: 'center' };
       }
-      if (colNumber === 5 || colNumber === 8) {
+      if (colNumber === 6 || colNumber === 9) {
         cell.alignment = { horizontal: 'right' };
       }
     });
@@ -75,13 +85,14 @@ export const exportOutstandingCouponsToExcel = async (data: OutstandingCouponSum
   totalRow.getCell(3).font = { bold: true };
   totalRow.getCell(3).alignment = { horizontal: 'right' };
   totalRow.getCell(4).value = { formula: `SUM(D${startRow}:D${endRow})` };
-  totalRow.getCell(5).value = '';
-  totalRow.getCell(6).value = { formula: `SUM(F${startRow}:F${endRow})` };
+  totalRow.getCell(5).value = { formula: `SUM(E${startRow}:E${endRow})` };
+  totalRow.getCell(6).value = '';
   totalRow.getCell(7).value = { formula: `SUM(G${startRow}:G${endRow})` };
   totalRow.getCell(8).value = { formula: `SUM(H${startRow}:H${endRow})` };
-  totalRow.getCell(8).numFmt = '#,##0';
+  totalRow.getCell(9).value = { formula: `SUM(I${startRow}:I${endRow})` };
+  totalRow.getCell(9).numFmt = '#,##0';
 
-  for (let c = 1; c <= 8; c++) {
+  for (let c = 1; c <= 9; c++) {
     const cell = totalRow.getCell(c);
     cell.font = { ...cell.font, bold: true };
     cell.border = {
@@ -92,7 +103,7 @@ export const exportOutstandingCouponsToExcel = async (data: OutstandingCouponSum
 
   // Column widths
   sheet.columns = [
-    { width: 5 }, { width: 25 }, { width: 15 }, { width: 14 },
+    { width: 5 }, { width: 25 }, { width: 15 }, { width: 14 }, { width: 16 },
     { width: 18 }, { width: 12 }, { width: 14 }, { width: 20 },
   ];
 
