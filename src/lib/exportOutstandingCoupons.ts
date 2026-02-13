@@ -18,11 +18,7 @@ export const exportOutstandingCouponsToExcel = async (data: OutstandingCouponSum
   const sheet = workbook.addWorksheet('Kupon Belum Bayar');
 
   // Title
-<<<<<<< HEAD
   sheet.mergeCells('A1:J1');
-=======
-  sheet.mergeCells('A1:I1');
->>>>>>> 47a1cf1d521e39614476e562b0a120db13dd49a6
   const titleCell = sheet.getCell('A1');
   titleCell.value = 'LAPORAN KUPON BELUM TERBAYAR';
   titleCell.font = { bold: true, size: 16 };
@@ -30,12 +26,8 @@ export const exportOutstandingCouponsToExcel = async (data: OutstandingCouponSum
   titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4472C4' } };
   titleCell.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 16 };
 
-<<<<<<< HEAD
   // Subtitle with date
   sheet.mergeCells('A2:J2');
-=======
-  sheet.mergeCells('A2:I2');
->>>>>>> 47a1cf1d521e39614476e562b0a120db13dd49a6
   const dateCell = sheet.getCell('A2');
   dateCell.value = `Per tanggal: ${new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })}`;
   dateCell.font = { italic: true, size: 12 };
@@ -43,7 +35,6 @@ export const exportOutstandingCouponsToExcel = async (data: OutstandingCouponSum
 
   // Empty row
   sheet.addRow([]);
-<<<<<<< HEAD
 
   // Headers with enhanced columns
   const headers = [
@@ -51,9 +42,6 @@ export const exportOutstandingCouponsToExcel = async (data: OutstandingCouponSum
     'Nominal Angsuran', 'Terbayar', 'Belum Bayar', 'Total Belum Bayar',
     'Persentase Terbayar', 'Status'
   ];
-=======
-  const headers = ['No', 'Nama Konsumen', 'Kode Kontrak', 'Kupon Keluar', 'Kupon di Kolektor', 'Nominal Angsuran', 'Terbayar', 'Belum Bayar', 'Total Belum Bayar'];
->>>>>>> 47a1cf1d521e39614476e562b0a120db13dd49a6
   const hRow = sheet.addRow(headers);
   hRow.eachCell((cell) => {
     cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
@@ -68,13 +56,9 @@ export const exportOutstandingCouponsToExcel = async (data: OutstandingCouponSum
   // Data rows with enhanced formulas
   const startRow = hRow.number + 1;
   data.forEach((row, i) => {
-<<<<<<< HEAD
     const rowNum = startRow + i;
-    const dataRow = sheet.addRow([
-=======
     const kuponDiKolektor = handoverMap.get(row.contract_id) || 0;
-    const r = sheet.addRow([
->>>>>>> 47a1cf1d521e39614476e562b0a120db13dd49a6
+    const dataRow = sheet.addRow([
       i + 1,
       row.customer_name,
       row.contract_ref,
@@ -96,7 +80,6 @@ export const exportOutstandingCouponsToExcel = async (data: OutstandingCouponSum
         top: { style: 'thin' }, bottom: { style: 'thin' },
         left: { style: 'thin' }, right: { style: 'thin' },
       };
-<<<<<<< HEAD
       
       // Format currency columns
       if (colNumber === 5 || colNumber === 8) {
@@ -117,23 +100,12 @@ export const exportOutstandingCouponsToExcel = async (data: OutstandingCouponSum
       else if (colNumber === 10) {
         cell.alignment = { horizontal: 'center' };
         // Conditional formatting akan ditambah nanti
-=======
-      if (colNumber === 6 || colNumber === 9) {
-        cell.numFmt = '#,##0';
-      }
-      if (colNumber >= 4 && colNumber <= 9) {
-        cell.alignment = { horizontal: 'center' };
-      }
-      if (colNumber === 6 || colNumber === 9) {
-        cell.alignment = { horizontal: 'right' };
->>>>>>> 47a1cf1d521e39614476e562b0a120db13dd49a6
       }
     });
   });
 
   // Total row with comprehensive formulas
   const endRow = startRow + data.length - 1;
-<<<<<<< HEAD
   const totalRow = sheet.addRow([
     '',
     '',
@@ -151,25 +123,6 @@ export const exportOutstandingCouponsToExcel = async (data: OutstandingCouponSum
   totalRow.eachCell((cell, colNumber) => {
     cell.font = { bold: true };
     cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD9E2F3' } };
-=======
-  const totalRow = sheet.addRow([]);
-  totalRow.getCell(1).value = '';
-  totalRow.getCell(2).value = '';
-  totalRow.getCell(3).value = 'TOTAL';
-  totalRow.getCell(3).font = { bold: true };
-  totalRow.getCell(3).alignment = { horizontal: 'right' };
-  totalRow.getCell(4).value = { formula: `SUM(D${startRow}:D${endRow})` };
-  totalRow.getCell(5).value = { formula: `SUM(E${startRow}:E${endRow})` };
-  totalRow.getCell(6).value = '';
-  totalRow.getCell(7).value = { formula: `SUM(G${startRow}:G${endRow})` };
-  totalRow.getCell(8).value = { formula: `SUM(H${startRow}:H${endRow})` };
-  totalRow.getCell(9).value = { formula: `SUM(I${startRow}:I${endRow})` };
-  totalRow.getCell(9).numFmt = '#,##0';
-
-  for (let c = 1; c <= 9; c++) {
-    const cell = totalRow.getCell(c);
-    cell.font = { ...cell.font, bold: true };
->>>>>>> 47a1cf1d521e39614476e562b0a120db13dd49a6
     cell.border = {
       top: { style: 'double' }, bottom: { style: 'double' },
       left: { style: 'thin' }, right: { style: 'thin' },
@@ -193,7 +146,6 @@ export const exportOutstandingCouponsToExcel = async (data: OutstandingCouponSum
 
   // Column widths
   sheet.columns = [
-<<<<<<< HEAD
     { width: 5 },   // No
     { width: 25 },  // Nama Konsumen
     { width: 15 },  // Kode Kontrak
@@ -204,10 +156,6 @@ export const exportOutstandingCouponsToExcel = async (data: OutstandingCouponSum
     { width: 20 },  // Total Belum Bayar
     { width: 16 },  // Persentase Terbayar
     { width: 15 },  // Status
-=======
-    { width: 5 }, { width: 25 }, { width: 15 }, { width: 14 }, { width: 16 },
-    { width: 18 }, { width: 12 }, { width: 14 }, { width: 20 },
->>>>>>> 47a1cf1d521e39614476e562b0a120db13dd49a6
   ];
 
   // ============ Sheet 2: Analisis Ringkasan ============
