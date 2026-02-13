@@ -56,7 +56,7 @@ export function OutstandingCouponsTable({ data, isLoading, handovers }: Props) {
   const handleExport = async () => {
     if (filteredData.length === 0) return;
     try {
-      await exportOutstandingCouponsToExcel(filteredData);
+      await exportOutstandingCouponsToExcel(filteredData, handovers);
       toast.success("File Excel berhasil diunduh");
     } catch {
       toast.error("Gagal mengekspor Excel");
