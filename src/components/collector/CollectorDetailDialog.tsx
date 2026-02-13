@@ -88,8 +88,7 @@ export function CollectorDetailDialog({
             daily_installment_amount,
             customer_id,
             customers(
-              name,
-              customer_code
+              name
             )
           )
         `)
