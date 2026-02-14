@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { format, startOfMonth, endOfMonth } from "date-fns";
 import { id as localeId } from "date-fns/locale";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, Download } from "lucide-react";
+import ExcelJS from "exceljs";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -124,6 +126,99 @@ export function CollectorDetailDialog({
   const totalCollected = paymentList.reduce((sum, item) => sum + item.amount_paid, 0);
   const totalPayments = paymentList.length;
 
+  // Export detail to Excel
+  const handleExportDetail = async () => {
+    if (paymentList.length === 0 || !collector) {
+      toast.error("Tidak ada data untuk diekspor");
+      return;
+    }
+
+    const workbook = new ExcelJS.Workbook();
+    const ws = workbook.addWorksheet("Detail Tagihan");
+
+    // Title
+    ws.mergeCells('A1:D1');
+    const titleCell = ws.getCell('A1');
+    titleCell.value = `DETAIL TAGIHAN KOLEKTOR - ${collector.name.toUpperCase()} (${collector.collector_code})`;
+    titleCell.font = { bold: true, size: 14, color: { argb: 'FFFFFFFF' } };
+    titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4472C4' } };
+    titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
+
+    // Period info
+    ws.mergeCells('A2:D2');
+    const periodCell = ws.getCell('A2');
+    let periodText = "Periode: Semua Tanggal";
+    if (filterMode === "daily" && selectedDate) {
+      periodText = `Periode: ${format(selectedDate, "dd MMMM yyyy", { locale: localeId })}`;
+    } else if (filterMode === "monthly") {
+      periodText = `Periode: ${format(selectedMonth, "MMMM yyyy", { locale: localeId })}`;
+    }
+    periodCell.value = periodText;
+    periodCell.font = { size: 11 };
+    periodCell.alignment = { horizontal: 'center' };
+
+    ws.addRow([]);
+
+    // Header
+    const headerRow = ws.addRow(["No", "Kode Kontrak", "Tanggal", "Jumlah"]);
+    headerRow.eachCell((cell) => {
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF70AD47' } };
+      cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+      cell.alignment = { horizontal: 'center', vertical: 'middle' };
+      cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+    });
+
+    // Data rows
+    const dataStartRow = 5;
+    paymentList.forEach((item, i) => {
+      const row = ws.addRow([
+        i + 1,
+        item.contract_ref,
+        format(new Date(item.payment_date), "dd/MM/yyyy"),
+        item.amount_paid,
+      ]);
+      row.eachCell((cell, colNumber) => {
+        cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+        if (colNumber === 4) {
+          cell.numFmt = '"Rp "#,##0';
+          cell.alignment = { horizontal: 'right' };
+        } else if (colNumber === 1) {
+          cell.alignment = { horizontal: 'center' };
+        }
+      });
+    });
+
+    // Total row with formula
+    const totalRowNum = dataStartRow + paymentList.length;
+    const totalRow = ws.addRow(['', '', 'TOTAL', { formula: `SUM(D${dataStartRow}:D${totalRowNum - 1})` }]);
+    totalRow.font = { bold: true };
+    totalRow.eachCell((cell, colNumber) => {
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD9E2F3' } };
+      cell.border = { top: { style: 'double' }, left: { style: 'thin' }, bottom: { style: 'double' }, right: { style: 'thin' } };
+      if (colNumber === 4) {
+        cell.numFmt = '"Rp "#,##0';
+        cell.alignment = { horizontal: 'right' };
+      }
+    });
+
+    // Column widths
+    ws.getColumn(1).width = 6;
+    ws.getColumn(2).width = 20;
+    ws.getColumn(3).width = 16;
+    ws.getColumn(4).width = 22;
+
+    // Download
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `detail_tagihan_${collector.collector_code}_${format(new Date(), "yyyy-MM-dd")}.xlsx`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(`Data ${collector.name} berhasil diekspor`);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
@@ -204,8 +299,14 @@ export function CollectorDetailDialog({
               )}
             </div>
 
-            <div className="text-sm text-muted-foreground">
-              {totalPayments} transaksi | Total: <span className="font-semibold text-primary">{formatRupiah(totalCollected)}</span>
+            <div className="flex items-center gap-2">
+              <div className="text-sm text-muted-foreground">
+                {totalPayments} transaksi | Total: <span className="font-semibold text-primary">{formatRupiah(totalCollected)}</span>
+              </div>
+              <Button variant="outline" size="sm" onClick={handleExportDetail} disabled={paymentList.length === 0}>
+                <Download className="mr-1 h-4 w-4" />
+                Export
+              </Button>
             </div>
           </div>
 
