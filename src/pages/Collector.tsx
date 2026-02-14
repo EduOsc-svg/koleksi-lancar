@@ -138,10 +138,24 @@ export default function Collector() {
     // ============ Sheet 1: Performa Kolektor ============
     const worksheet = workbook.addWorksheet("Performa Kolektor");
 
+    // Add placeholder for Detail Tagihan in columns A-E
+    worksheet.mergeCells('A1:E1');
+    const detailTagihanCell = worksheet.getCell('A1');
+    detailTagihanCell.value = 'DETAIL TAGIHAN (Area ini tersedia untuk Detail Tagihan)';
+    detailTagihanCell.font = { bold: true, size: 14 };
+    detailTagihanCell.alignment = { horizontal: 'center', vertical: 'middle' };
+    detailTagihanCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFCCCCCC' } };
+
+    worksheet.mergeCells('A2:E2');
+    const spaceCell = worksheet.getCell('A2');
+    spaceCell.value = 'Kolom A-E dapat digunakan untuk data Detail Tagihan';
+    spaceCell.font = { size: 10, italic: true };
+    spaceCell.alignment = { horizontal: 'center' };
+
     // Add title and period info starting from F4
     worksheet.mergeCells('F4:K4');
     const titleCell = worksheet.getCell('F4');
-    titleCell.value = `LAPORAN PERFORMA KOLEKTOR - ${format(selectedDate, "MMMM yyyy", { locale: localeId }).toUpperCase()}`;
+    titleCell.value = `LAPORAN PERFORMA KOLEKTOR - ${format(selectedDate, "MMMM yyyy", { locale: localeId }).toUpperCase()} (F4-K4)`;
     titleCell.font = { bold: true, size: 16 };
     titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
     titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4472C4' } };
