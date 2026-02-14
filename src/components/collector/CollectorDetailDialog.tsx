@@ -133,10 +133,54 @@ export function CollectorDetailDialog({
       return;
     }
 
-    const workbook = new ExcelJS.Workbook();
-    const ws = workbook.addWorksheet("Detail Tagihan");
+    try {
+      toast.loading("Memproses data export...");
 
-    // Title
+      // Get coupon handovers data
+      let handoversQuery = supabase
+        .from('coupon_handovers')
+        .select(`
+          id,
+          handover_date,
+          coupon_count,
+          start_index,
+          end_index,
+          contract_id,
+          credit_contracts(
+            contract_ref,
+            customer_id,
+            customers(
+              name
+            )
+          )
+        `)
+        .eq('collector_id', collector.id)
+        .order('handover_date', { ascending: false });
+
+      // Apply same date filter as payments
+      if (filterMode === "daily" && selectedDate) {
+        const dateStr = format(selectedDate, "yyyy-MM-dd");
+        handoversQuery = handoversQuery.eq('handover_date', dateStr);
+      } else if (filterMode === "monthly") {
+        const startDate = format(startOfMonth(selectedMonth), "yyyy-MM-dd");
+        const endDate = format(endOfMonth(selectedMonth), "yyyy-MM-dd");
+        handoversQuery = handoversQuery.gte('handover_date', startDate).lte('handover_date', endDate);
+      }
+
+      const { data: handoversData, error: handoversError } = await handoversQuery;
+      if (handoversError) {
+        console.error("Error fetching handovers:", handoversError);
+        toast.error("Gagal mengambil data kupon: " + handoversError.message);
+        return;
+      }
+
+      const workbook = new ExcelJS.Workbook();
+      workbook.creator = "Credit Management System";
+      workbook.created = new Date();
+      
+      const ws = workbook.addWorksheet("Detail Tagihan");
+
+      // Title
     ws.mergeCells('A1:D1');
     const titleCell = ws.getCell('A1');
     titleCell.value = `DETAIL TAGIHAN KOLEKTOR - ${collector.name.toUpperCase()} (${collector.collector_code})`;
@@ -201,25 +245,107 @@ export function CollectorDetailDialog({
       }
     });
 
-    // Column widths
+    // Column widths for first table
     ws.getColumn(1).width = 6;
     ws.getColumn(2).width = 20;
     ws.getColumn(3).width = 16;
     ws.getColumn(4).width = 22;
 
-    // Download
-    const buffer = await workbook.xlsx.writeBuffer();
-    const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `detail_tagihan_${collector.collector_code}_${format(new Date(), "yyyy-MM-dd")}.xlsx`;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast.success(`Data ${collector.name} berhasil diekspor`);
-  };
+    // ============ Second Table: Collector Summary ============
+    
+    // Add 3 empty rows as spacing
+    ws.addRow([]);
+    ws.addRow([]);
+    ws.addRow([]);
+    
+    // Process data by collector (in this case, single collector)
+    const collectorSummary = {
+      collector_code: collector.collector_code,
+      collector_name: collector.name,
+      coupons_out: 0,    // Kupon Keluar (handovers)
+      coupons_in: 0,     // Kupon Masuk (payments)
+      payment_count: paymentList.length,  // Jumlah Tagihan
+      total_collected: totalCollected     // Total Tertagih
+    };
+    
+    // Count handover coupons (kupon keluar)
+    handoversData?.forEach(handover => {
+      collectorSummary.coupons_out += handover.coupon_count;
+    });
+    
+    // Count payment coupons (kupon masuk)
+    collectorSummary.coupons_in = paymentList.length;
 
-  return (
+    // Second table header
+    const secondTableStartRow = totalRowNum + 4; // After total row + 3 empty rows
+    
+    // Title for second table
+    ws.mergeCells(`A${secondTableStartRow}:F${secondTableStartRow}`);
+    const secondTitleCell = ws.getCell(`A${secondTableStartRow}`);
+    secondTitleCell.value = 'RINGKASAN PERFORMA KOLEKTOR';
+    secondTitleCell.font = { bold: true, size: 12, color: { argb: 'FFFFFFFF' } };
+    secondTitleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFF6B35' } };
+    secondTitleCell.alignment = { horizontal: 'center', vertical: 'middle' };
+
+    // Header row for second table
+    const secondHeaderRow = ws.addRow(["Kode Kolektor", "Nama", "Kupon Keluar", "Kupon Masuk", "Jumlah Tagihan", "Total Tertagih"]);
+    secondHeaderRow.eachCell((cell) => {
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFF8C00' } };
+      cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+      cell.alignment = { horizontal: 'center', vertical: 'middle' };
+      cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+    });
+
+    // Data row for second table (single collector)
+    const secondDataStartRow = secondTableStartRow + 2;
+    const collectorRow = ws.addRow([
+      collectorSummary.collector_code,
+      collectorSummary.collector_name,
+      collectorSummary.coupons_out,
+      collectorSummary.coupons_in,
+      collectorSummary.payment_count,
+      collectorSummary.total_collected
+    ]);
+    
+    collectorRow.eachCell((cell, colNumber) => {
+      cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+      
+      // Center align numeric columns
+      if (colNumber >= 3 && colNumber <= 5) {
+        cell.alignment = { horizontal: 'center' };
+      } else if (colNumber === 6) {
+        // Format currency for total tertagih
+        cell.numFmt = '"Rp "#,##0';
+        cell.alignment = { horizontal: 'right' };
+      }
+    });
+
+    // Adjust column widths for second table
+    ws.getColumn(1).width = Math.max(ws.getColumn(1).width, 15); // Kode Kolektor
+    ws.getColumn(2).width = Math.max(ws.getColumn(2).width, 25); // Nama
+    ws.getColumn(3).width = Math.max(ws.getColumn(3).width, 12); // Kupon Keluar
+    ws.getColumn(4).width = Math.max(ws.getColumn(4).width, 12); // Kupon Masuk
+    ws.getColumn(5).width = Math.max(ws.getColumn(5).width, 15); // Jumlah Tagihan
+    ws.getColumn(6).width = Math.max(ws.getColumn(6).width, 22); // Total Tertagih
+
+      // Download
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `detail_tagihan_kupon_${collector.collector_code}_${format(new Date(), "yyyy-MM-dd")}.xlsx`;
+      a.click();
+      URL.revokeObjectURL(url);
+      
+      toast.dismiss(); // Remove loading toast
+      toast.success(`Data tagihan dan kupon ${collector.name} berhasil diekspor`);
+    } catch (error) {
+      console.error("Error exporting Excel:", error);
+      toast.dismiss(); // Remove loading toast
+      toast.error("Gagal mengekspor data: " + (error instanceof Error ? error.message : 'Unknown error'));
+    }
+  };  return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>

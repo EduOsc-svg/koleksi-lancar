@@ -37,6 +37,7 @@ import { TablePagination } from "@/components/TablePagination";
 import { usePagination } from "@/hooks/usePagination";
 import { SearchInput } from "@/components/ui/search-input";
 import { CollectorDetailDialog } from "@/components/collector/CollectorDetailDialog";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function Collector() {
   const { t } = useTranslation();
@@ -127,16 +128,19 @@ export default function Collector() {
       return;
     }
 
-    const workbook = new ExcelJS.Workbook();
+    try {
+      toast.loading("Memproses data export...");
+
+      const workbook = new ExcelJS.Workbook();
     workbook.creator = "Credit Management System";
     workbook.created = new Date();
     
     // ============ Sheet 1: Performa Kolektor ============
     const worksheet = workbook.addWorksheet("Performa Kolektor");
 
-    // Add title and period info
-    worksheet.mergeCells('A1:F1');
-    const titleCell = worksheet.getCell('A1');
+    // Add title and period info starting from F4
+    worksheet.mergeCells('F4:K4');
+    const titleCell = worksheet.getCell('F4');
     titleCell.value = `LAPORAN PERFORMA KOLEKTOR - ${format(selectedDate, "MMMM yyyy", { locale: localeId }).toUpperCase()}`;
     titleCell.font = { bold: true, size: 16 };
     titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
@@ -144,28 +148,26 @@ export default function Collector() {
     titleCell.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 16 };
 
     // Periode info row
-    worksheet.mergeCells('A2:F2');
-    const periodCell = worksheet.getCell('A2');
+    worksheet.mergeCells('F5:K5');
+    const periodCell = worksheet.getCell('F5');
     periodCell.value = `Periode: ${format(selectedDate, "d MMMM yyyy", { locale: localeId })}`;
     periodCell.font = { size: 12 };
     periodCell.alignment = { horizontal: 'center' };
 
-    // Empty row
-    worksheet.addRow([]);
+    // Empty row (F6 will be empty)
 
-    // Header row
-    const headerRow = worksheet.addRow([
-      "Kode Kolektor",
-      "Nama", 
-      "Jumlah Tagihan",
-      "Total Tertagih",
-      "Rata-rata per Tagihan",
-      "Efisiensi (%)"
-    ]);
+    // Header row starting from F7
+    const headerRow = worksheet.getRow(7);
+    headerRow.getCell('F').value = "Kode Kolektor";
+    headerRow.getCell('G').value = "Nama";
+    headerRow.getCell('H').value = "Jumlah Tagihan";
+    headerRow.getCell('I').value = "Total Tertagih";
+    headerRow.getCell('J').value = "Rata-rata per Tagihan";
+    headerRow.getCell('K').value = "Efisiensi (%)";
 
     // Style header
-    headerRow.font = { bold: true };
-    headerRow.eachCell((cell) => {
+    ['F', 'G', 'H', 'I', 'J', 'K'].forEach(col => {
+      const cell = headerRow.getCell(col);
       cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF70AD47' } };
       cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
       cell.alignment = { horizontal: 'center', vertical: 'middle' };
@@ -177,27 +179,25 @@ export default function Collector() {
       };
     });
 
-    // Data rows with enhanced calculations
-    const dataStartRow = 5;
+    // Data rows with enhanced calculations using dynamic formulas
+    const dataStartRow = 8; // Now starting from row 8 since header is in row 7
     const totalCollected = collectorStats.reduce((sum, stat) => sum + stat.totalCollected, 0);
     const totalPayments = collectorStats.reduce((sum, stat) => sum + stat.paymentCount, 0);
 
     collectorStats.forEach((stat, index) => {
       const rowNum = dataStartRow + index;
-      const averagePerPayment = stat.paymentCount > 0 ? stat.totalCollected / stat.paymentCount : 0;
-      const efficiency = totalCollected > 0 ? (stat.totalCollected / totalCollected) * 100 : 0;
+      const row = worksheet.getRow(rowNum);
       
-      const row = worksheet.addRow([
-        stat.collector_code,
-        stat.name,
-        stat.paymentCount,
-        stat.totalCollected,
-        averagePerPayment,
-        efficiency / 100
-      ]);
+      row.getCell('F').value = stat.collector_code;
+      row.getCell('G').value = stat.name;
+      row.getCell('H').value = stat.paymentCount;
+      row.getCell('I').value = stat.totalCollected;
+      row.getCell('J').value = { formula: `IF(H${rowNum}=0,0,I${rowNum}/H${rowNum})` }; // Dynamic formula for average per payment
+      row.getCell('K').value = { formula: `I${rowNum}/$I$${dataStartRow + collectorStats.length}` }; // Dynamic formula for efficiency percentage
 
       // Format cells and add borders
-      row.eachCell((cell, colNumber) => {
+      ['F', 'G', 'H', 'I', 'J', 'K'].forEach((col, colIndex) => {
+        const cell = row.getCell(col);
         cell.border = {
           top: { style: 'thin' },
           left: { style: 'thin' },
@@ -206,33 +206,34 @@ export default function Collector() {
         };
 
         // Format specific columns
-        if (colNumber === 3) {
+        if (col === 'H') {
           cell.numFmt = '#,##0';
           cell.alignment = { horizontal: 'center' };
-        } else if (colNumber === 4 || colNumber === 5) {
+        } else if (col === 'I' || col === 'J') {
           cell.numFmt = '"Rp "#,##0';
           cell.alignment = { horizontal: 'right' };
-        } else if (colNumber === 6) {
+        } else if (col === 'K') {
           cell.numFmt = '0.0%';
           cell.alignment = { horizontal: 'right' };
         }
       });
     });
 
-    // Total row with formulas
+    // Total row with enhanced dynamic formulas
     const totalRowNum = dataStartRow + collectorStats.length;
-    const totalRow = worksheet.addRow([
-      '',
-      'TOTAL',
-      { formula: `SUM(C${dataStartRow}:C${totalRowNum - 1})` },
-      { formula: `SUM(D${dataStartRow}:D${totalRowNum - 1})` },
-      { formula: `AVERAGE(E${dataStartRow}:E${totalRowNum - 1})` },
-      '100.0%'
-    ]);
+    const totalRow = worksheet.getRow(totalRowNum);
+    
+    totalRow.getCell('F').value = '';
+    totalRow.getCell('G').value = 'TOTAL';
+    totalRow.getCell('H').value = { formula: `SUM(H${dataStartRow}:H${totalRowNum - 1})` }; // Total payments
+    totalRow.getCell('I').value = { formula: `SUM(I${dataStartRow}:I${totalRowNum - 1})` }; // Total collected
+    totalRow.getCell('J').value = { formula: `AVERAGE(J${dataStartRow}:J${totalRowNum - 1})` }; // Average per payment
+    totalRow.getCell('K').value = { formula: `SUM(K${dataStartRow}:K${totalRowNum - 1})` }; // Total efficiency (should be 100%)
 
     // Style total row
-    totalRow.font = { bold: true };
-    totalRow.eachCell((cell, colNumber) => {
+    ['F', 'G', 'H', 'I', 'J', 'K'].forEach((col) => {
+      const cell = totalRow.getCell(col);
+      cell.font = { bold: true };
       cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD9E2F3' } };
       cell.border = {
         top: { style: 'double' },
@@ -241,73 +242,310 @@ export default function Collector() {
         right: { style: 'thin' }
       };
 
-      if (colNumber === 3) {
+      if (col === 'H') {
         cell.numFmt = '#,##0';
         cell.alignment = { horizontal: 'center' };
-      } else if (colNumber === 4 || colNumber === 5) {
+      } else if (col === 'I' || col === 'J') {
         cell.numFmt = '"Rp "#,##0';
         cell.alignment = { horizontal: 'right' };
-      } else if (colNumber === 6) {
+      } else if (col === 'K') {
         cell.alignment = { horizontal: 'right' };
       }
     });
 
-    // Set column widths
-    worksheet.getColumn(1).width = 18; // Kode Kolektor
-    worksheet.getColumn(2).width = 30; // Nama
-    worksheet.getColumn(3).width = 18; // Jumlah Tagihan
-    worksheet.getColumn(4).width = 22; // Total Tertagih
-    worksheet.getColumn(5).width = 20; // Rata-rata
-    worksheet.getColumn(6).width = 15; // Efisiensi
+    // Set column widths - now for columns F through K
+    worksheet.getColumn('F').width = 18; // Kode Kolektor
+    worksheet.getColumn('G').width = 30; // Nama
+    worksheet.getColumn('H').width = 18; // Jumlah Tagihan
+    worksheet.getColumn('I').width = 22; // Total Tertagih
+    worksheet.getColumn('J').width = 20; // Rata-rata
+    worksheet.getColumn('K').width = 15; // Efisiensi
 
-    // ============ Sheet 2: Analisis Ringkasan ============
-    const summarySheet = workbook.addWorksheet("Ringkasan Analisis");
-    
-    summarySheet.mergeCells('A1:C1');
-    const summaryTitleCell = summarySheet.getCell('A1');
-    summaryTitleCell.value = `RINGKASAN ANALISIS PERFORMA - ${format(selectedDate, "MMMM yyyy", { locale: localeId }).toUpperCase()}`;
-    summaryTitleCell.font = { bold: true, size: 14 };
-    summaryTitleCell.alignment = { horizontal: 'center' };
-
-    // Summary metrics
-    summarySheet.addRow([]);
-    summarySheet.addRow([]);
-    
-    const summaryData = [
-      ['Metrik', 'Nilai', 'Keterangan'],
-      ['Total Kolektor Aktif', collectorStats.length, 'Jumlah kolektor yang melakukan penagihan'],
-      ['Total Transaksi Penagihan', totalPayments, 'Jumlah seluruh transaksi penagihan'],
-      ['Total Nilai Tertagih', totalCollected, 'Total nilai yang berhasil ditagih'],
-      ['Rata-rata per Kolektor', totalCollected / collectorStats.length, 'Rata-rata penagihan per kolektor'],
-      ['Rata-rata per Transaksi', totalCollected / totalPayments, 'Rata-rata nilai per transaksi'],
-      ['Kolektor Terbaik', collectorStats.reduce((best, current) => current.totalCollected > best.totalCollected ? current : best, collectorStats[0])?.name || '-', 'Kolektor dengan penagihan tertinggi']
-    ];
-
-    summaryData.forEach((rowData, index) => {
-      const row = summarySheet.addRow(rowData);
+    // Add conditional formatting for performance analysis
+    if (collectorStats.length > 0) {
+      const performanceDataRange = `I${dataStartRow}:I${dataStartRow + collectorStats.length - 1}`;
+      const efficiencyDataRange = `K${dataStartRow}:K${dataStartRow + collectorStats.length - 1}`;
       
-      if (index === 0) {
-        // Header styling
-        row.font = { bold: true };
-        row.eachCell((cell) => {
-          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4472C4' } };
-          cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
-          cell.alignment = { horizontal: 'center' };
-        });
-      } else {
-        // Data formatting
-        if (index >= 3 && index <= 5) {
-          row.getCell(2).numFmt = '"Rp "#,##0';
-        } else if (index === 2) {
-          row.getCell(2).numFmt = '#,##0';
+      // Conditional formatting for Total Tertagih (performance-based coloring)
+      worksheet.addConditionalFormatting({
+        ref: performanceDataRange,
+        rules: [
+          {
+            type: 'colorScale',
+            priority: 1,
+            cfvo: [
+              { type: 'min' },
+              { type: 'percentile', value: 50 },
+              { type: 'max' }
+            ],
+            color: [
+              { argb: 'FFFF6B6B' }, // Red for lowest
+              { argb: 'FFFFFF99' }, // Yellow for medium  
+              { argb: 'FF4ECDC4' }  // Green for highest
+            ]
+          }
+        ]
+      });
+
+      // Conditional formatting for Efficiency (percentage-based)
+      worksheet.addConditionalFormatting({
+        ref: efficiencyDataRange,
+        rules: [
+          {
+            type: 'cellIs',
+            operator: 'greaterThan',
+            formulae: ['0.29'],
+            priority: 1,
+            style: {
+              fill: { type: 'pattern', pattern: 'solid', bgColor: { argb: 'FF90EE90' } }, // Light green for high efficiency
+              font: { color: { argb: 'FF006400' } }
+            },
+          },
+          {
+            type: 'cellIs',
+            operator: 'between',
+            formulae: ['0.1', '0.29'],
+            priority: 2,
+            style: {
+              fill: { type: 'pattern', pattern: 'solid', bgColor: { argb: 'FFFFD700' } }, // Gold for medium efficiency
+              font: { color: { argb: 'FF8B4513' } }
+            },
+          },
+          {
+            type: 'cellIs',
+            operator: 'lessThan',
+            formulae: ['0.1'],
+            priority: 3,
+            style: {
+              fill: { type: 'pattern', pattern: 'solid', bgColor: { argb: 'FFFFCCCB' } }, // Light red for low efficiency
+              font: { color: { argb: 'FF8B0000' } }
+            },
+          }
+        ]
+      });
+    }
+
+    // ============ Sheet 2: Pelacakan Kupon ============
+    const couponSheet = workbook.addWorksheet("Pelacakan Kupon");
+    
+    // Get coupon handover data and payments for the selected month
+    const { data: handoversData } = await supabase
+      .from('coupon_handovers')
+      .select(`
+        *,
+        collectors(name, collector_code),
+        credit_contracts(contract_ref, customer_id, customers(name))
+      `)
+      .gte('handover_date', monthStart.toISOString().split('T')[0])
+      .lte('handover_date', monthEnd.toISOString().split('T')[0]);
+
+    const { data: paymentsData } = await supabase
+      .from('payment_logs')
+      .select(`
+        *,
+        credit_contracts(contract_ref, customer_id, customers(name)),
+        collectors(name, collector_code)
+      `)
+      .gte('payment_date', monthStart.toISOString().split('T')[0])
+      .lte('payment_date', monthEnd.toISOString().split('T')[0]);
+
+    // Process coupon tracking data by customer
+    const customerCouponMap = new Map();
+
+    // Process handovers (coupons received by collectors)
+    handoversData?.forEach(handover => {
+      const customerId = handover.credit_contracts?.customer_id;
+      const customerName = handover.credit_contracts?.customers?.name;
+      const contractRef = handover.credit_contracts?.contract_ref;
+      
+      if (customerId && customerName) {
+        const key = `${customerId}-${contractRef}`;
+        if (!customerCouponMap.has(key)) {
+          customerCouponMap.set(key, {
+            customerName,
+            contractRef,
+            couponsReceived: 0,
+            couponsPaid: 0,
+            collectorName: handover.collectors?.name || 'Unknown',
+            collectorCode: handover.collectors?.collector_code || 'N/A'
+          });
         }
+        customerCouponMap.get(key).couponsReceived += handover.coupon_count;
       }
     });
 
-    // Set column widths
-    summarySheet.getColumn('A').width = 25;
-    summarySheet.getColumn('B').width = 20;
-    summarySheet.getColumn('C').width = 35;
+    // Process payments (coupons paid)
+    paymentsData?.forEach(payment => {
+      const customerId = payment.credit_contracts?.customer_id;
+      const customerName = payment.credit_contracts?.customers?.name;
+      const contractRef = payment.credit_contracts?.contract_ref;
+      
+      if (customerId && customerName) {
+        const key = `${customerId}-${contractRef}`;
+        if (!customerCouponMap.has(key)) {
+          customerCouponMap.set(key, {
+            customerName,
+            contractRef,
+            couponsReceived: 0,
+            couponsPaid: 0,
+            collectorName: payment.collectors?.name || 'Unknown',
+            collectorCode: payment.collectors?.collector_code || 'N/A'
+          });
+        }
+        customerCouponMap.get(key).couponsPaid += 1; // Each payment represents one coupon paid
+      }
+    });
+
+    // Setup coupon sheet header
+    const couponTitleRow = couponSheet.addRow(['LAPORAN PELACAKAN KUPON PER KONSUMEN']);
+    couponTitleRow.font = { size: 16, bold: true };
+    couponTitleRow.alignment = { horizontal: 'center' };
+    couponSheet.mergeCells('A1:G1');
+
+    const couponPeriodRow = couponSheet.addRow([`Periode: ${format(monthStart, "MMMM yyyy", { locale: localeId })}`]);
+    couponPeriodRow.font = { size: 12 };
+    couponPeriodRow.alignment = { horizontal: 'center' };
+    couponSheet.mergeCells('A2:G2');
+
+    couponSheet.addRow([]); // Empty row
+
+    // Header for coupon tracking
+    const couponHeaderRow = couponSheet.addRow([
+      "Konsumen",
+      "No. Kontrak",
+      "Kupon Diterima",
+      "Kupon Dibayar",
+      "Kupon Tertunggak",
+      "Kolektor",
+      "Kode Kolektor"
+    ]);
+
+    // Style coupon header
+    couponHeaderRow.font = { bold: true };
+    couponHeaderRow.eachCell((cell) => {
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFF6B35' } };
+      cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+      cell.alignment = { horizontal: 'center', vertical: 'middle' };
+      cell.border = {
+        top: { style: 'thin' },
+        left: { style: 'thin' },
+        bottom: { style: 'thin' },
+        right: { style: 'thin' }
+      };
+    });
+
+    // Add coupon tracking data rows
+    const couponDataStartRow = 5; // Row 5 is where data starts (after title, period, empty row, header)
+    let dataRowCount = 0;
+
+    Array.from(customerCouponMap.values()).forEach((customerData, index) => {
+      const currentRow = couponDataStartRow + index;
+      
+      const row = couponSheet.addRow([
+        customerData.customerName,
+        customerData.contractRef,
+        customerData.couponsReceived,
+        customerData.couponsPaid,
+        { formula: `C${currentRow}-D${currentRow}` }, // Dynamic formula for outstanding coupons
+        customerData.collectorName,
+        customerData.collectorCode
+      ]);
+
+      // Style data rows
+      row.eachCell((cell, colNumber) => {
+        cell.border = {
+          top: { style: 'thin' },
+          left: { style: 'thin' },
+          bottom: { style: 'thin' },
+          right: { style: 'thin' }
+        };
+        
+        // Center align numeric columns
+        if (colNumber >= 3 && colNumber <= 5) {
+          cell.alignment = { horizontal: 'center' };
+        }
+        
+        // Color code outstanding coupons with conditional formatting
+        if (colNumber === 5) {
+          // Add conditional formatting for better visual representation
+          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFF' } };
+        }
+      });
+
+      dataRowCount++;
+    });
+
+    // Calculate the range for formulas
+    const dataEndRow = couponDataStartRow + dataRowCount - 1;
+
+    // Add summary row for coupons with dynamic formulas
+    couponSheet.addRow([]); // Empty row
+    const couponSummaryRow = couponSheet.addRow([
+      "TOTAL",
+      "",
+      { formula: `SUM(C${couponDataStartRow}:C${dataEndRow})` }, // Dynamic formula for Kupon Diterima
+      { formula: `SUM(D${couponDataStartRow}:D${dataEndRow})` }, // Dynamic formula for Kupon Dibayar  
+      { formula: `SUM(E${couponDataStartRow}:E${dataEndRow})` }, // Dynamic formula for Kupon Tertunggak
+      "",
+      ""
+    ]);
+
+    couponSummaryRow.font = { bold: true };
+    couponSummaryRow.eachCell((cell, colNumber) => {
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFEB3B' } };
+      cell.font = { bold: true };
+      
+      if (colNumber >= 3 && colNumber <= 5) {
+        cell.alignment = { horizontal: 'center' };
+      }
+      
+      cell.border = {
+        top: { style: 'thick' },
+        left: { style: 'thin' },
+        bottom: { style: 'thick' },
+        right: { style: 'thin' }
+      };
+    });
+
+    // Set column widths for coupon sheet
+    couponSheet.getColumn('A').width = 25; // Customer name
+    couponSheet.getColumn('B').width = 15; // Contract ref
+    couponSheet.getColumn('C').width = 15; // Coupons received
+    couponSheet.getColumn('D').width = 15; // Coupons paid
+    couponSheet.getColumn('E').width = 15; // Outstanding
+    couponSheet.getColumn('F').width = 20; // Collector
+    couponSheet.getColumn('G').width = 15; // Collector Code
+
+    // Add conditional formatting to Outstanding column (E) for dynamic visual feedback
+    if (dataRowCount > 0) {
+      const outstandingRange = `E${couponDataStartRow}:E${couponDataStartRow + dataRowCount - 1}`;
+      
+      couponSheet.addConditionalFormatting({
+        ref: outstandingRange,
+        rules: [
+          {
+            type: 'cellIs',
+            operator: 'greaterThan',
+            formulae: ['0'],
+            priority: 1,
+            style: {
+              fill: { type: 'pattern', pattern: 'solid', bgColor: { argb: 'FFFFCCCC' } }, // Light red for outstanding
+              font: { color: { argb: 'FF8B0000' } } // Dark red text
+            },
+          },
+          {
+            type: 'cellIs',
+            operator: 'equal',
+            formulae: ['0'],
+            priority: 2,
+            style: {
+              fill: { type: 'pattern', pattern: 'solid', bgColor: { argb: 'FFCCFFCC' } }, // Light green for zero outstanding
+              font: { color: { argb: 'FF006400' } } // Dark green text
+            },
+          }
+        ]
+      });
+    }
 
     // Generate and download file
     const buffer = await workbook.xlsx.writeBuffer();
@@ -317,10 +555,17 @@ export default function Collector() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `performa_kolektor_lengkap_${format(selectedDate, "yyyy-MM")}.xlsx`;
+    a.download = `performa_kolektor_dengan_kupon_${format(selectedDate, "yyyy-MM")}.xlsx`;
     a.click();
     URL.revokeObjectURL(url);
-    toast.success("Data berhasil diekspor dengan analisis lengkap");
+    
+    toast.dismiss(); // Remove loading toast
+    toast.success("Data kolektor dan pelacakan kupon berhasil diekspor");
+    } catch (error) {
+      console.error("Error exporting Excel:", error);
+      toast.dismiss(); // Remove loading toast
+      toast.error("Gagal mengekspor data: " + (error instanceof Error ? error.message : 'Unknown error'));
+    }
   };
 
   return (

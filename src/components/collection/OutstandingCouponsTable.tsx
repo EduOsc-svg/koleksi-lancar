@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FileX, Download } from "lucide-react";
+import { FileX, Download, Clock, UserCheck, FileText, DollarSign, TrendingUp, Calendar } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,6 +19,9 @@ import {
 } from "@/components/ui/select";
 import { CouponHandover } from "@/hooks/useCouponHandovers";
 import { formatDate } from "@/lib/format";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
 
 interface Props {
   data: OutstandingCouponSummary[] | undefined;
@@ -239,48 +242,185 @@ export function OutstandingCouponsTable({ data, isLoading, handovers }: Props) {
         />
       )}
 
-      {/* Riwayat Serah Terima */}
+      {/* Enhanced Riwayat Serah Terima */}
       {handovers && handovers.length > 0 && (
-        <div className="space-y-2">
-          <h3 className="font-semibold text-sm">Riwayat Serah Terima Kupon</h3>
-          <div className="border rounded-lg overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/50">
-                  <TableHead className="font-semibold">Tanggal</TableHead>
-                  <TableHead className="font-semibold">Kolektor</TableHead>
-                  <TableHead className="font-semibold">Kontrak</TableHead>
-                  <TableHead className="font-semibold">Konsumen</TableHead>
-                  <TableHead className="font-semibold text-center">Kupon</TableHead>
-                  <TableHead className="font-semibold text-right">Total Nominal</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {handovers.slice(0, 20).map((h) => {
-                  const amount = h.credit_contracts?.daily_installment_amount || 0;
-                  return (
-                    <TableRow key={h.id}>
-                      <TableCell className="text-sm">{formatDate(h.handover_date)}</TableCell>
-                      <TableCell className="text-sm">
-                        {h.collectors?.name} <span className="text-muted-foreground">({h.collectors?.collector_code})</span>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="font-mono text-xs">{h.credit_contracts?.contract_ref}</Badge>
-                      </TableCell>
-                      <TableCell className="text-sm">{h.credit_contracts?.customers?.name || '-'}</TableCell>
-                      <TableCell className="text-center text-sm">
-                        #{h.start_index}-#{h.end_index} ({h.coupon_count})
-                      </TableCell>
-                      <TableCell className="text-right text-sm font-medium">
-                        {formatRupiah(h.coupon_count * amount)}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </div>
-        </div>
+        <Card className="shadow-sm border-0 bg-gradient-to-br from-indigo-50/50 to-purple-50/50 dark:from-indigo-950/20 dark:to-purple-950/20">
+          <CardHeader className="pb-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-indigo-500 flex items-center justify-center">
+                  <Clock className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg font-semibold text-indigo-900 dark:text-indigo-100">
+                    Riwayat Serah Terima Kupon
+                  </CardTitle>
+                  <p className="text-sm text-indigo-600/70 dark:text-indigo-300/70 mt-1">
+                    {handovers.length} transaksi serah terima • Menampilkan 20 terbaru
+                  </p>
+                </div>
+              </div>
+              <Badge variant="outline" className="bg-white dark:bg-gray-900 border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300">
+                Riwayat
+              </Badge>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="border rounded-lg overflow-hidden bg-white dark:bg-gray-900">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-950/50 dark:to-purple-950/50">
+                    <TableHead className="font-semibold text-indigo-800 dark:text-indigo-200">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4" />
+                        Tanggal
+                      </div>
+                    </TableHead>
+                    <TableHead className="font-semibold text-indigo-800 dark:text-indigo-200">
+                      <div className="flex items-center gap-2">
+                        <UserCheck className="h-4 w-4" />
+                        Kolektor
+                      </div>
+                    </TableHead>
+                    <TableHead className="font-semibold text-indigo-800 dark:text-indigo-200">
+                      <div className="flex items-center gap-2">
+                        <FileText className="h-4 w-4" />
+                        Kontrak
+                      </div>
+                    </TableHead>
+                    <TableHead className="font-semibold text-indigo-800 dark:text-indigo-200">
+                      <div className="flex items-center gap-2">
+                        <UserCheck className="h-4 w-4" />
+                        Konsumen
+                      </div>
+                    </TableHead>
+                    <TableHead className="font-semibold text-center text-indigo-800 dark:text-indigo-200">
+                      <div className="flex items-center justify-center gap-2">
+                        <TrendingUp className="h-4 w-4" />
+                        Kupon
+                      </div>
+                    </TableHead>
+                    <TableHead className="font-semibold text-right text-indigo-800 dark:text-indigo-200">
+                      <div className="flex items-center justify-end gap-2">
+                        <DollarSign className="h-4 w-4" />
+                        Total Nominal
+                      </div>
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {handovers.slice(0, 20).map((h, index) => {
+                    const amount = h.credit_contracts?.daily_installment_amount || 0;
+                    const totalAmount = h.coupon_count * amount;
+                    const isRecent = index < 3; // Mark first 3 as recent
+                    
+                    return (
+                      <TableRow 
+                        key={h.id} 
+                        className={cn(
+                          "hover:bg-indigo-50/50 dark:hover:bg-indigo-950/20 transition-colors",
+                          isRecent && "bg-gradient-to-r from-blue-50/50 to-indigo-50/50 dark:from-blue-950/20 dark:to-indigo-950/20"
+                        )}
+                      >
+                        <TableCell className="py-4">
+                          <div className="flex items-center gap-2">
+                            <div className={cn(
+                              "h-2 w-2 rounded-full",
+                              isRecent ? "bg-green-500" : "bg-gray-400"
+                            )}></div>
+                            <div>
+                              <p className="text-sm font-medium">{formatDate(h.handover_date)}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {new Date(h.created_at).toLocaleTimeString('id-ID', { 
+                                  hour: '2-digit', 
+                                  minute: '2-digit' 
+                                })}
+                              </p>
+                            </div>
+                          </div>
+                        </TableCell>
+                        
+                        <TableCell className="py-4">
+                          <div className="flex items-center gap-2">
+                            <UserCheck className="h-4 w-4 text-blue-500" />
+                            <div>
+                              <p className="text-sm font-medium">{h.collectors?.name}</p>
+                              <Badge variant="secondary" className="text-xs">
+                                {h.collectors?.collector_code}
+                              </Badge>
+                            </div>
+                          </div>
+                        </TableCell>
+                        
+                        <TableCell className="py-4">
+                          <Badge variant="outline" className="font-mono text-xs bg-white dark:bg-gray-800">
+                            {h.credit_contracts?.contract_ref}
+                          </Badge>
+                        </TableCell>
+                        
+                        <TableCell className="py-4">
+                          <div className="flex items-center gap-2">
+                            <UserCheck className="h-4 w-4 text-green-500" />
+                            <span className="text-sm font-medium">
+                              {h.credit_contracts?.customers?.name || '-'}
+                            </span>
+                          </div>
+                        </TableCell>
+                        
+                        <TableCell className="text-center py-4">
+                          <div className="flex flex-col items-center gap-1">
+                            <Badge 
+                              variant={isRecent ? "default" : "secondary"} 
+                              className={cn(
+                                "text-xs font-mono",
+                                isRecent && "bg-blue-500 hover:bg-blue-600"
+                              )}
+                            >
+                              #{h.start_index}-#{h.end_index}
+                            </Badge>
+                            <span className="text-xs text-muted-foreground">
+                              {h.coupon_count} kupon
+                            </span>
+                          </div>
+                        </TableCell>
+                        
+                        <TableCell className="text-right py-4">
+                          <div className="flex flex-col items-end gap-1">
+                            <p className={cn(
+                              "text-sm font-bold",
+                              isRecent ? "text-blue-600 dark:text-blue-400" : "text-gray-700 dark:text-gray-300"
+                            )}>
+                              {formatRupiah(totalAmount)}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {formatRupiah(amount)}/kupon
+                            </p>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+            
+            {handovers.length > 20 && (
+              <div className="mt-4 p-3 rounded-lg bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-950/20 dark:to-purple-950/20 border border-indigo-200/50 dark:border-indigo-800/50">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-indigo-500" />
+                    <span className="text-sm text-indigo-700 dark:text-indigo-300">
+                      Menampilkan 20 dari {handovers.length} total transaksi
+                    </span>
+                  </div>
+                  <Button variant="outline" size="sm" className="text-indigo-600 dark:text-indigo-400 border-indigo-300 dark:border-indigo-700">
+                    Lihat Semua
+                  </Button>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       )}
     </div>
   );

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Check, ChevronsUpDown, Send } from "lucide-react";
+import { Check, ChevronsUpDown, Send, Users, FileText, Calendar, MessageSquare, DollarSign, Hash, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,6 +10,8 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { cn } from "@/lib/utils";
 import { formatRupiah } from "@/lib/format";
 import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 
 interface Contract {
   id: string;
@@ -81,41 +83,84 @@ export function HandoverCouponForm({ contracts, collectors, onSubmit, isSubmitti
   };
 
   return (
-    <Card>
-      <CardHeader className="pb-4">
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <Send className="h-5 w-5" />
-          Serah Terima Kupon
-        </CardTitle>
-        <CardDescription>
-          Catat kupon yang diambil kolektor untuk ditagihkan ke konsumen
-        </CardDescription>
+    <Card className="shadow-sm border-0 bg-gradient-to-br from-blue-50/50 to-indigo-50/50 dark:from-blue-950/20 dark:to-indigo-950/20">
+      <CardHeader className="pb-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center">
+              <Send className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <CardTitle className="text-xl font-semibold text-blue-900 dark:text-blue-100">
+                Serah Terima Kupon
+              </CardTitle>
+              <CardDescription className="text-blue-600/70 dark:text-blue-300/70 mt-1">
+                Catat kupon yang diambil kolektor untuk ditagihkan ke konsumen
+              </CardDescription>
+            </div>
+          </div>
+          <Badge variant="outline" className="bg-white dark:bg-gray-900 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300">
+            Form Serah Terima
+          </Badge>
+        </div>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Row 1: Kolektor + Kontrak */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Kolektor *</Label>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Enhanced Selection Row */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Kolektor Section */}
+            <div className="space-y-3">
+              <Label className="text-sm font-semibold flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                <Users className="h-4 w-4 text-blue-500" />
+                Pilih Kolektor <span className="text-red-500">*</span>
+              </Label>
               <Popover open={collectorOpen} onOpenChange={setCollectorOpen}>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" role="combobox" className="w-full justify-between font-normal">
-                    {collectorId
-                      ? (() => { const c = collectors?.find(c => c.id === collectorId); return c ? `${c.name} (${c.collector_code})` : "Pilih kolektor..."; })()
-                      : "Pilih kolektor..."}
+                  <Button 
+                    variant="outline" 
+                    role="combobox" 
+                    className={cn(
+                      "w-full justify-between font-normal h-12 bg-white dark:bg-gray-900",
+                      !collectorId && "text-muted-foreground",
+                      collectorId && "border-blue-300 dark:border-blue-700"
+                    )}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Users className="h-4 w-4 text-blue-500" />
+                      {collectorId
+                        ? (() => { 
+                            const c = collectors?.find(c => c.id === collectorId); 
+                            return c ? (
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium">{c.name}</span>
+                                <Badge variant="secondary" className="text-xs">{c.collector_code}</Badge>
+                              </div>
+                            ) : "Pilih kolektor..."; 
+                          })()
+                        : "Pilih kolektor..."}
+                    </div>
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-full p-0" align="start">
                   <Command>
-                    <CommandInput placeholder="Cari kolektor..." />
+                    <CommandInput placeholder="Cari kolektor..." className="h-9" />
                     <CommandList>
                       <CommandEmpty>Tidak ditemukan.</CommandEmpty>
                       <CommandGroup>
                         {collectors?.map(c => (
-                          <CommandItem key={c.id} value={`${c.name} ${c.collector_code}`} onSelect={() => { setCollectorId(c.id); setCollectorOpen(false); }}>
-                            <Check className={cn("mr-2 h-4 w-4", collectorId === c.id ? "opacity-100" : "opacity-0")} />
-                            {c.name} ({c.collector_code})
+                          <CommandItem 
+                            key={c.id} 
+                            value={`${c.name} ${c.collector_code}`} 
+                            onSelect={() => { setCollectorId(c.id); setCollectorOpen(false); }}
+                            className="flex items-center gap-3 py-3"
+                          >
+                            <Check className={cn("h-4 w-4", collectorId === c.id ? "opacity-100 text-blue-500" : "opacity-0")} />
+                            <Users className="h-4 w-4 text-gray-400" />
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium">{c.name}</span>
+                              <Badge variant="outline" className="text-xs">{c.collector_code}</Badge>
+                            </div>
                           </CommandItem>
                         ))}
                       </CommandGroup>
@@ -125,29 +170,63 @@ export function HandoverCouponForm({ contracts, collectors, onSubmit, isSubmitti
               </Popover>
             </div>
 
-            <div className="space-y-2">
-              <Label>Kontrak *</Label>
+            {/* Kontrak Section */}
+            <div className="space-y-3">
+              <Label className="text-sm font-semibold flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                <FileText className="h-4 w-4 text-green-500" />
+                Pilih Kontrak <span className="text-red-500">*</span>
+              </Label>
               <Popover open={contractOpen} onOpenChange={setContractOpen}>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" role="combobox" className="w-full justify-between font-normal">
-                    {contractId
-                      ? (() => { const c = selectedContract; return c ? `${c.contract_ref} - ${c.customers?.name || '-'}` : "Pilih kontrak..."; })()
-                      : "Pilih kontrak..."}
+                  <Button 
+                    variant="outline" 
+                    role="combobox" 
+                    className={cn(
+                      "w-full justify-between font-normal h-12 bg-white dark:bg-gray-900",
+                      !contractId && "text-muted-foreground",
+                      contractId && "border-green-300 dark:border-green-700"
+                    )}
+                  >
+                    <div className="flex items-center gap-2">
+                      <FileText className="h-4 w-4 text-green-500" />
+                      {contractId
+                        ? (() => { 
+                            const c = selectedContract; 
+                            return c ? (
+                              <div className="flex items-center gap-2">
+                                <Badge variant="outline" className="font-mono text-xs">{c.contract_ref}</Badge>
+                                <span className="font-medium truncate">{c.customers?.name || '-'}</span>
+                              </div>
+                            ) : "Pilih kontrak..."; 
+                          })()
+                        : "Pilih kontrak..."}
+                    </div>
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-full p-0" align="start">
                   <Command>
-                    <CommandInput placeholder="Cari kontrak atau konsumen..." />
+                    <CommandInput placeholder="Cari kontrak atau konsumen..." className="h-9" />
                     <CommandList>
                       <CommandEmpty>Tidak ditemukan.</CommandEmpty>
                       <CommandGroup>
                         {contracts?.map(c => (
-                          <CommandItem key={c.id} value={`${c.contract_ref} ${c.customers?.name || ''}`} onSelect={() => { setContractId(c.id); setContractOpen(false); }}>
-                            <Check className={cn("mr-2 h-4 w-4", contractId === c.id ? "opacity-100" : "opacity-0")} />
-                            <div>
-                              <span className="font-mono text-sm">{c.contract_ref}</span>
-                              <span className="text-muted-foreground text-sm ml-2">{c.customers?.name || '-'}</span>
+                          <CommandItem 
+                            key={c.id} 
+                            value={`${c.contract_ref} ${c.customers?.name || ''}`} 
+                            onSelect={() => { setContractId(c.id); setContractOpen(false); }}
+                            className="flex items-center gap-3 py-3"
+                          >
+                            <Check className={cn("h-4 w-4", contractId === c.id ? "opacity-100 text-green-500" : "opacity-0")} />
+                            <FileText className="h-4 w-4 text-gray-400" />
+                            <div className="flex flex-col gap-1">
+                              <div className="flex items-center gap-2">
+                                <Badge variant="outline" className="font-mono text-xs">{c.contract_ref}</Badge>
+                                <span className="font-medium">{c.customers?.name || '-'}</span>
+                              </div>
+                              <div className="text-xs text-muted-foreground">
+                                {formatRupiah(c.daily_installment_amount)}/kupon • Tenor: {c.tenor_days} hari
+                              </div>
                             </div>
                           </CommandItem>
                         ))}
@@ -159,45 +238,147 @@ export function HandoverCouponForm({ contracts, collectors, onSubmit, isSubmitti
             </div>
           </div>
 
-          {/* Contract info badge */}
+          {/* Enhanced Contract Info Display */}
           {selectedContract && (
-            <div className="rounded-md bg-muted/50 p-3 text-sm flex flex-wrap gap-x-6 gap-y-1">
-              <span>Angsuran: <span className="font-medium">{formatRupiah(selectedContract.daily_installment_amount)}</span>/kupon</span>
-              <span>Kupon saat ini: <span className="font-medium">#{selectedContract.current_installment_index}</span> dari {selectedContract.tenor_days}</span>
-              <span>Sisa kupon: <span className="font-medium">{maxCoupons}</span></span>
+            <div className="rounded-lg bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-950/20 dark:to-blue-950/20 border border-green-200/50 dark:border-green-800/50 p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <FileText className="h-5 w-5 text-green-600 dark:text-green-400" />
+                <h4 className="font-semibold text-green-800 dark:text-green-200">Detail Kontrak</h4>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-white/60 dark:bg-gray-800/60 border border-green-200/30">
+                  <DollarSign className="h-8 w-8 text-green-500 bg-green-100 dark:bg-green-900/50 rounded-full p-1.5" />
+                  <div>
+                    <p className="text-xs font-medium text-green-600 dark:text-green-400 uppercase tracking-wide">Angsuran</p>
+                    <p className="font-bold text-green-800 dark:text-green-200">{formatRupiah(selectedContract.daily_installment_amount)}</p>
+                    <p className="text-xs text-green-600 dark:text-green-400">per kupon</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-white/60 dark:bg-gray-800/60 border border-blue-200/30">
+                  <Hash className="h-8 w-8 text-blue-500 bg-blue-100 dark:bg-blue-900/50 rounded-full p-1.5" />
+                  <div>
+                    <p className="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide">Kupon Saat Ini</p>
+                    <p className="font-bold text-blue-800 dark:text-blue-200">#{selectedContract.current_installment_index}</p>
+                    <p className="text-xs text-blue-600 dark:text-blue-400">dari {selectedContract.tenor_days}</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-white/60 dark:bg-gray-800/60 border border-orange-200/30">
+                  <FileText className="h-8 w-8 text-orange-500 bg-orange-100 dark:bg-orange-900/50 rounded-full p-1.5" />
+                  <div>
+                    <p className="text-xs font-medium text-orange-600 dark:text-orange-400 uppercase tracking-wide">Sisa Kupon</p>
+                    <p className="font-bold text-orange-800 dark:text-orange-200">{maxCoupons}</p>
+                    <p className="text-xs text-orange-600 dark:text-orange-400">kupon tersisa</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-white/60 dark:bg-gray-800/60 border border-purple-200/30">
+                  <Users className="h-8 w-8 text-purple-500 bg-purple-100 dark:bg-purple-900/50 rounded-full p-1.5" />
+                  <div>
+                    <p className="text-xs font-medium text-purple-600 dark:text-purple-400 uppercase tracking-wide">Konsumen</p>
+                    <p className="font-bold text-purple-800 dark:text-purple-200 truncate">{selectedContract.customers?.name || '-'}</p>
+                    <Badge variant="outline" className="text-xs mt-1">{selectedContract.contract_ref}</Badge>
+                  </div>
+                </div>
+              </div>
+              
+              {maxCoupons <= 0 && (
+                <div className="mt-4 flex items-center gap-2 p-3 rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800">
+                  <AlertCircle className="h-5 w-5 text-red-500" />
+                  <p className="text-sm font-medium text-red-700 dark:text-red-300">
+                    Kontrak ini sudah tidak memiliki kupon tersisa untuk diserahkan.
+                  </p>
+                </div>
+              )}
             </div>
           )}
 
-          {/* Row 2: Jumlah + Tanggal + Catatan + Button */}
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 items-end">
-            <div className="space-y-2">
-              <Label>Jumlah Kupon *</Label>
+          <Separator className="my-6" />
+
+          {/* Enhanced Input Section */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="space-y-3">
+              <Label className="text-sm font-semibold flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                <Hash className="h-4 w-4 text-orange-500" />
+                Jumlah Kupon <span className="text-red-500">*</span>
+              </Label>
               <Input
                 type="number"
                 min={1}
                 max={maxCoupons || 999}
                 value={couponCount}
                 onChange={e => setCouponCount(parseInt(e.target.value) || 1)}
+                className="text-center font-semibold h-12 bg-white dark:bg-gray-900 border-orange-300 dark:border-orange-700"
+                disabled={!selectedContract || maxCoupons <= 0}
               />
               {selectedContract && couponCount > 0 && (
-                <p className="text-xs text-muted-foreground">
-                  #{startIndex}-#{endIndex} = {formatRupiah(couponCount * selectedContract.daily_installment_amount)}
-                </p>
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground font-medium">
+                    Kupon #{startIndex} - #{endIndex}
+                  </p>
+                  <p className="text-xs font-bold text-orange-600 dark:text-orange-400">
+                    Total: {formatRupiah(couponCount * selectedContract.daily_installment_amount)}
+                  </p>
+                </div>
               )}
             </div>
 
-            <div className="space-y-2">
-              <Label>Tanggal</Label>
-              <Input type="date" value={handoverDate} onChange={e => setHandoverDate(e.target.value)} />
+            <div className="space-y-3">
+              <Label className="text-sm font-semibold flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                <Calendar className="h-4 w-4 text-purple-500" />
+                Tanggal Serah Terima
+              </Label>
+              <Input 
+                type="date" 
+                value={handoverDate} 
+                onChange={e => setHandoverDate(e.target.value)} 
+                className="h-12 bg-white dark:bg-gray-900 border-purple-300 dark:border-purple-700"
+              />
             </div>
 
-            <div className="space-y-2">
-              <Label>Catatan</Label>
-              <Input value={notes} onChange={e => setNotes(e.target.value)} placeholder="Opsional" />
+            <div className="space-y-3 lg:col-span-2">
+              <Label className="text-sm font-semibold flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                <MessageSquare className="h-4 w-4 text-indigo-500" />
+                Catatan Tambahan
+              </Label>
+              <Input 
+                value={notes} 
+                onChange={e => setNotes(e.target.value)} 
+                placeholder="Catatan atau keterangan tambahan (opsional)" 
+                className="h-12 bg-white dark:bg-gray-900 border-indigo-300 dark:border-indigo-700"
+              />
             </div>
+          </div>
 
-            <Button type="submit" disabled={isSubmitting || !collectorId || !contractId}>
-              {isSubmitting ? "Menyimpan..." : "Simpan Serah Terima"}
+          {/* Enhanced Submit Section */}
+          <div className="flex flex-col sm:flex-row items-center gap-4 pt-4">
+            <div className="flex-1">
+              {selectedContract && couponCount > 0 && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <div className="h-2 w-2 rounded-full bg-green-500"></div>
+                  <span>Siap untuk diserahkan: <strong>{couponCount} kupon</strong> senilai <strong>{formatRupiah(couponCount * selectedContract.daily_installment_amount)}</strong></span>
+                </div>
+              )}
+            </div>
+            <Button 
+              type="submit" 
+              disabled={isSubmitting || !collectorId || !contractId || maxCoupons <= 0}
+              className="h-12 px-8 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold shadow-lg"
+              size="lg"
+            >
+              {isSubmitting ? (
+                <>
+                  <div className="animate-spin h-4 w-4 mr-2 border-2 border-white/20 border-t-white rounded-full"></div>
+                  Menyimpan...
+                </>
+              ) : (
+                <>
+                  <Send className="mr-2 h-4 w-4" />
+                  Simpan Serah Terima
+                </>
+              )}
             </Button>
           </div>
         </form>
