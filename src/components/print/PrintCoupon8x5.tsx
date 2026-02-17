@@ -59,7 +59,7 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
           height: 210mm;
           background: white;
           box-shadow: 0 0 15px rgba(0,0,0,0.5);
-          padding: 5mm; 
+          padding: 3mm; /* Diperkecil dari 5mm ke 3mm */
           margin-bottom: 30px;
           display: flex;
           justify-content: center;
@@ -91,7 +91,7 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
         .print-coupon-wrapper {
           width: 297mm;
           height: 210mm;
-          padding: 5mm; 
+          padding: 3mm; /* Diperkecil dari 5mm ke 3mm untuk menghemat kertas */
           margin: 0 auto;
           page-break-after: always;
           page-break-inside: avoid;
@@ -139,12 +139,12 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
         grid-template-columns: repeat(3, 8.4cm);
         grid-template-rows: repeat(3, 5.8cm);
         
-        /* Gap untuk garis potong yang jelas */
-        gap: 2mm; 
+        /* Gap untuk garis potong yang jelas - diperkecil */
+        gap: 1mm; 
         
         /* GARIS POTONG LUAR yang lebih tebal */
         border: 2px dashed #000;
-        padding: 2mm;
+        padding: 1mm; /* Diperkecil dari 2mm ke 1mm */
         
         /* Background untuk membedakan area potong */
         background: repeating-linear-gradient(
@@ -244,7 +244,7 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
       @media print {
         .coupon-grid {
           border: 2px dashed #000;
-          gap: 3mm; /* Gap lebih besar untuk cetak */
+          gap: 1.5mm; /* Gap diperkecil untuk menghemat kertas */
           background: none; /* Hilangkan background pattern saat cetak */
         }
         
@@ -475,7 +475,7 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
   // Constants
   const REKENING_NUMBER = "008201003537567";
   const KANTOR_NUMBER = "0821 8802 0656";
-  const BG_IMAGE_URL = "https://uploads.onecompiler.io/3zcmc9fyy/448fk8uyf/Background%20WM%20SME2.jpg";
+  const BG_IMAGE_URL = "/BackGroundCV.png";
 
   const printContent = (
     <>
