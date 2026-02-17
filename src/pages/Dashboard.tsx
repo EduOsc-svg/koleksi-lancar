@@ -119,118 +119,6 @@ export default function Dashboard() {
     }
   };
 
-  // Handle export monthly report
-  const handleExportMonthlyReport = async () => {
-    if (!monthlyData) {
-      toast.error('Data bulanan belum tersedia');
-      return;
-    }
-    
-    try {
-      // Dynamic import ExcelJS untuk mengurangi bundle size awal
-      const ExcelJS = (await import('exceljs')).default;
-      
-      const workbook = new ExcelJS.Workbook();
-      workbook.creator = 'Credit Management System';
-      workbook.created = new Date();
-      
-      const worksheet = workbook.addWorksheet('Laporan Bulanan');
-      
-      // Title
-      worksheet.mergeCells('A1:F1');
-      const titleCell = worksheet.getCell('A1');
-      titleCell.value = `LAPORAN KEUANGAN BULANAN - ${format(selectedMonth, 'MMMM yyyy', { locale: idLocale }).toUpperCase()}`;
-      titleCell.font = { bold: true, size: 16 };
-      titleCell.alignment = { horizontal: 'center' };
-      titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4472C4' } };
-      titleCell.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 16 };
-
-      // Period info
-      worksheet.mergeCells('A2:F2');
-      const periodCell = worksheet.getCell('A2');
-      periodCell.value = `Periode: ${format(selectedMonth, 'd MMMM yyyy', { locale: idLocale })}`;
-      periodCell.font = { size: 12 };
-      periodCell.alignment = { horizontal: 'center' };
-
-      // Empty row
-      worksheet.addRow([]);
-
-      // Summary data
-      const summaryData = [
-        ['Metrik', 'Nilai', 'Keterangan'],
-        ['Total Modal', monthlyData.total_modal, 'Modal yang dikeluarkan'],
-        ['Total Omset', monthlyData.total_omset, 'Target pinjaman'],
-        ['Keuntungan Kotor', monthlyData.total_profit, 'Sebelum biaya operasional'],
-        ['Biaya Operasional', totalExpenses, 'Total biaya operasional'],
-        ['Total Komisi', monthlyData.total_commission, 'Komisi sales agent'],
-        ['Keuntungan Bersih', netProfit, 'Setelah biaya operasional'],
-        ['Margin Keuntungan', monthlyData.profit_margin / 100, 'Persentase margin'],
-        ['Jumlah Kontrak', monthlyData.contracts_count, 'Total kontrak bulan ini'],
-        ['Rata-rata per Kontrak', (monthlyData.total_omset / Math.max(monthlyData.contracts_count, 1)), 'Omset per kontrak'],
-        ['ROI Bulanan', monthlyData.total_modal ? ((netProfit / monthlyData.total_modal) * 100) / 100 : 0, 'Return on Investment']
-      ];
-
-      summaryData.forEach((rowData, index) => {
-        const row = worksheet.addRow(rowData);
-        
-        if (index === 0) {
-          // Header styling
-          row.font = { bold: true };
-          row.eachCell((cell) => {
-            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF70AD47' } };
-            cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
-            cell.alignment = { horizontal: 'center' };
-            cell.border = {
-              top: { style: 'thin' },
-              left: { style: 'thin' },
-              bottom: { style: 'thin' },
-              right: { style: 'thin' }
-            };
-          });
-        } else {
-          // Data formatting
-          row.eachCell((cell, colNumber) => {
-            cell.border = {
-              top: { style: 'thin' },
-              left: { style: 'thin' },
-              bottom: { style: 'thin' },
-              right: { style: 'thin' }
-            };
-          });
-
-          if (index >= 1 && index <= 6) {
-            row.getCell(2).numFmt = '"Rp "#,##0';
-          } else if (index === 7 || index === 10) {
-            row.getCell(2).numFmt = '0.0%';
-          } else if (index === 8 || index === 9) {
-            if (index === 9) row.getCell(2).numFmt = '"Rp "#,##0';
-            else row.getCell(2).numFmt = '#,##0';
-          }
-        }
-      });
-
-      // Set column widths
-      worksheet.getColumn('A').width = 25;
-      worksheet.getColumn('B').width = 20;
-      worksheet.getColumn('C').width = 35;
-
-      // Generate and download
-      const buffer = await workbook.xlsx.writeBuffer();
-      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `Laporan_Bulanan_${format(selectedMonth, 'yyyy_MM', { locale: idLocale })}_Management_System_Kredit.xlsx`;
-      link.click();
-      window.URL.revokeObjectURL(url);
-      
-      toast.success('Laporan bulanan berhasil diexport');
-    } catch (error) {
-      toast.error('Gagal mengexport laporan');
-      console.error(error);
-    }
-  };
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -256,56 +144,39 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Monthly Performance Section */}
-      <Card>
-        <CardHeader className="pb-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <BarChart3 className="h-6 w-6 text-blue-600" />
-              <CardTitle className="text-xl">Performa Bulanan</CardTitle>
-            </div>
-            <div className="flex items-center gap-3">
-              <Button onClick={handleExportMonthlyReport} variant="outline" size="sm">
-                <FileSpreadsheet className="mr-2 h-4 w-4" />
-                Export Excel
-              </Button>
-              <div className="text-sm text-muted-foreground">
-                {format(selectedMonth, 'MMMM yyyy', { locale: idLocale })}
-              </div>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Monthly Stats Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      {/* Monthly Summary Cards - Horizontal Scrollable */}
+      <ScrollArea className="w-full">
+        <div className="flex gap-4 pb-4" style={{ minWidth: 'max-content' }}>
+          <div className="w-[180px] flex-shrink-0">
             <StatCard
               icon={DollarSign}
               iconColor="text-blue-500"
               label="Total Modal"
               value={monthlyData?.total_modal ?? 0}
-              subtitle={format(selectedMonth, 'MMM yyyy', { locale: idLocale })}
-              hoverInfo={`Modal yang dikeluarkan bulan ${format(selectedMonth, 'MMMM yyyy', { locale: idLocale })}`}
             />
-            
+          </div>
+          
+          <div className="w-[180px] flex-shrink-0">
             <StatCard
               icon={Wallet}
               iconColor="text-indigo-500"
-              label="Total Omset"
+              label="Omset"
               value={monthlyData?.total_omset ?? 0}
-              subtitle={format(selectedMonth, 'MMM yyyy', { locale: idLocale })}
-              hoverInfo={`Target pinjaman bulan ${format(selectedMonth, 'MMMM yyyy', { locale: idLocale })}`}
             />
+          </div>
 
+          <div className="w-[180px] flex-shrink-0">
             <StatCard
               icon={TrendingUp}
               iconColor="text-green-500"
-              label="Keuntungan Kotor"
+              label="Keuntungan"
               value={monthlyData?.total_profit ?? 0}
               valueColor="text-green-600"
-              subtitle={format(selectedMonth, 'MMM yyyy', { locale: idLocale })}
-              hoverInfo={`Keuntungan sebelum biaya operasional: ${formatRupiah(monthlyData?.total_profit ?? 0)}`}
+              subtitle="Sebelum operasional"
             />
+          </div>
 
+          <div className="w-[180px] flex-shrink-0">
             <StatCard
               icon={Settings}
               iconColor="text-orange-500"
@@ -313,86 +184,46 @@ export default function Dashboard() {
               value={totalExpenses}
               valueColor="text-orange-600"
               isNegative
-              subtitle={format(selectedMonth, 'MMM yyyy', { locale: idLocale })}
-              hoverInfo={`Total biaya operasional bulan ${format(selectedMonth, 'MMMM yyyy', { locale: idLocale })}`}
             />
+          </div>
 
+          <div className="w-[180px] flex-shrink-0">
             <StatCard
               icon={Percent}
               iconColor="text-purple-500"
               label="Total Komisi"
               value={monthlyData?.total_commission ?? 0}
               valueColor="text-purple-600"
-              subtitle={format(selectedMonth, 'MMM yyyy', { locale: idLocale })}
-              hoverInfo={`Komisi sales agent bulan ${format(selectedMonth, 'MMMM yyyy', { locale: idLocale })}`}
             />
+          </div>
 
+          <div className="w-[180px] flex-shrink-0">
             <StatCard
-              icon={CheckCircle}
-              iconColor={netProfit >= 0 ? "text-emerald-500" : "text-red-500"}
-              label="Keuntungan Bersih"
-              value={netProfit}
-              valueColor={netProfit >= 0 ? "text-emerald-600" : "text-red-600"}
-              subtitle={format(selectedMonth, 'MMM yyyy', { locale: idLocale })}
-              hoverInfo={`Keuntungan setelah biaya operasional: ${formatRupiah(netProfit)}`}
+              icon={Percent}
+              iconColor="text-emerald-500"
+              label="Margin"
+              value={monthlyData?.profit_margin ?? 0}
+              valueColor="text-emerald-600"
+              isPercentage
             />
           </div>
+        </div>
+        <ScrollBar orientation="horizontal" />
+      </ScrollArea>
 
-          {/* Monthly Summary */}
-          <div className="bg-gradient-to-r from-primary/5 to-primary/10 rounded-lg p-6 border border-primary/20">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="text-center">
-                <p className="text-sm text-muted-foreground mb-1">Margin Keuntungan</p>
-                <p className="text-2xl font-bold text-blue-600">{(monthlyData?.profit_margin ?? 0).toFixed(1)}%</p>
-              </div>
-              <div className="text-center">
-                <p className="text-sm text-muted-foreground mb-1">Jumlah Kontrak</p>
-                <p className="text-2xl font-bold">{monthlyData?.contracts_count ?? 0}</p>
-              </div>
-              <div className="text-center">
-                <p className="text-sm text-muted-foreground mb-1">Rata-rata per Kontrak</p>
-                <p className="text-2xl font-bold text-green-600">
-                  {formatRupiah((monthlyData?.total_omset ?? 0) / Math.max(monthlyData?.contracts_count ?? 1, 1))}
-                </p>
-              </div>
-              <div className="text-center">
-                <p className="text-sm text-muted-foreground mb-1">ROI Bulanan</p>
-                <p className="text-2xl font-bold text-emerald-600">
-                  {monthlyData?.total_modal ? ((netProfit / monthlyData.total_modal) * 100).toFixed(1) : 0}%
-                </p>
-              </div>
+      {/* Net Profit Card */}
+      <Card className="bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20">
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-muted-foreground mb-1">Keuntungan Bersih (Setelah Operasional)</p>
+              <p className={`text-3xl font-bold ${netProfit >= 0 ? 'text-green-600' : 'text-destructive'}`}>
+                {formatRupiah(netProfit)}
+              </p>
             </div>
-          </div>
-
-          {/* Monthly Performance Visualization */}
-          <div>
-            <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
-              <BarChart3 className="h-4 w-4" />
-              Visualisasi Performa Bulanan
-            </h4>
-            <div className="h-[200px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={[
-                  { name: 'Modal', value: monthlyData?.total_modal ?? 0, fill: 'hsl(217, 91%, 60%)' },
-                  { name: 'Omset', value: monthlyData?.total_omset ?? 0, fill: 'hsl(239, 84%, 67%)' },
-                  { name: 'Keuntungan', value: monthlyData?.total_profit ?? 0, fill: 'hsl(142, 76%, 36%)' },
-                  { name: 'Komisi', value: monthlyData?.total_commission ?? 0, fill: 'hsl(271, 81%, 56%)' },
-                  { name: 'Operasional', value: totalExpenses, fill: 'hsl(25, 95%, 53%)' },
-                  { name: 'Bersih', value: netProfit, fill: netProfit >= 0 ? 'hsl(142, 76%, 36%)' : 'hsl(0, 84%, 60%)' }
-                ]}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                  <XAxis dataKey="name" className="text-xs" />
-                  <YAxis tickFormatter={(v) => `${(v / 1000000).toFixed(0)}M`} className="text-xs" />
-                  <Tooltip
-                    formatter={(value: number) => [formatRupiah(value), 'Jumlah']}
-                    contentStyle={{ 
-                      backgroundColor: "hsl(var(--card))", 
-                      border: "1px solid hsl(var(--border))" 
-                    }}
-                  />
-                  <Bar dataKey="value" fill="fill" />
-                </BarChart>
-              </ResponsiveContainer>
+            <div className="text-right">
+              <p className="text-sm text-muted-foreground mb-1">Periode</p>
+              <p className="font-medium">{format(selectedMonth, 'MMMM yyyy', { locale: idLocale })}</p>
             </div>
           </div>
         </CardContent>

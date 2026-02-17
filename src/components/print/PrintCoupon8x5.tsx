@@ -376,8 +376,9 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
 
       .content-area {
         position: absolute;
-        top: 24mm; /* Jarak dari atas melewati Header Gambar */
-        left: 3mm;
+        top: 26mm; /* Disesuaikan agar tidak tertimpa header background */
+        left: 4mm; /* Disesuaikan untuk memberikan margin yang cukup */
+        max-width: 50mm; /* Batasi lebar untuk mencegah overflow */
       }
 
       .data-row {
