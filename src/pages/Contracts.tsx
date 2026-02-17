@@ -847,39 +847,13 @@ export default function Contracts() {
 
       {/* Contract Detail Dialog - Progress & Info */}
       <Dialog open={detailDialogOpen} onOpenChange={setDetailDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh]">
-          <DialogHeader className="sticky top-0 z-10 bg-background pb-4">
+        <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col overflow-hidden p-0">
+          <DialogHeader className="shrink-0 p-6 pb-4">
             <DialogTitle>Detail Kontrak: {selectedContract?.contract_ref}</DialogTitle>
           </DialogHeader>
           
-          {/* Scrollable Content with Professional Scrolling */}
-          <div className="relative max-h-[60vh] overflow-hidden">
-            {/* Scroll Indicator - Top Shadow */}
-            <div className="absolute top-0 left-0 right-0 h-4 bg-gradient-to-b from-background via-background/80 to-transparent z-10 opacity-0 transition-opacity duration-300 pointer-events-none" id="contract-scroll-top" />
-            
-            {/* Main Scrollable Content */}
-            <div 
-              className="h-full overflow-y-auto px-1 scrollbar-thin scrollbar-thumb-muted-foreground/20 scrollbar-track-transparent hover:scrollbar-thumb-muted-foreground/40 transition-colors"
-              onScroll={(e) => {
-                const target = e.target as HTMLDivElement;
-                const scrollTop = target.scrollTop;
-                const scrollHeight = target.scrollHeight;
-                const clientHeight = target.clientHeight;
-                
-                // Update scroll indicators
-                const topIndicator = document.getElementById('contract-scroll-top');
-                const bottomIndicator = document.getElementById('contract-scroll-bottom');
-                
-                if (topIndicator) {
-                  topIndicator.style.opacity = scrollTop > 20 ? '1' : '0';
-                }
-                
-                if (bottomIndicator) {
-                  const isNearBottom = scrollTop + clientHeight >= scrollHeight - 20;
-                  bottomIndicator.style.opacity = isNearBottom ? '0' : '1';
-                }
-              }}
-            >
+          {/* Scrollable Content */}
+          <div className="flex-1 overflow-y-auto px-6">
               <div className="space-y-6 pb-4">
                 {selectedContract && (() => {
                   const progress = (selectedContract.current_installment_index / selectedContract.tenor_days) * 100;
@@ -993,15 +967,11 @@ export default function Contracts() {
                   );
                 })()}
               </div>
-            </div>
-            
-            {/* Scroll Indicator - Bottom Shadow */}
-            <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-background via-background/80 to-transparent z-10 opacity-100 transition-opacity duration-300 pointer-events-none" id="contract-scroll-bottom" />
           </div>
           
-          <DialogFooter className="sticky bottom-0 z-10 bg-background pt-4 border-t">
+          <div className="shrink-0 p-6 pt-4 border-t flex justify-end">
             <Button variant="outline" onClick={() => setDetailDialogOpen(false)}>Tutup</Button>
-          </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
 
