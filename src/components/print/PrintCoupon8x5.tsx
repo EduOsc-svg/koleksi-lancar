@@ -407,23 +407,61 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
         height: 100%;
       }
 
+      /* Header Section */
+      .header-section {
+        position: absolute;
+        top: 3mm;
+        left: 50%;
+        transform: translateX(-50%);
+        text-align: center;
+        width: 100%;
+      }
+
+      .company-name {
+        font-size: 11pt;
+        font-weight: bold;
+        color: #000;
+        margin-bottom: 1mm;
+        text-transform: uppercase;
+      }
+
+      .voucher-title {
+        font-size: 10pt;
+        font-weight: bold;
+        color: #000;
+        margin-bottom: 2mm;
+        text-transform: uppercase;
+      }
+
+      .warning-text {
+        font-size: 7pt;
+        color: red;
+        font-weight: bold;
+        font-style: italic;
+        margin-bottom: 3mm;
+        text-align: center;
+        line-height: 1.2;
+      }
+
       .content-area {
         position: absolute;
-        top: 26mm; /* Disesuaikan agar tidak tertimpa header background */
-        left: 4mm; /* Disesuaikan untuk memberikan margin yang cukup */
-        max-width: 50mm; /* Batasi lebar untuk mencegah overflow */
+        top: 22mm; /* Disesuaikan untuk memberi ruang header */
+        left: 4mm;
+        max-width: 50mm;
       }
 
       .data-row {
-        font-size: 9pt;
-        line-height: 1.35;
+        font-size: 8pt; /* Diperkecil dari 9pt */
+        line-height: 1.4; /* Sedikit lebih besar spacing */
         color: #000;
         white-space: nowrap;
+        margin-bottom: 0.5mm; /* Tambah jarak antar baris */
       }
 
       .data-row .label {
         display: inline-block;
-        width: 23mm; 
+        width: 22mm; /* Sedikit diperkecil */
+        font-weight: normal;
       }
       .data-row .value { font-weight: bold; }
 
@@ -439,12 +477,21 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
 
       .right-section {
         position: absolute;
-        right: 2mm;
-        top: 36mm;
+        right: 3mm;
+        top: 32mm; /* Disesuaikan dengan posisi baru */
         text-align: right;
       }
-      .lbl-besar { font-size: 8pt; color: red; text-decoration: underline; }
-      .val-besar { font-size: 10pt; font-weight: 900; color: red; }
+      .lbl-besar { 
+        font-size: 8pt; 
+        color: #000; 
+        text-decoration: underline; 
+        margin-bottom: 1mm;
+      }
+      .val-besar { 
+        font-size: 11pt; 
+        font-weight: 900; 
+        color: red; 
+      }
 
       .footer {
         position: absolute; bottom: 1.5mm; width: 100%; text-align: center;
@@ -638,6 +685,16 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
 
                   {/* Layer 2: Konten Text */}
                   <div className="content-layer">
+                    {/* Header Section */}
+                    <div className="header-section">
+                      <div className="company-name">CV. SUMBER MUTIARA ELEKTRONIK</div>
+                      <div className="voucher-title">VOUCHER ANGSURAN</div>
+                      <div className="warning-text">
+                        Jangan dibayar tanpa bukti kupon<br />
+                        kami tidak bertanggung jawab
+                      </div>
+                    </div>
+
                     <div className="content-area">
                         <div className="data-row">
                             <span className="label">NO.Faktur</span>
@@ -660,8 +717,7 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
                             <span className="value">: <span className="red-text">{coupon.installment_index}</span></span>
                         </div>
                         <div className="data-row">
-                            <span className="label">No Rekening</span>
-                            <span className="value">: {REKENING_NUMBER}</span>
+                            <span className="label">Rekening BRI ( {REKENING_NUMBER} )</span>
                         </div>
                     </div>
 
