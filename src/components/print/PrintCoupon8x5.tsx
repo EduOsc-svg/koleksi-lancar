@@ -407,45 +407,9 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
         height: 100%;
       }
 
-      /* Header Section */
-      .header-section {
-        position: absolute;
-        top: 3mm;
-        left: 50%;
-        transform: translateX(-50%);
-        text-align: center;
-        width: 100%;
-      }
-
-      .company-name {
-        font-size: 11pt;
-        font-weight: bold;
-        color: #000;
-        margin-bottom: 1mm;
-        text-transform: uppercase;
-      }
-
-      .voucher-title {
-        font-size: 10pt;
-        font-weight: bold;
-        color: #000;
-        margin-bottom: 2mm;
-        text-transform: uppercase;
-      }
-
-      .warning-text {
-        font-size: 7pt;
-        color: red;
-        font-weight: bold;
-        font-style: italic;
-        margin-bottom: 3mm;
-        text-align: center;
-        line-height: 1.2;
-      }
-
       .content-area {
         position: absolute;
-        top: 22mm; /* Disesuaikan untuk memberi ruang header */
+        top: 26mm; /* Kembali ke posisi awal karena tidak ada header custom */
         left: 4mm;
         max-width: 50mm;
       }
@@ -477,8 +441,8 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
 
       .right-section {
         position: absolute;
-        right: 3mm;
-        top: 32mm; /* Disesuaikan dengan posisi baru */
+        right: 2mm;
+        top: 36mm; /* Kembali ke posisi awal */
         text-align: right;
       }
       .lbl-besar { 
@@ -685,16 +649,6 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
 
                   {/* Layer 2: Konten Text */}
                   <div className="content-layer">
-                    {/* Header Section */}
-                    <div className="header-section">
-                      <div className="company-name">CV. SUMBER MUTIARA ELEKTRONIK</div>
-                      <div className="voucher-title">VOUCHER ANGSURAN</div>
-                      <div className="warning-text">
-                        Jangan dibayar tanpa bukti kupon<br />
-                        kami tidak bertanggung jawab
-                      </div>
-                    </div>
-
                     <div className="content-area">
                         <div className="data-row">
                             <span className="label">NO.Faktur</span>
