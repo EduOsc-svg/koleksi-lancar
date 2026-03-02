@@ -407,9 +407,27 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
         height: 100%;
       }
 
+      /* Title Section */
+      .title-section {
+        position: absolute;
+        top: 8mm;
+        left: 50%;
+        transform: translateX(-50%);
+        text-align: center;
+        width: 100%;
+      }
+
+      .voucher-title {
+        font-size: 10pt;
+        font-weight: bold;
+        color: #000;
+        text-transform: uppercase;
+        letter-spacing: 0.5mm;
+      }
+
       .content-area {
         position: absolute;
-        top: 26mm; /* Kembali ke posisi awal karena tidak ada header custom */
+        top: 26mm; /* Tetap pada posisi awal */
         left: 4mm;
         max-width: 50mm;
       }
@@ -649,6 +667,11 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
 
                   {/* Layer 2: Konten Text */}
                   <div className="content-layer">
+                    {/* Title Section */}
+                    <div className="title-section">
+                      <div className="voucher-title">VOUCHER ANGSURAN</div>
+                    </div>
+
                     <div className="content-area">
                         <div className="data-row">
                             <span className="label">NO.Faktur</span>
