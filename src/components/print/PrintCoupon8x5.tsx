@@ -163,8 +163,8 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
         background-color: white;
         overflow: hidden;
         
-        /* GARIS POTONG ENHANCED - diselaraskan dengan print mode */
-        border: 2px dashed #000;
+        /* GARIS POTONG ENHANCED dengan shadow */
+        border: 1.5px dashed #333;
         border-radius: 2mm;
         box-shadow: 
           0 0 0 1px white, /* White outline inside */
@@ -175,28 +175,28 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
         position: relative;
       }
 
-      /* Tambahan: Corner markers untuk panduan potong - diselaraskan */
+      /* Tambahan: Corner markers untuk panduan potong */
       .coupon-card::before,
       .coupon-card::after {
         content: '';
         position: absolute;
-        width: 4mm;
-        height: 4mm;
-        border: 2px solid #666;
+        width: 3mm;
+        height: 3mm;
+        border: 1px solid #666;
         z-index: 2;
         background: white;
       }
 
       .coupon-card::before {
-        top: -2mm;
-        left: -2mm;
+        top: -1.5mm;
+        left: -1.5mm;
         border-right: none;
         border-bottom: none;
       }
 
       .coupon-card::after {
-        bottom: -2mm;
-        right: -2mm;
+        bottom: -1.5mm;
+        right: -1.5mm;
         border-left: none;
         border-top: none;
       }
@@ -244,9 +244,8 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
       @media print {
         .coupon-grid {
           border: 2px dashed #000;
-          gap: 1mm; /* Selaraskan dengan screen mode */
+          gap: 1.5mm; /* Gap diperkecil untuk menghemat kertas */
           background: none; /* Hilangkan background pattern saat cetak */
-          padding: 1mm; /* Selaraskan dengan screen mode */
         }
         
         .coupon-card {
@@ -255,7 +254,13 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
           box-shadow: none; /* Hilangkan shadow saat cetak */
         }
 
-        /* Corner markers sudah diselaraskan di screen mode */
+        /* Corner markers lebih tebal saat cetak */
+        .coupon-card::before,
+        .coupon-card::after {
+          border-width: 2px;
+          width: 4mm;
+          height: 4mm;
+        }
 
         /* Panduan potong tengah lebih jelas saat cetak */
         .coupon-grid::before,
@@ -470,7 +475,7 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
   // Constants
   const REKENING_NUMBER = "008201003537567";
   const KANTOR_NUMBER = "0821 8802 0656";
-  const BG_IMAGE_URL = "/BackGroundCV.png";
+  const BG_IMAGE_URL = "/Background WM SME2.jpg";
 
   const printContent = (
     <>
