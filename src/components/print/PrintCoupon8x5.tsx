@@ -85,8 +85,17 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
         @page { 
           size: A4 landscape; 
           margin: 0; 
+          /* Pastikan background images tercetak */
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
         }
-        body { margin: 0; background: white; }
+        body { 
+          margin: 0; 
+          background: white; 
+          /* Force print background images */
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
         
         .print-coupon-wrapper {
           width: 297mm;
@@ -278,6 +287,14 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
         .coupon-grid::after {
           --direction: to right;
         }
+        
+        /* Background image optimization untuk print */
+        .bg-img-layer {
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+          opacity: 1 !important;
+          filter: none !important;
+        }
       }
 
       /* =========================================
@@ -359,9 +376,25 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
         position: absolute;
         top: 0; left: 0;
         width: 100%; height: 100%;
-        object-fit: fill; 
+        object-fit: cover; /* Ubah ke cover untuk proporsi yang lebih baik */
+        object-position: center; /* Center gambar */
         z-index: 1; /* Di bawah teks */
         opacity: 1; 
+        /* Backup background color jika gambar tidak load */
+        background-color: #f8f9fa;
+      }
+      
+      /* Fallback background pattern jika gambar gagal load */
+      .bg-img-layer::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        opacity: 0.1;
+        z-index: -1;
       }
 
       /* =========================================
@@ -475,7 +508,22 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
   // Constants
   const REKENING_NUMBER = "008201003537567";
   const KANTOR_NUMBER = "0821 8802 0656";
-  const BG_IMAGE_URL = "/Background WM SME2.jpg";
+  const BG_IMAGE_URL = "/BackgroundSME2.jpg";
+  
+  // State untuk handle image loading
+  const [imageLoaded, setImageLoaded] = React.useState(false);
+  const [imageError, setImageError] = React.useState(false);
+
+  const handleImageLoad = () => {
+    setImageLoaded(true);
+    setImageError(false);
+  };
+
+  const handleImageError = () => {
+    setImageLoaded(false);
+    setImageError(true);
+    console.warn('Background image failed to load:', BG_IMAGE_URL);
+  };
 
   const printContent = (
     <>
@@ -565,7 +613,28 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
                 <div key={coupon.id} className={`coupon-card ${isUrgent ? 'coupon-urgent' : ''}`}>
                   
                   {/* Layer 1: Background Image (Pakai IMG agar dipaksa cetak) */}
-                  <img src={BG_IMAGE_URL} className="bg-img-layer" alt="background" />
+                  <img 
+                    src={BG_IMAGE_URL} 
+                    className="bg-img-layer" 
+                    alt="background"
+                    onLoad={handleImageLoad}
+                    onError={handleImageError}
+                    style={{
+                      display: imageError ? 'none' : 'block',
+                      filter: imageLoaded ? 'none' : 'blur(1px)'
+                    }}
+                  />
+                  
+                  {/* Fallback background jika gambar gagal load */}
+                  {imageError && (
+                    <div 
+                      className="bg-img-layer"
+                      style={{
+                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        opacity: 0.3
+                      }}
+                    />
+                  )}
 
                   {/* Layer 2: Konten Text */}
                   <div className="content-layer">
