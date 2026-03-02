@@ -410,7 +410,7 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
       /* Title Section */
       .title-section {
         position: absolute;
-        top: 8mm;
+        top: 12mm; /* Disesuaikan dengan posisi di gambar */
         left: 50%;
         transform: translateX(-50%);
         text-align: center;
@@ -418,34 +418,38 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
       }
 
       .voucher-title {
-        font-size: 10pt;
+        font-size: 9pt; /* Disesuaikan dengan gambar */
         font-weight: bold;
         color: #000;
         text-transform: uppercase;
-        letter-spacing: 0.5mm;
+        letter-spacing: 0.3mm;
       }
 
       .content-area {
         position: absolute;
-        top: 26mm; /* Tetap pada posisi awal */
-        left: 4mm;
-        max-width: 50mm;
+        top: 20mm; /* Disesuaikan agar lebih dekat dengan gambar */
+        left: 3mm; /* Sedikit lebih dekat ke kiri */
+        max-width: 52mm; /* Sedikit diperlebar */
       }
 
       .data-row {
-        font-size: 8pt; /* Diperkecil dari 9pt */
-        line-height: 1.4; /* Sedikit lebih besar spacing */
+        font-size: 7pt; /* Diperkecil sesuai gambar */
+        line-height: 1.5; /* Spacing yang lebih besar */
         color: #000;
         white-space: nowrap;
-        margin-bottom: 0.5mm; /* Tambah jarak antar baris */
+        margin-bottom: 0.8mm; /* Jarak antar baris lebih besar */
       }
 
       .data-row .label {
         display: inline-block;
-        width: 22mm; /* Sedikit diperkecil */
+        width: 20mm; /* Disesuaikan dengan gambar */
         font-weight: normal;
+        font-size: 7pt;
       }
-      .data-row .value { font-weight: bold; }
+      .data-row .value { 
+        font-weight: normal; /* Tidak bold seperti di gambar */
+        font-size: 7pt;
+      }
 
       .value-alamat {
         display: inline-block;
@@ -459,25 +463,32 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
 
       .right-section {
         position: absolute;
-        right: 2mm;
-        top: 36mm; /* Kembali ke posisi awal */
+        right: 3mm; /* Sedikit lebih ke kiri */
+        top: 30mm; /* Disesuaikan dengan posisi di gambar */
         text-align: right;
       }
       .lbl-besar { 
-        font-size: 8pt; 
+        font-size: 7pt; /* Diperkecil sesuai gambar */
         color: #000; 
         text-decoration: underline; 
-        margin-bottom: 1mm;
+        margin-bottom: 0.5mm;
+        font-weight: normal;
       }
       .val-besar { 
-        font-size: 11pt; 
-        font-weight: 900; 
+        font-size: 9pt; /* Diperkecil sesuai gambar */
+        font-weight: bold; 
         color: red; 
       }
 
       .footer {
-        position: absolute; bottom: 1.5mm; width: 100%; text-align: center;
-        font-size: 8pt; color: red; font-weight: bold;
+        position: absolute; 
+        bottom: 2mm; /* Sedikit lebih tinggi */
+        width: 100%; 
+        text-align: center;
+        font-size: 7pt; /* Diperkecil sesuai gambar */
+        color: red; 
+        font-weight: bold;
+        padding: 0 3mm; /* Tambah padding samping */
       }
       
       /* Urgent Style Override */
