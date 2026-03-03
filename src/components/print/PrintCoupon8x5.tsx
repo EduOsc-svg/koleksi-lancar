@@ -105,62 +105,15 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
         .print-coupon-wrapper:last-child { page-break-after: avoid; }
         .print-btn-container { display: none !important; }
         
-        /* Garis potong enhanced untuk print */
+        /* Garis potong untuk print */
         .coupon-grid {
-          border: 3px dashed #000 !important;
-          gap: 4mm !important;
-          padding: 3mm !important;
-          outline: 4px dashed #000;
-          outline-offset: 2mm;
+          border: 2px dashed #000 !important;
+          gap: 1mm !important;
+          padding: 1mm !important;
         }
         
         .coupon-card {
-          border: 3px dashed #000 !important;
-          border-radius: 0 !important;
-          box-shadow: none !important;
-        }
-
-        /* Garis potong horizontal lebih tebal saat print */
-        .coupon-grid::before,
-        .coupon-grid::after {
-          background: repeating-linear-gradient(
-            to right,
-            #000 0,
-            #000 2mm,
-            transparent 2mm,
-            transparent 4mm
-          ) !important;
-          height: 4mm !important;
-          opacity: 1 !important;
-        }
-
-        /* Garis potong vertikal lebih tebal saat print */
-        .coupon-card:nth-child(1)::after,
-        .coupon-card:nth-child(2)::after,
-        .coupon-card:nth-child(4)::after,
-        .coupon-card:nth-child(5)::after,
-        .coupon-card:nth-child(7)::after,
-        .coupon-card:nth-child(8)::after {
-          background: repeating-linear-gradient(
-            to bottom,
-            #000 0,
-            #000 2mm,
-            transparent 2mm,
-            transparent 4mm
-          ) !important;
-          width: 4mm !important;
-          opacity: 1 !important;
-        }
-
-        /* Corner markers lebih besar dan jelas saat print */
-        .coupon-card::before {
-          font-size: 12pt !important;
-          width: 6mm !important;
-          height: 6mm !important;
-          color: #000 !important;
-          font-weight: bold !important;
-          background: white !important;
-          border: 1px solid #000 !important;
+          border: 1px dashed #666 !important;
         }
         
         /* Background image optimization untuk print */
@@ -184,25 +137,15 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
       }
 
       /* =========================================
-         3. GRID LAYOUT & GARIS POTONG ENHANCED
+         3. GRID LAYOUT & GARIS POTONG
          ========================================= */
       .coupon-grid {
         display: grid;
         grid-template-columns: repeat(3, 8.4cm);
         grid-template-rows: repeat(3, 5.8cm);
-        gap: 3mm; /* Diperbesar untuk garis potong yang lebih jelas */
+        gap: 1mm; 
         border: 2px dashed #000;
-        padding: 2mm; 
-        position: relative;
-        
-        /* Background pattern untuk area potong */
-        background: repeating-linear-gradient(
-          45deg,
-          transparent,
-          transparent 2mm,
-          #f0f0f0 2mm,
-          #f0f0f0 3mm
-        );
+        padding: 1mm; 
       }
 
       .coupon-card {
@@ -211,91 +154,7 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
         position: relative;
         background-color: white;
         overflow: hidden;
-        
-        /* Garis potong lengkap di semua sisi */
-        border: 2px dashed #333;
-        border-radius: 1mm;
-        
-        /* Box shadow untuk efek 3D */
-        box-shadow: 
-          0 0 0 1px white,
-          0 2px 4px rgba(0,0,0,0.1);
-      }
-
-      /* Garis potong horizontal di gap grid */
-      .coupon-grid::before {
-        content: '';
-        position: absolute;
-        top: calc(33.33% - 1.5mm);
-        left: 0;
-        right: 0;
-        height: 3mm;
-        background: repeating-linear-gradient(
-          to right,
-          transparent 0,
-          transparent 3mm,
-          #666 3mm,
-          #666 4mm
-        );
-        z-index: 1;
-      }
-
-      .coupon-grid::after {
-        content: '';
-        position: absolute;
-        top: calc(66.66% - 1.5mm);
-        left: 0;
-        right: 0;
-        height: 3mm;
-        background: repeating-linear-gradient(
-          to right,
-          transparent 0,
-          transparent 3mm,
-          #666 3mm,
-          #666 4mm
-        );
-        z-index: 1;
-      }
-
-      /* Garis potong vertikal di gap grid */
-      .coupon-card:nth-child(1)::after,
-      .coupon-card:nth-child(2)::after,
-      .coupon-card:nth-child(4)::after,
-      .coupon-card:nth-child(5)::after,
-      .coupon-card:nth-child(7)::after,
-      .coupon-card:nth-child(8)::after {
-        content: '';
-        position: absolute;
-        top: 0;
-        right: -3mm;
-        width: 3mm;
-        height: 100%;
-        background: repeating-linear-gradient(
-          to bottom,
-          transparent 0,
-          transparent 3mm,
-          #666 3mm,
-          #666 4mm
-        );
-        z-index: 2;
-      }
-
-      /* Corner markers untuk panduan potong yang lebih jelas */
-      .coupon-card::before {
-        content: '✂';
-        position: absolute;
-        top: -2mm;
-        left: -2mm;
-        font-size: 8pt;
-        color: #666;
-        background: white;
-        width: 4mm;
-        height: 4mm;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 50%;
-        z-index: 3;
+        border: 1px dashed #666;
       }
 
       .bg-img-layer {
