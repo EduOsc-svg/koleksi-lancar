@@ -143,7 +143,7 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
         display: grid;
         grid-template-columns: repeat(3, 8.4cm);
         grid-template-rows: repeat(3, 5.8cm);
-        gap: 1mm; 
+        gap: 2mm; 
         border: 2px dashed #000;
         padding: 1mm; 
       }
@@ -154,7 +154,7 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
         position: relative;
         background-color: white;
         overflow: hidden;
-        border: 1px dashed #666;
+        border: 1px dashed #444;
       }
 
       .bg-img-layer {
