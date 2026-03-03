@@ -105,15 +105,16 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
         .print-coupon-wrapper:last-child { page-break-after: avoid; }
         .print-btn-container { display: none !important; }
         
-        /* Garis potong untuk print */
+        /* Garis potong untuk print - lebih tebal dan jelas */
         .coupon-grid {
-          border: 2px dashed #000 !important;
-          gap: 1mm !important;
+          border: 3px dashed #000 !important;
+          gap: 2mm !important;
           padding: 1mm !important;
         }
         
         .coupon-card {
-          border: 1px dashed #666 !important;
+          border: 2px dashed #000 !important;
+          box-sizing: border-box !important;
         }
         
         /* Background image optimization untuk print */
@@ -144,8 +145,9 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
         grid-template-columns: repeat(3, 8.4cm);
         grid-template-rows: repeat(3, 5.8cm);
         gap: 2mm; 
-        border: 2px dashed #000;
-        padding: 1mm; 
+        border: 3px dashed #000;
+        padding: 1mm;
+        background-color: #f5f5f5;
       }
 
       .coupon-card {
@@ -153,14 +155,16 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
         height: 5.8cm;
         position: relative;
         background-color: white;
+        border: 2px dashed #000;
+        box-sizing: border-box;
         overflow: hidden;
-        border: 1px dashed #444;
       }
 
       .bg-img-layer {
         position: absolute;
-        top: 0; left: 0;
-        width: 100%; height: 100%;
+        top: 2px; left: 2px;
+        width: calc(100% - 4px); 
+        height: calc(100% - 4px);
         object-fit: cover; 
         object-position: top center; 
         z-index: 1; 
