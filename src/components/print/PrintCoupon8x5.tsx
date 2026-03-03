@@ -232,7 +232,7 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
       .contract-code {
         position: absolute;
         right: 3mm;
-        top:20mm;
+        top:23mm;
         font-size: 12pt;
         font-weight: bold;
         color: #000;
@@ -249,7 +249,6 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
         font-size: 10pt; 
         color: #000; 
         text-decoration: underline; 
-        margin-bottom: 1px;
       }
       .val-besar { 
         font-size: 11pt; 
