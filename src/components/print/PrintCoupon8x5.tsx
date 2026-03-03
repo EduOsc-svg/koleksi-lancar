@@ -19,6 +19,7 @@ interface ContractInfo {
     business_address?: string | null;
   } | null;
   sales_agents?: { agent_code: string } | null;
+  collectors?: { collector_code: string } | null;
 }
 
 interface PrintCoupon8x5Props {
@@ -231,8 +232,8 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
       .contract-code {
         position: absolute;
         right: 3mm;
-        top: 31mm;
-        font-size: 11pt;
+        top:20mm;
+        font-size: 12pt;
         font-weight: bold;
         color: #000;
         z-index: 10;
@@ -316,7 +317,7 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
   };
 
   // --- Data Preparation ---
-  const noFakturBase = `${contract.tenor_days}/${contract.sales_agents?.agent_code || "-"}/${contract.contract_ref}`;
+  const noFakturBase = `${contract.tenor_days}/${contract.sales_agents?.agent_code || "-"}/${contract.collectors?.collector_code || "-"}`;
   const displayAddress = contract.customers?.business_address || contract.customers?.address || "-";
   const couponPages = groupCouponsIntoPages(coupons);
 
