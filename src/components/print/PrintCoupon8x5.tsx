@@ -489,10 +489,10 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
                         </div>
                         <div className="data-row">
                             <span className="label">Angsuran Ke-</span>
-                            <span className="value">: <span className="red-text">{coupon.installment_index}</span></span>
+                            <span className="value">: <span className="red-text" style={{marginLeft: "10px"}}>{coupon.installment_index}</span></span>
                         </div>
                         <div className="data-row">
-                            <span className="label">Rekening BRI ( {REKENING_NUMBER} )</span>
+                            <span className="label" style={{width: "auto", fontWeight: "bold"}}>Rekening BRI ( {REKENING_NUMBER} )</span>
                         </div>
                     </div>
 
