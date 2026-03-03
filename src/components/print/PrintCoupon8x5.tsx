@@ -123,7 +123,9 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
           -webkit-print-color-adjust: exact !important;
           print-color-adjust: exact !important;
           opacity: 1 !important;
-          filter: none !important;
+          filter: brightness(1.4) contrast(1.3) saturate(1.2) !important;
+          image-rendering: -webkit-optimize-contrast !important;
+          image-rendering: crisp-edges !important;
         }
         
         /* Sembunyikan instruksi potong saat print */
@@ -168,7 +170,12 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
         height: calc(100% - 4px);
         object-fit: cover; 
         object-position: top center; 
-        z-index: 1; 
+        z-index: 1;
+        opacity: 1;
+        filter: brightness(0.3) contrast(0.3) saturate(0.3);
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: crisp-edges;
+        image-rendering: pixelated;
       }
       
       /* =========================================
@@ -469,8 +476,7 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
                     onLoad={handleImageLoad}
                     onError={handleImageError}
                     style={{
-                      display: imageError ? 'none' : 'block',
-                      filter: imageLoaded ? 'none' : 'blur(1px)'
+                      display: imageError ? 'none' : 'block'
                     }}
                   />
                   
@@ -479,8 +485,8 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
                     <div 
                       className="bg-img-layer"
                       style={{
-                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                        opacity: 0.3
+                        background: 'linear-gradient(135deg, #87ceeb 0%, #98d8e8 50%, #b0e0e6 100%)',
+                        opacity: 0.8
                       }}
                     />
                   )}
