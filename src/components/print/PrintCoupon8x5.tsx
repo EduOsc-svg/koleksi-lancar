@@ -228,6 +228,16 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
 
       .red-text { color: red; font-weight: bold; }
 
+      .contract-code {
+        position: absolute;
+        right: 3mm;
+        top: 31mm;
+        font-size: 11pt;
+        font-weight: bold;
+        color: #000;
+        z-index: 10;
+      }
+
       .right-section {
         position: absolute;
         right: 1mm; 
@@ -498,6 +508,11 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
                         <div className="data-row">
                             <span className="label" style={{width: "auto", fontWeight: "bold"}}>Rekening BRI ( {REKENING_NUMBER} )</span>
                         </div>
+                    </div>
+
+                    {/* Contract Code - positioned on the right side */}
+                    <div className="contract-code">
+                        {contract.contract_ref}
                     </div>
 
                     <div className="right-section">
