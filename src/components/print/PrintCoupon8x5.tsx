@@ -480,10 +480,6 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
                             <span className="value">: {truncateText(noFakturBase, 18)}</span>
                         </div>
                         <div className="data-row">
-                            <span className="label">Kode Kontrak</span>
-                            <span className="value">: {contract.contract_ref}</span>
-                        </div>
-                        <div className="data-row">
                             <span className="label">Nama</span>
                             <span className="value">: {truncateText(contract.customers?.name || "-", 20)}</span>
                         </div>
