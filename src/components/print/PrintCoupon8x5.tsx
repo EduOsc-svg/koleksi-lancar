@@ -45,7 +45,6 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
       /* =========================================
          2. PENGATURAN HALAMAN (GRID SYSTEM)
          ========================================= */
-      /* Mode Layar */
       @media screen {
         body {
           background-color: #525659;
@@ -59,15 +58,13 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
           height: 210mm;
           background: white;
           box-shadow: 0 0 15px rgba(0,0,0,0.5);
-          padding: 3mm; /* Diperkecil dari 5mm ke 3mm */
+          padding: 3mm; 
           margin-bottom: 30px;
           display: flex;
           justify-content: center;
           align-items: center;
           position: relative;
         }
-        
-        /* Tombol Print */
         .print-btn-container {
             position: fixed; bottom: 30px; right: 30px; z-index: 9999;
         }
@@ -80,27 +77,23 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
         .print-btn:hover { background-color: #c82333; }
       }
 
-      /* Mode Cetak */
       @media print {
         @page { 
           size: A4 landscape; 
           margin: 0; 
-          /* Pastikan background images tercetak */
           -webkit-print-color-adjust: exact;
           print-color-adjust: exact;
         }
         body { 
           margin: 0; 
           background: white; 
-          /* Force print background images */
           -webkit-print-color-adjust: exact;
           print-color-adjust: exact;
         }
-        
         .print-coupon-wrapper {
           width: 297mm;
           height: 210mm;
-          padding: 3mm; /* Diperkecil dari 5mm ke 3mm untuk menghemat kertas */
+          padding: 3mm; 
           margin: 0 auto;
           page-break-after: always;
           page-break-inside: avoid;
@@ -108,34 +101,85 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
           justify-content: center;
           align-items: center;
           position: relative;
-          
-          /* Add print margins guidance */
-          border: 1px solid #ddd;
         }
         .print-coupon-wrapper:last-child { page-break-after: avoid; }
-        
-        /* Sembunyikan elemen UI */
         .print-btn-container { display: none !important; }
         
-        /* Print-specific page margins */
-        .print-coupon-wrapper::before {
-          content: 'MARGIN POTONG 5mm';
-          position: absolute;
-          top: 1mm;
-          left: 1mm;
-          font-size: 6pt;
-          color: #999;
-          font-family: Arial, sans-serif;
+        /* Garis potong enhanced untuk print */
+        .coupon-grid {
+          border: 3px dashed #000 !important;
+          gap: 4mm !important;
+          padding: 3mm !important;
+          outline: 4px dashed #000;
+          outline-offset: 2mm;
         }
         
-        .print-coupon-wrapper::after {
-          content: 'HALAMAN ' counter(page);
-          position: absolute;
-          bottom: 1mm;
-          right: 1mm;
-          font-size: 6pt;
-          color: #999;
-          font-family: Arial, sans-serif;
+        .coupon-card {
+          border: 3px dashed #000 !important;
+          border-radius: 0 !important;
+          box-shadow: none !important;
+        }
+
+        /* Garis potong horizontal lebih tebal saat print */
+        .coupon-grid::before,
+        .coupon-grid::after {
+          background: repeating-linear-gradient(
+            to right,
+            #000 0,
+            #000 2mm,
+            transparent 2mm,
+            transparent 4mm
+          ) !important;
+          height: 4mm !important;
+          opacity: 1 !important;
+        }
+
+        /* Garis potong vertikal lebih tebal saat print */
+        .coupon-card:nth-child(1)::after,
+        .coupon-card:nth-child(2)::after,
+        .coupon-card:nth-child(4)::after,
+        .coupon-card:nth-child(5)::after,
+        .coupon-card:nth-child(7)::after,
+        .coupon-card:nth-child(8)::after {
+          background: repeating-linear-gradient(
+            to bottom,
+            #000 0,
+            #000 2mm,
+            transparent 2mm,
+            transparent 4mm
+          ) !important;
+          width: 4mm !important;
+          opacity: 1 !important;
+        }
+
+        /* Corner markers lebih besar dan jelas saat print */
+        .coupon-card::before {
+          font-size: 12pt !important;
+          width: 6mm !important;
+          height: 6mm !important;
+          color: #000 !important;
+          font-weight: bold !important;
+          background: white !important;
+          border: 1px solid #000 !important;
+        }
+        
+        /* Background image optimization untuk print */
+        .bg-img-layer {
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+          opacity: 1 !important;
+          filter: none !important;
+        }
+        
+        /* Sembunyikan instruksi potong saat print */
+        .cutting-guide,
+        .cutting-guide-vertical {
+          display: none !important;
+        }
+        
+        /* Sembunyikan semua instruksi tambahan saat print */
+        div[style*="position: absolute"][style*="top: -15mm"] {
+          display: none !important;
         }
       }
 
@@ -144,18 +188,14 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
          ========================================= */
       .coupon-grid {
         display: grid;
-        /* Ukuran Kartu: 8.4cm x 5.8cm */
         grid-template-columns: repeat(3, 8.4cm);
         grid-template-rows: repeat(3, 5.8cm);
-        
-        /* Gap untuk garis potong yang jelas - diperkecil */
-        gap: 1mm; 
-        
-        /* GARIS POTONG LUAR yang lebih tebal */
+        gap: 3mm; /* Diperbesar untuk garis potong yang lebih jelas */
         border: 2px dashed #000;
-        padding: 1mm; /* Diperkecil dari 2mm ke 1mm */
+        padding: 2mm; 
+        position: relative;
         
-        /* Background untuk membedakan area potong */
+        /* Background pattern untuk area potong */
         background: repeating-linear-gradient(
           45deg,
           transparent,
@@ -172,288 +212,152 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
         background-color: white;
         overflow: hidden;
         
-        /* GARIS POTONG ENHANCED dengan shadow */
-        border: 1.5px dashed #333;
-        border-radius: 2mm;
-        box-shadow: 
-          0 0 0 1px white, /* White outline inside */
-          0 2px 4px rgba(0,0,0,0.1), /* Subtle shadow */
-          inset 0 0 0 2mm transparent; /* Inner space for cutting */
+        /* Garis potong lengkap di semua sisi */
+        border: 2px dashed #333;
+        border-radius: 1mm;
         
-        /* Efek 3D ringan */
-        position: relative;
+        /* Box shadow untuk efek 3D */
+        box-shadow: 
+          0 0 0 1px white,
+          0 2px 4px rgba(0,0,0,0.1);
       }
 
-      /* Tambahan: Corner markers untuk panduan potong */
-      .coupon-card::before,
-      .coupon-card::after {
-        content: '';
-        position: absolute;
-        width: 3mm;
-        height: 3mm;
-        border: 1px solid #666;
-        z-index: 2;
-        background: white;
-      }
-
-      .coupon-card::before {
-        top: -1.5mm;
-        left: -1.5mm;
-        border-right: none;
-        border-bottom: none;
-      }
-
-      .coupon-card::after {
-        bottom: -1.5mm;
-        right: -1.5mm;
-        border-left: none;
-        border-top: none;
-      }
-
-      /* Garis potong tambahan di tengah grid untuk panduan */
+      /* Garis potong horizontal di gap grid */
       .coupon-grid::before {
         content: '';
         position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 1px;
-        height: 100%;
+        top: calc(33.33% - 1.5mm);
+        left: 0;
+        right: 0;
+        height: 3mm;
         background: repeating-linear-gradient(
-          to bottom,
-          #ccc 0,
-          #ccc 2mm,
-          transparent 2mm,
-          transparent 4mm
+          to right,
+          transparent 0,
+          transparent 3mm,
+          #666 3mm,
+          #666 4mm
         );
         z-index: 1;
-        opacity: 0.5;
       }
 
       .coupon-grid::after {
         content: '';
         position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        height: 1px;
-        width: 100%;
+        top: calc(66.66% - 1.5mm);
+        left: 0;
+        right: 0;
+        height: 3mm;
         background: repeating-linear-gradient(
           to right,
-          #ccc 0,
-          #ccc 2mm,
-          transparent 2mm,
-          transparent 4mm
+          transparent 0,
+          transparent 3mm,
+          #666 3mm,
+          #666 4mm
         );
         z-index: 1;
-        opacity: 0.5;
       }
 
-      /* Mode cetak: Garis potong lebih jelas */
-      @media print {
-        .coupon-grid {
-          border: 2px dashed #000;
-          gap: 1.5mm; /* Gap diperkecil untuk menghemat kertas */
-          background: none; /* Hilangkan background pattern saat cetak */
-        }
-        
-        .coupon-card {
-          border: 2px dashed #000;
-          border-radius: 0; /* Hilangkan radius saat cetak */
-          box-shadow: none; /* Hilangkan shadow saat cetak */
-        }
-
-        /* Corner markers lebih tebal saat cetak */
-        .coupon-card::before,
-        .coupon-card::after {
-          border-width: 2px;
-          width: 4mm;
-          height: 4mm;
-        }
-
-        /* Panduan potong tengah lebih jelas saat cetak */
-        .coupon-grid::before,
-        .coupon-grid::after {
-          background: repeating-linear-gradient(
-            var(--direction, to bottom),
-            #000 0,
-            #000 3mm,
-            transparent 3mm,
-            transparent 6mm
-          );
-          opacity: 0.3;
-        }
-
-        .coupon-grid::after {
-          --direction: to right;
-        }
-        
-        /* Background image optimization untuk print */
-        .bg-img-layer {
-          -webkit-print-color-adjust: exact !important;
-          print-color-adjust: exact !important;
-          opacity: 1 !important;
-          filter: none !important;
-        }
-      }
-
-      /* =========================================
-         6. CUTTING GUIDE TEXT & EMPTY CARDS
-         ========================================= */
-      .cutting-guide {
+      /* Garis potong vertikal di gap grid */
+      .coupon-card:nth-child(1)::after,
+      .coupon-card:nth-child(2)::after,
+      .coupon-card:nth-child(4)::after,
+      .coupon-card:nth-child(5)::after,
+      .coupon-card:nth-child(7)::after,
+      .coupon-card:nth-child(8)::after {
+        content: '';
         position: absolute;
-        top: -8mm;
-        left: 50%;
-        transform: translateX(-50%);
-        font-size: 8pt;
-        color: #666;
-        font-weight: bold;
-        text-align: center;
-        background: white;
-        padding: 1mm 3mm;
-        border-radius: 2mm;
-        border: 1px solid #ccc;
-        z-index: 3;
-      }
-
-      .cutting-guide-vertical {
-        position: absolute;
-        left: -15mm;
-        top: 50%;
-        transform: translateY(-50%) rotate(-90deg);
-        font-size: 8pt;
-        color: #666;
-        font-weight: bold;
-        text-align: center;
-        background: white;
-        padding: 1mm 3mm;
-        border-radius: 2mm;
-        border: 1px solid #ccc;
-        z-index: 3;
-        transform-origin: center;
-      }
-
-      /* Empty card styling */
-      .coupon-card.empty-card {
+        top: 0;
+        right: -3mm;
+        width: 3mm;
+        height: 100%;
         background: repeating-linear-gradient(
-          45deg,
-          #f9f9f9,
-          #f9f9f9 5mm,
-          #f5f5f5 5mm,
-          #f5f5f5 10mm
+          to bottom,
+          transparent 0,
+          transparent 3mm,
+          #666 3mm,
+          #666 4mm
         );
+        z-index: 2;
+      }
+
+      /* Corner markers untuk panduan potong yang lebih jelas */
+      .coupon-card::before {
+        content: '✂';
+        position: absolute;
+        top: -2mm;
+        left: -2mm;
+        font-size: 8pt;
+        color: #666;
+        background: white;
+        width: 4mm;
+        height: 4mm;
         display: flex;
         align-items: center;
         justify-content: center;
+        border-radius: 50%;
+        z-index: 3;
       }
 
-      .empty-card::before,
-      .empty-card::after {
-        opacity: 0.3;
-      }
-
-      .empty-card-text {
-        color: #999;
-        font-size: 10pt;
-        font-style: italic;
-        text-align: center;
-        line-height: 1.3;
-      }
-
-      /* Hide guides on print */
-      @media print {
-        .cutting-guide,
-        .cutting-guide-vertical {
-          display: none;
-        }
-        
-        .empty-card {
-          background: #f8f8f8;
-        }
-      }
-      /* Ini kunci agar gambar tercetak otomatis */
       .bg-img-layer {
         position: absolute;
         top: 0; left: 0;
         width: 100%; height: 100%;
-        object-fit: cover; /* Ubah ke cover untuk proporsi yang lebih baik */
-        object-position: center; /* Center gambar */
-        z-index: 1; /* Di bawah teks */
-        opacity: 1; 
-        /* Backup background color jika gambar tidak load */
-        background-color: #f8f9fa;
+        object-fit: cover; 
+        object-position: top center; 
+        z-index: 1; 
       }
       
-      /* Fallback background pattern jika gambar gagal load */
-      .bg-img-layer::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        opacity: 0.1;
-        z-index: -1;
-      }
-
       /* =========================================
-         5. POSISI DATA (TEXT)
+         4. POSISI DATA (TEXT)
          ========================================= */
       .content-layer {
         position: relative;
-        z-index: 10; /* Di atas gambar */
+        z-index: 10; 
         width: 100%;
         height: 100%;
       }
 
-      /* Title Section */
       .title-section {
         position: absolute;
-        top: 12mm; /* Disesuaikan dengan posisi di gambar */
+        top: 18mm; 
         left: 50%;
         transform: translateX(-50%);
         text-align: center;
         width: 100%;
       }
-
       .voucher-title {
-        font-size: 9pt; /* Disesuaikan dengan gambar */
-        font-weight: bold;
+        font-size: 10.5pt; 
+        font-weight: normal; 
         color: #000;
-        text-transform: uppercase;
-        letter-spacing: 0.3mm;
+        text-decoration: underline;
       }
 
       .content-area {
         position: absolute;
-        top: 20mm; /* Disesuaikan agar lebih dekat dengan gambar */
-        left: 3mm; /* Sedikit lebih dekat ke kiri */
-        max-width: 52mm; /* Sedikit diperlebar */
+        top: 24.5mm; 
+        left: 1.5mm; 
+        width: 100%;
       }
 
       .data-row {
-        font-size: 7pt; /* Diperkecil sesuai gambar */
-        line-height: 1.5; /* Spacing yang lebih besar */
+        font-size: 10.3pt; 
+        line-height: 1.15; 
         color: #000;
         white-space: nowrap;
-        margin-bottom: 0.8mm; /* Jarak antar baris lebih besar */
       }
 
       .data-row .label {
         display: inline-block;
-        width: 20mm; /* Disesuaikan dengan gambar */
+        width: 26mm; 
         font-weight: normal;
-        font-size: 7pt;
       }
       .data-row .value { 
-        font-weight: normal; /* Tidak bold seperti di gambar */
-        font-size: 7pt;
+        font-weight: normal; 
       }
 
       .value-alamat {
         display: inline-block;
-        max-width: 48mm;
+        max-width: 50mm;
         overflow: hidden;
         text-overflow: ellipsis;
         vertical-align: bottom;
@@ -463,32 +367,30 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
 
       .right-section {
         position: absolute;
-        right: 3mm; /* Sedikit lebih ke kiri */
-        top: 30mm; /* Disesuaikan dengan posisi di gambar */
+        right: 1mm; 
+        bottom: 7mm; 
         text-align: right;
       }
       .lbl-besar { 
-        font-size: 7pt; /* Diperkecil sesuai gambar */
+        font-size: 10pt; 
         color: #000; 
         text-decoration: underline; 
-        margin-bottom: 0.5mm;
-        font-weight: normal;
+        margin-bottom: 1px;
       }
       .val-besar { 
-        font-size: 9pt; /* Diperkecil sesuai gambar */
-        font-weight: bold; 
+        font-size: 11pt; 
         color: red; 
+        font-weight: bold;
       }
 
       .footer {
         position: absolute; 
-        bottom: 2mm; /* Sedikit lebih tinggi */
+        bottom: 1.5mm; 
         width: 100%; 
         text-align: center;
-        font-size: 7pt; /* Diperkecil sesuai gambar */
+        font-size: 10pt; 
         color: red; 
         font-weight: bold;
-        padding: 0 3mm; /* Tambah padding samping */
       }
       
       /* Urgent Style Override */
@@ -579,12 +481,38 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
 
       {couponPages.map((pagesCoupons, pageIndex) => (
         <div key={pageIndex} className="print-coupon-wrapper">
-          {/* Cutting Guidelines */}
+          {/* Cutting Guidelines Enhanced */}
           <div className="cutting-guide">
-            ✂ POTONG MENGIKUTI GARIS PUTUS-PUTUS ✂
+            ✂ POTONG MENGIKUTI SEMUA GARIS PUTUS-PUTUS - IKUTI SEMUA SISI ✂
           </div>
           <div className="cutting-guide-vertical">
-            ✂ POTONG ✂
+            ✂ GARIS POTONG LENGKAP ✂
+          </div>
+          
+          {/* Instruksi potong tambahan */}
+          <div style={{
+            position: 'absolute',
+            top: '-15mm',
+            right: '10mm',
+            fontSize: '8pt',
+            color: '#333',
+            background: 'white',
+            padding: '3mm',
+            border: '2px solid #666',
+            borderRadius: '3mm',
+            textAlign: 'center',
+            zIndex: 15,
+            boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+          }}>
+            <div style={{ fontWeight: 'bold', color: '#d32f2f', marginBottom: '1mm' }}>
+              📋 PANDUAN POTONG:
+            </div>
+            <div style={{ fontSize: '7pt', lineHeight: '1.3' }}>
+              1. Potong garis LUAR grid dulu ⬜<br />
+              2. Potong garis DALAM antar kupon ✂<br />
+              3. Ikuti semua tanda ✂ di sudut<br />
+              4. Gunakan penggaris untuk hasil rapi
+            </div>
           </div>
           
           {/* Corner Registration Marks */}
