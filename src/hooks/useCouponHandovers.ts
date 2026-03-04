@@ -51,6 +51,9 @@ export const useCreateCouponHandover = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['coupon_handovers'] });
+      queryClient.invalidateQueries({ queryKey: ['outstanding_coupons'] });
+      queryClient.invalidateQueries({ queryKey: ['credit_contracts'] });
+      queryClient.invalidateQueries({ queryKey: ['installment_coupons'] });
     },
   });
 };
@@ -67,6 +70,8 @@ export const useDeleteCouponHandover = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['coupon_handovers'] });
+      queryClient.invalidateQueries({ queryKey: ['outstanding_coupons'] });
+      queryClient.invalidateQueries({ queryKey: ['credit_contracts'] });
     },
   });
 };
