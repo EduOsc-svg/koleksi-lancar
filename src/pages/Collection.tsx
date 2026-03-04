@@ -26,8 +26,9 @@ export default function Collection() {
   const createHandover = useCreateCouponHandover();
   const { data: handovers } = useCouponHandovers();
 
-  // Manifest state
+  // Shared state
   const [searchQuery, setSearchQuery] = useState("");
+  const [sharedCollectorId, setSharedCollectorId] = useState("");
 
   // Filter contracts for manifest
   const manifestContracts = contracts?.filter((c) => {
