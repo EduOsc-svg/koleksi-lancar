@@ -158,23 +158,22 @@ export default function Customers() {
       toast.error(t("errors.nameRequired", "Nama customer wajib diisi"));
       return;
     }
-    if (!formData.nik.trim()) {
-      toast.error(t("errors.nikRequired", "NIK wajib diisi"));
+    // Validate NIK format if provided (optional, but must be 16 digits if filled)
+    if (formData.nik.trim() && formData.nik.trim().length !== 16) {
+      toast.error("NIK harus 16 digit jika diisi");
       return;
     }
-    if (formData.nik.trim().length !== 16) {
-      toast.error(t("errors.nikMustBe16Digits", "NIK harus 16 digit"));
-      return;
-    }
-    
-    // Validate NIK contains only numbers
-    if (!/^\d{16}$/.test(formData.nik.trim())) {
+    if (formData.nik.trim() && !/^\d{16}$/.test(formData.nik.trim())) {
       toast.error("NIK harus berisi 16 digit angka");
       return;
     }
     
-    // Validate phone number format if provided
-    if (formData.phone && formData.phone.trim() && !/^[\d\+\-\s\(\)]+$/.test(formData.phone.trim())) {
+    // Validate phone number (required)
+    if (!formData.phone.trim()) {
+      toast.error("Nomor telepon wajib diisi");
+      return;
+    }
+    if (!/^[\d\+\-\s\(\)]+$/.test(formData.phone.trim())) {
       toast.error("Format nomor telepon tidak valid");
       return;
     }
@@ -351,7 +350,7 @@ export default function Customers() {
               />
             </div>
             <div>
-              <Label htmlFor="nik">{t("customers.nik")} *</Label>
+              <Label htmlFor="nik">{t("customers.nik")}</Label>
               <Input
                 id="nik"
                 value={formData.nik}
@@ -368,19 +367,17 @@ export default function Customers() {
                 )}
                 required
               />
-              <p className={cn(
-                "text-xs mt-1",
-                !formData.nik ? 'text-destructive' : 
-                formData.nik.length === 16 ? 'text-green-600' : 
-                'text-muted-foreground'
-              )}>
-                {!formData.nik ? 'NIK wajib diisi (16 digit angka)' :
-                 formData.nik.length === 16 ? '✓ NIK valid (16 digit)' :
-                 `${formData.nik.length}/16 digit`}
-              </p>
+              {formData.nik && (
+                <p className={cn(
+                  "text-xs mt-1",
+                  formData.nik.length === 16 ? 'text-green-600' : 'text-muted-foreground'
+                )}>
+                  {formData.nik.length === 16 ? '✓ NIK valid (16 digit)' : `${formData.nik.length}/16 digit`}
+                </p>
+              )}
             </div>
             <div>
-              <Label htmlFor="phone">{t("customers.phone")}</Label>
+              <Label htmlFor="phone">{t("customers.phone")} *</Label>
               <Input
                 id="phone"
                 type="tel"

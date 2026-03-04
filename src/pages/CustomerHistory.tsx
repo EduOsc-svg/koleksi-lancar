@@ -88,8 +88,9 @@ export default function CustomerHistory() {
     const query = searchTerm.toLowerCase();
     
     return customers.filter((customer) => {
-      // First check name search
-      const matchesSearch = customer.name.toLowerCase().includes(query);
+      // Check name or phone search
+      const matchesSearch = customer.name.toLowerCase().includes(query) ||
+        (customer.phone || '').toLowerCase().includes(query);
       if (!matchesSearch) return false;
       
       // If status filter is 'all', include all customers matching search
@@ -161,7 +162,7 @@ export default function CustomerHistory() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Cari berdasarkan nama pelanggan..."
+                placeholder="Cari berdasarkan nama atau nomor telepon..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
