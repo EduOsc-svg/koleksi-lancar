@@ -54,9 +54,10 @@ interface PaymentFormProps {
     notes: string;
   }) => Promise<void>;
   isSubmitting: boolean;
+  defaultCollectorId?: string;
 }
 
-export function PaymentForm({ contracts, collectors, onSubmit, onBulkSubmit, isSubmitting }: PaymentFormProps) {
+export function PaymentForm({ contracts, collectors, onSubmit, onBulkSubmit, isSubmitting, defaultCollectorId }: PaymentFormProps) {
   const { t } = useTranslation();
   
   const [selectedContract, setSelectedContract] = useState("");
@@ -89,6 +90,13 @@ export function PaymentForm({ contracts, collectors, onSubmit, onBulkSubmit, isS
   const totalBulkAmount = selectedContractData 
     ? (paymentAmount || selectedContractData.daily_installment_amount) * couponCount 
     : 0;
+
+  // Sync default collector from handover tab
+  useEffect(() => {
+    if (defaultCollectorId && !paymentCollector) {
+      setPaymentCollector(defaultCollectorId);
+    }
+  }, [defaultCollectorId]);
 
   useEffect(() => {
     if (selectedContract && nextCouponDueDate && paymentDate) {

@@ -394,7 +394,6 @@ export default function Contracts() {
           contract={{
             contract_ref: selectedContract.contract_ref,
             tenor_days: selectedContract.tenor_days,
-            daily_installment_amount: selectedContract.daily_installment_amount,
             customers: selectedContract.customers ? {
               name: selectedContract.customers.name,
               address: selectedContract.customers.address || null,
