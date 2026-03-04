@@ -104,7 +104,7 @@ export default function Collectors() {
   const handleOpenCreate = () => {
     // Generate next collector code based on the most recent pattern
     const generateNextCode = () => {
-      if (!collectors || collectors.length === 0) return "KOL001";
+      if (!collectors || collectors.length === 0) return "K001";
       
       // Sort collectors by creation date to get the most recent pattern
       const sortedCollectors = [...collectors].sort((a, b) => 
@@ -114,13 +114,13 @@ export default function Collectors() {
       // Get the most recent code to determine the pattern
       const recentCode = sortedCollectors[0]?.collector_code;
       
-      if (!recentCode) return "KOL001";
+      if (!recentCode) return "K001";
       
       // Extract pattern from recent code
       const match = recentCode.match(/^([A-Z]+)(\d+)$/);
       if (!match) {
         // If no pattern found, use default
-        return "KOL001";
+        return "K001";
       }
       
       const prefix = match[1];
@@ -328,7 +328,7 @@ export default function Collectors() {
                   onChange={(e) =>
                     setFormData({ ...formData, collector_code: e.target.value })
                   }
-                  placeholder="Contoh: KOL001, K001, COL001"
+                  placeholder="Contoh: K001, KOL001, COL001"
                   className="flex-1"
                 />
                 {!selectedCollector && (
@@ -339,17 +339,17 @@ export default function Collectors() {
                     onClick={() => {
                       // Regenerate code using the same logic as handleOpenCreate
                       const generateNextCode = () => {
-                        if (!collectors || collectors.length === 0) return "KOL001";
+                        if (!collectors || collectors.length === 0) return "K001";
                         
                         const sortedCollectors = [...collectors].sort((a, b) => 
                           new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
                         );
                         
                         const recentCode = sortedCollectors[0]?.collector_code;
-                        if (!recentCode) return "KOL001";
+                        if (!recentCode) return "K001";
                         
                         const match = recentCode.match(/^([A-Z]+)(\d+)$/);
-                        if (!match) return "KOL001";
+                        if (!match) return "K001";
                         
                         const prefix = match[1];
                         const numberLength = match[2].length;
