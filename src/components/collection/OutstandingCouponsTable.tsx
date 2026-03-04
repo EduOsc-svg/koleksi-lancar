@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FileX, Download, Clock, UserCheck, FileText, DollarSign, TrendingUp, Calendar } from "lucide-react";
+import { FileX, Download, Clock, UserCheck, FileText, DollarSign, TrendingUp, Calendar, AlertTriangle, CheckCircle2, BarChart3 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -7,26 +7,94 @@ import {
 } from "@/components/ui/table";
 import { TablePagination } from "@/components/TablePagination";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Progress } from "@/components/ui/progress";
 import { formatRupiah } from "@/lib/format";
 import { usePagination } from "@/hooks/usePagination";
 import { OutstandingCouponSummary } from "@/hooks/useOutstandingCoupons";
 import { exportOutstandingCouponsToExcel } from "@/lib/exportOutstandingCoupons";
 import { toast } from "sonner";
 import { SearchInput } from "@/components/ui/search-input";
-import { Label } from "@/components/ui/label";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { CouponHandover } from "@/hooks/useCouponHandovers";
 import { formatDate } from "@/lib/format";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 
 interface Props {
   data: OutstandingCouponSummary[] | undefined;
   isLoading: boolean;
   handovers?: CouponHandover[];
+}
+
+function SummaryCards({ data, handoverTotal }: { data: OutstandingCouponSummary[]; handoverTotal: number }) {
+  const totalContracts = data.length;
+  const contractsWithArrears = data.filter(r => r.coupons_unpaid > 0).length;
+  const totalCouponsIssued = data.reduce((s, r) => s + r.total_coupons_issued, 0);
+  const totalPaid = data.reduce((s, r) => s + r.coupons_paid, 0);
+  const totalUnpaid = data.reduce((s, r) => s + r.coupons_unpaid, 0);
+  const totalUnpaidAmount = data.reduce((s, r) => s + r.total_unpaid_amount, 0);
+  const totalPaidAmount = data.reduce((s, r) => s + r.coupons_paid * r.daily_installment_amount, 0);
+  const collectionRate = totalCouponsIssued > 0 ? (totalPaid / totalCouponsIssued) * 100 : 0;
+
+  const cards = [
+    {
+      title: "Total Tunggakan",
+      value: formatRupiah(totalUnpaidAmount),
+      subtitle: `${totalUnpaid} kupon belum bayar`,
+      icon: AlertTriangle,
+      iconColor: "text-destructive",
+      iconBg: "bg-destructive/10",
+    },
+    {
+      title: "Total Terbayar",
+      value: formatRupiah(totalPaidAmount),
+      subtitle: `${totalPaid} kupon lunas`,
+      icon: CheckCircle2,
+      iconColor: "text-green-600 dark:text-green-400",
+      iconBg: "bg-green-500/10",
+    },
+    {
+      title: "Tingkat Koleksi",
+      value: `${collectionRate.toFixed(1)}%`,
+      subtitle: `${totalPaid}/${totalCouponsIssued} kupon`,
+      icon: BarChart3,
+      iconColor: collectionRate >= 80 ? "text-green-600 dark:text-green-400" : collectionRate >= 50 ? "text-yellow-600 dark:text-yellow-400" : "text-destructive",
+      iconBg: collectionRate >= 80 ? "bg-green-500/10" : collectionRate >= 50 ? "bg-yellow-500/10" : "bg-destructive/10",
+      progress: collectionRate,
+    },
+    {
+      title: "Kontrak Bermasalah",
+      value: `${contractsWithArrears}`,
+      subtitle: `dari ${totalContracts} kontrak aktif`,
+      icon: FileText,
+      iconColor: contractsWithArrears > 0 ? "text-orange-600 dark:text-orange-400" : "text-green-600 dark:text-green-400",
+      iconBg: contractsWithArrears > 0 ? "bg-orange-500/10" : "bg-green-500/10",
+    },
+  ];
+
+  return (
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      {cards.map((card) => (
+        <Card key={card.title} className="shadow-sm">
+          <CardContent className="p-4">
+            <div className="flex items-start justify-between mb-2">
+              <p className="text-xs font-medium text-muted-foreground">{card.title}</p>
+              <div className={cn("rounded-full p-1.5", card.iconBg)}>
+                <card.icon className={cn("h-3.5 w-3.5", card.iconColor)} />
+              </div>
+            </div>
+            <p className="text-lg font-bold tracking-tight">{card.value}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{card.subtitle}</p>
+            {card.progress !== undefined && (
+              <Progress value={card.progress} className="h-1.5 mt-2" />
+            )}
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
 }
 
 export function OutstandingCouponsTable({ data, isLoading, handovers }: Props) {
@@ -63,6 +131,7 @@ export function OutstandingCouponsTable({ data, isLoading, handovers }: Props) {
       handoverMap.set(h.contract_id, (handoverMap.get(h.contract_id) || 0) + h.coupon_count);
     }
   }
+  const handoverTotal = Array.from(handoverMap.values()).reduce((sum, count) => sum + count, 0);
 
   const handleExport = async () => {
     if (filteredData.length === 0) return;
@@ -76,61 +145,72 @@ export function OutstandingCouponsTable({ data, isLoading, handovers }: Props) {
 
   if (isLoading) {
     return (
-      <div className="border rounded-lg">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-12">#</TableHead>
-              <TableHead>Nama Konsumen</TableHead>
-              <TableHead>Kode Kontrak</TableHead>
-              <TableHead className="text-center">Kupon Keluar</TableHead>
-              <TableHead className="text-center">Kupon di Kolektor</TableHead>
-              <TableHead className="text-right">Nominal Angsuran</TableHead>
-              <TableHead className="text-center">Terbayar</TableHead>
-              <TableHead className="text-right">Telah Dibayar</TableHead>
-              <TableHead className="text-center">Belum Bayar</TableHead>
-              <TableHead className="text-right">Total Belum Bayar</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {[...Array(5)].map((_, i) => (
-              <TableRow key={i}>
-                {[...Array(10)].map((_, j) => (
-                  <TableCell key={j}><Skeleton className="h-4 w-16" /></TableCell>
-                ))}
+      <div className="space-y-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {[...Array(4)].map((_, i) => (
+            <Card key={i}><CardContent className="p-4"><Skeleton className="h-16 w-full" /></CardContent></Card>
+          ))}
+        </div>
+        <div className="border rounded-lg">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-12">#</TableHead>
+                <TableHead>Nama Konsumen</TableHead>
+                <TableHead>Kode Kontrak</TableHead>
+                <TableHead className="text-center">Kupon Keluar</TableHead>
+                <TableHead className="text-center">Kupon di Kolektor</TableHead>
+                <TableHead className="text-right">Nominal Angsuran</TableHead>
+                <TableHead className="text-center">Terbayar</TableHead>
+                <TableHead className="text-right">Telah Dibayar</TableHead>
+                <TableHead className="text-center">Belum Bayar</TableHead>
+                <TableHead className="text-right">Total Belum Bayar</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {[...Array(5)].map((_, i) => (
+                <TableRow key={i}>
+                  {[...Array(10)].map((_, j) => (
+                    <TableCell key={j}><Skeleton className="h-4 w-16" /></TableCell>
+                  ))}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       </div>
     );
   }
 
+  const FiltersRow = () => (
+    <div className="flex flex-col sm:flex-row gap-3">
+      <div className="flex-1">
+        <SearchInput
+          value={searchQuery}
+          onChange={setSearchQuery}
+          placeholder="Cari nama konsumen atau kode kontrak..."
+        />
+      </div>
+      <div className="w-full sm:w-48">
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger>
+            <SelectValue placeholder="Semua Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Semua</SelectItem>
+            <SelectItem value="unpaid_only">Ada Tunggakan</SelectItem>
+            <SelectItem value="fully_paid">Lunas</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+    </div>
+  );
+
   if (!data || filteredData.length === 0) {
     return (
       <div className="space-y-4">
-        {/* Filters even when empty */}
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="flex-1">
-            <SearchInput
-              value={searchQuery}
-              onChange={setSearchQuery}
-              placeholder="Cari nama konsumen atau kode kontrak..."
-            />
-          </div>
-          <div className="w-full sm:w-48">
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="Semua Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Semua</SelectItem>
-                <SelectItem value="unpaid_only">Ada Tunggakan</SelectItem>
-                <SelectItem value="fully_paid">Lunas</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
+        {data && data.length > 0 && <SummaryCards data={data} handoverTotal={handoverTotal} />}
+        <FiltersRow />
         <div className="border rounded-lg p-12">
           <div className="flex flex-col items-center justify-center text-center">
             <div className="rounded-full bg-muted p-4 mb-4">
@@ -156,28 +236,11 @@ export function OutstandingCouponsTable({ data, isLoading, handovers }: Props) {
 
   return (
     <div className="space-y-4">
+      {/* Summary Cards */}
+      <SummaryCards data={data || []} handoverTotal={handoverTotal} />
+
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="flex-1">
-          <SearchInput
-            value={searchQuery}
-            onChange={setSearchQuery}
-            placeholder="Cari nama konsumen atau kode kontrak..."
-          />
-        </div>
-        <div className="w-full sm:w-48">
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger>
-              <SelectValue placeholder="Semua Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Semua</SelectItem>
-              <SelectItem value="unpaid_only">Ada Tunggakan</SelectItem>
-              <SelectItem value="fully_paid">Lunas</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
+      <FiltersRow />
 
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
@@ -208,13 +271,24 @@ export function OutstandingCouponsTable({ data, isLoading, handovers }: Props) {
           <TableBody>
             {paginatedItems.map((row, i) => {
               const handoverCount = handoverMap.get(row.contract_id) || 0;
+              const rowCollectionRate = row.total_coupons_issued > 0 
+                ? (row.coupons_paid / row.total_coupons_issued) * 100 
+                : 0;
 
               return (
                 <TableRow key={row.contract_id} className="hover:bg-muted/30 transition-colors">
                   <TableCell className="text-muted-foreground">
                     {(currentPage - 1) * ITEMS_PER_PAGE + i + 1}
                   </TableCell>
-                  <TableCell className="font-medium">{row.customer_name}</TableCell>
+                  <TableCell>
+                    <div>
+                      <p className="font-medium">{row.customer_name}</p>
+                      <div className="flex items-center gap-1 mt-0.5">
+                        <Progress value={rowCollectionRate} className="h-1 w-16" />
+                        <span className="text-[10px] text-muted-foreground">{rowCollectionRate.toFixed(0)}%</span>
+                      </div>
+                    </div>
+                  </TableCell>
                   <TableCell>
                     <Badge variant="outline" className="font-mono">{row.contract_ref}</Badge>
                   </TableCell>
@@ -237,7 +311,11 @@ export function OutstandingCouponsTable({ data, isLoading, handovers }: Props) {
                     )}
                   </TableCell>
                   <TableCell className="text-right font-medium">
-                    {formatRupiah(row.total_unpaid_amount)}
+                    {row.total_unpaid_amount > 0 ? (
+                      <span className="text-destructive">{formatRupiah(row.total_unpaid_amount)}</span>
+                    ) : (
+                      <span className="text-muted-foreground">{formatRupiah(0)}</span>
+                    )}
                   </TableCell>
                 </TableRow>
               );
@@ -246,12 +324,12 @@ export function OutstandingCouponsTable({ data, isLoading, handovers }: Props) {
             <TableRow className="bg-muted/50 font-semibold border-t-2">
               <TableCell colSpan={3} className="text-right">TOTAL</TableCell>
               <TableCell className="text-center">{totalCouponsOut}</TableCell>
-              <TableCell className="text-center">{Array.from(handoverMap.values()).reduce((sum, count) => sum + count, 0)}</TableCell>
+              <TableCell className="text-center">{handoverTotal}</TableCell>
               <TableCell />
               <TableCell className="text-center">{totalPaid}</TableCell>
               <TableCell className="text-right">{formatRupiah(filteredData.reduce((sum, row) => sum + (row.coupons_paid * row.daily_installment_amount), 0))}</TableCell>
               <TableCell className="text-center">{totalUnpaid}</TableCell>
-              <TableCell className="text-right">{formatRupiah(totalUnpaidAmount)}</TableCell>
+              <TableCell className="text-right text-destructive">{formatRupiah(totalUnpaidAmount)}</TableCell>
             </TableRow>
           </TableBody>
         </Table>
@@ -266,65 +344,63 @@ export function OutstandingCouponsTable({ data, isLoading, handovers }: Props) {
         />
       )}
 
-      {/* Enhanced Riwayat Serah Terima */}
+      {/* Riwayat Serah Terima */}
       {handovers && handovers.length > 0 && (
-        <Card className="shadow-sm border-0 bg-gradient-to-br from-indigo-50/50 to-purple-50/50 dark:from-indigo-950/20 dark:to-purple-950/20">
+        <Card className="shadow-sm">
           <CardHeader className="pb-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-indigo-500 flex items-center justify-center">
-                  <Clock className="h-5 w-5 text-white" />
+                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Clock className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <CardTitle className="text-lg font-semibold text-indigo-900 dark:text-indigo-100">
+                  <CardTitle className="text-lg font-semibold">
                     Riwayat Serah Terima Kupon
                   </CardTitle>
-                  <p className="text-sm text-indigo-600/70 dark:text-indigo-300/70 mt-1">
+                  <p className="text-sm text-muted-foreground mt-1">
                     {handovers.length} transaksi serah terima • Menampilkan 20 terbaru
                   </p>
                 </div>
               </div>
-              <Badge variant="outline" className="bg-white dark:bg-gray-900 border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300">
-                Riwayat
-              </Badge>
+              <Badge variant="outline">Riwayat</Badge>
             </div>
           </CardHeader>
           <CardContent>
-            <div className="border rounded-lg overflow-hidden bg-white dark:bg-gray-900">
+            <div className="border rounded-lg overflow-hidden">
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-950/50 dark:to-purple-950/50">
-                    <TableHead className="font-semibold text-indigo-800 dark:text-indigo-200">
+                  <TableRow className="bg-muted/50">
+                    <TableHead className="font-semibold">
                       <div className="flex items-center gap-2">
                         <Calendar className="h-4 w-4" />
                         Tanggal
                       </div>
                     </TableHead>
-                    <TableHead className="font-semibold text-indigo-800 dark:text-indigo-200">
+                    <TableHead className="font-semibold">
                       <div className="flex items-center gap-2">
                         <UserCheck className="h-4 w-4" />
                         Kolektor
                       </div>
                     </TableHead>
-                    <TableHead className="font-semibold text-indigo-800 dark:text-indigo-200">
+                    <TableHead className="font-semibold">
                       <div className="flex items-center gap-2">
                         <FileText className="h-4 w-4" />
                         Kontrak
                       </div>
                     </TableHead>
-                    <TableHead className="font-semibold text-indigo-800 dark:text-indigo-200">
+                    <TableHead className="font-semibold">
                       <div className="flex items-center gap-2">
                         <UserCheck className="h-4 w-4" />
                         Konsumen
                       </div>
                     </TableHead>
-                    <TableHead className="font-semibold text-center text-indigo-800 dark:text-indigo-200">
+                    <TableHead className="font-semibold text-center">
                       <div className="flex items-center justify-center gap-2">
                         <TrendingUp className="h-4 w-4" />
                         Kupon
                       </div>
                     </TableHead>
-                    <TableHead className="font-semibold text-right text-indigo-800 dark:text-indigo-200">
+                    <TableHead className="font-semibold text-right">
                       <div className="flex items-center justify-end gap-2">
                         <DollarSign className="h-4 w-4" />
                         Total Nominal
@@ -336,21 +412,18 @@ export function OutstandingCouponsTable({ data, isLoading, handovers }: Props) {
                   {handovers.slice(0, 20).map((h, index) => {
                     const amount = h.credit_contracts?.daily_installment_amount || 0;
                     const totalAmount = h.coupon_count * amount;
-                    const isRecent = index < 3; // Mark first 3 as recent
+                    const isRecent = index < 3;
                     
                     return (
                       <TableRow 
                         key={h.id} 
-                        className={cn(
-                          "hover:bg-indigo-50/50 dark:hover:bg-indigo-950/20 transition-colors",
-                          isRecent && "bg-gradient-to-r from-blue-50/50 to-indigo-50/50 dark:from-blue-950/20 dark:to-indigo-950/20"
-                        )}
+                        className="hover:bg-muted/30 transition-colors"
                       >
                         <TableCell className="py-4">
                           <div className="flex items-center gap-2">
                             <div className={cn(
                               "h-2 w-2 rounded-full",
-                              isRecent ? "bg-green-500" : "bg-gray-400"
+                              isRecent ? "bg-green-500" : "bg-muted-foreground/30"
                             )}></div>
                             <div>
                               <p className="text-sm font-medium">{formatDate(h.handover_date)}</p>
@@ -366,7 +439,7 @@ export function OutstandingCouponsTable({ data, isLoading, handovers }: Props) {
                         
                         <TableCell className="py-4">
                           <div className="flex items-center gap-2">
-                            <UserCheck className="h-4 w-4 text-blue-500" />
+                            <UserCheck className="h-4 w-4 text-primary" />
                             <div>
                               <p className="text-sm font-medium">{h.collectors?.name}</p>
                               <Badge variant="secondary" className="text-xs">
@@ -377,28 +450,22 @@ export function OutstandingCouponsTable({ data, isLoading, handovers }: Props) {
                         </TableCell>
                         
                         <TableCell className="py-4">
-                          <Badge variant="outline" className="font-mono text-xs bg-white dark:bg-gray-800">
+                          <Badge variant="outline" className="font-mono text-xs">
                             {h.credit_contracts?.contract_ref}
                           </Badge>
                         </TableCell>
                         
                         <TableCell className="py-4">
-                          <div className="flex items-center gap-2">
-                            <UserCheck className="h-4 w-4 text-green-500" />
-                            <span className="text-sm font-medium">
-                              {h.credit_contracts?.customers?.name || '-'}
-                            </span>
-                          </div>
+                          <span className="text-sm font-medium">
+                            {h.credit_contracts?.customers?.name || '-'}
+                          </span>
                         </TableCell>
                         
                         <TableCell className="text-center py-4">
                           <div className="flex flex-col items-center gap-1">
                             <Badge 
                               variant={isRecent ? "default" : "secondary"} 
-                              className={cn(
-                                "text-xs font-mono",
-                                isRecent && "bg-blue-500 hover:bg-blue-600"
-                              )}
+                              className="text-xs font-mono"
                             >
                               #{h.start_index}-#{h.end_index}
                             </Badge>
@@ -410,10 +477,7 @@ export function OutstandingCouponsTable({ data, isLoading, handovers }: Props) {
                         
                         <TableCell className="text-right py-4">
                           <div className="flex flex-col items-end gap-1">
-                            <p className={cn(
-                              "text-sm font-bold",
-                              isRecent ? "text-blue-600 dark:text-blue-400" : "text-gray-700 dark:text-gray-300"
-                            )}>
+                            <p className="text-sm font-bold">
                               {formatRupiah(totalAmount)}
                             </p>
                             <p className="text-xs text-muted-foreground">
@@ -429,15 +493,15 @@ export function OutstandingCouponsTable({ data, isLoading, handovers }: Props) {
             </div>
             
             {handovers.length > 20 && (
-              <div className="mt-4 p-3 rounded-lg bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-950/20 dark:to-purple-950/20 border border-indigo-200/50 dark:border-indigo-800/50">
+              <div className="mt-4 p-3 rounded-lg bg-muted/50 border">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-indigo-500" />
-                    <span className="text-sm text-indigo-700 dark:text-indigo-300">
+                    <Clock className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm text-muted-foreground">
                       Menampilkan 20 dari {handovers.length} total transaksi
                     </span>
                   </div>
-                  <Button variant="outline" size="sm" className="text-indigo-600 dark:text-indigo-400 border-indigo-300 dark:border-indigo-700">
+                  <Button variant="outline" size="sm">
                     Lihat Semua
                   </Button>
                 </div>
