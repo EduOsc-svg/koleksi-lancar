@@ -39,8 +39,7 @@ export const exportOutstandingCouponsToExcel = async (data: OutstandingCouponSum
   // Headers with enhanced columns
   const headers = [
     'No', 'Nama Konsumen', 'Kode Kontrak', 'Kupon Keluar', 'Kupon di Kolektor',
-    'Nominal Angsuran', 'Terbayar', 'Telah Dibayar', 'Belum Bayar', 'Total Belum Bayar',
-    'Persentase Terbayar', 'Status'
+    'Nominal Angsuran', 'Terbayar', 'Telah Dibayar', 'Belum Bayar', 'Total Belum Bayar'
   ];
   const hRow = sheet.addRow(headers);
   hRow.eachCell((cell) => {
@@ -70,11 +69,7 @@ export const exportOutstandingCouponsToExcel = async (data: OutstandingCouponSum
       { formula: `G${rowNum}*F${rowNum}` },
       row.coupons_unpaid,
       // Dynamic formula: Belum Bayar × Nominal Angsuran
-      { formula: `I${rowNum}*F${rowNum}` },
-      // Dynamic formula: Persentase Terbayar = (Terbayar / Kupon Keluar) × 100%
-      { formula: `IF(D${rowNum}=0,0,G${rowNum}/D${rowNum})` },
-      // Dynamic formula: Status berdasarkan persentase
-      { formula: `IF(K${rowNum}>=0.9,"Lancar",IF(K${rowNum}>=0.7,"Kurang Lancar","Bermasalah"))` }
+      { formula: `I${rowNum}*F${rowNum}` }
     ]);
 
     dataRow.eachCell((cell, colNumber) => {
@@ -88,20 +83,10 @@ export const exportOutstandingCouponsToExcel = async (data: OutstandingCouponSum
         cell.numFmt = '"Rp "#,##0';
         cell.alignment = { horizontal: 'right' };
       }
-      // Format percentage column (Persentase Terbayar)
-      else if (colNumber === 11) {
-        cell.numFmt = '0.0%';
-        cell.alignment = { horizontal: 'center' };
-      }
       // Format number columns - center alignment (Kupon Keluar, Kupon di Kolektor, Terbayar, Belum Bayar)
       else if (colNumber === 4 || colNumber === 5 || colNumber === 7 || colNumber === 9) {
         cell.numFmt = '#,##0';
         cell.alignment = { horizontal: 'center' };
-      }
-      // Status column styling
-      else if (colNumber === 12) {
-        cell.alignment = { horizontal: 'center' };
-        // Conditional formatting akan ditambah nanti
       }
     });
   });
@@ -118,9 +103,7 @@ export const exportOutstandingCouponsToExcel = async (data: OutstandingCouponSum
     { formula: `SUM(G${startRow}:G${endRow})` }, // Total Terbayar
     { formula: `SUM(H${startRow}:H${endRow})` }, // Total Telah Dibayar
     { formula: `SUM(I${startRow}:I${endRow})` }, // Total Belum Bayar
-    { formula: `SUM(J${startRow}:J${endRow})` }, // Total Nilai Belum Bayar
-    { formula: `AVERAGE(K${startRow}:K${endRow})` }, // Rata-rata Persentase
-    { formula: `COUNTIF(L${startRow}:L${endRow},"Bermasalah")&" Bermasalah"` } // Status Summary
+    { formula: `SUM(J${startRow}:J${endRow})` } // Total Nilai Belum Bayar
   ]);
 
   // Style total row
@@ -137,13 +120,8 @@ export const exportOutstandingCouponsToExcel = async (data: OutstandingCouponSum
     } else if (colNumber === 6 || colNumber === 8 || colNumber === 10) { // Nominal Angsuran, Telah Dibayar & Total Belum Bayar
       cell.numFmt = '"Rp "#,##0';
       cell.alignment = { horizontal: 'right' };
-    } else if (colNumber === 11) { // Persentase
-      cell.numFmt = '0.0%';
-      cell.alignment = { horizontal: 'center' };
     } else if (colNumber === 4 || colNumber === 5 || colNumber === 7 || colNumber === 9) { // Numbers
       cell.numFmt = '#,##0';
-      cell.alignment = { horizontal: 'center' };
-    } else if (colNumber === 12) { // Status
       cell.alignment = { horizontal: 'center' };
     }
   });
@@ -159,9 +137,7 @@ export const exportOutstandingCouponsToExcel = async (data: OutstandingCouponSum
     { width: 12 },  // Terbayar
     { width: 18 },  // Telah Dibayar
     { width: 12 },  // Belum Bayar
-    { width: 20 },  // Total Belum Bayar
-    { width: 16 },  // Persentase Terbayar
-    { width: 15 },  // Status
+    { width: 18 },  // Total Belum Bayar
   ];
 
   // ============ Sheet 2: Analisis Ringkasan ============
@@ -185,10 +161,7 @@ export const exportOutstandingCouponsToExcel = async (data: OutstandingCouponSum
     ['Total Kupon Terbayar', `=SUM('Kupon Belum Bayar'.G${startRow}:G${endRow})`, 'Jumlah kupon yang sudah dibayar'],
     ['Total Nilai Telah Dibayar', `=SUM('Kupon Belum Bayar'.H${startRow}:H${endRow})`, 'Total nilai rupiah yang sudah dibayar'],
     ['Total Kupon Belum Bayar', `=SUM('Kupon Belum Bayar'.I${startRow}:I${endRow})`, 'Jumlah kupon yang belum dibayar'],
-    ['Total Nilai Belum Bayar', `=SUM('Kupon Belum Bayar'.J${startRow}:J${endRow})`, 'Total nilai rupiah yang belum terbayar'],
-    ['Rata-rata Persentase Bayar', `=AVERAGE('Kupon Belum Bayar'.K${startRow}:K${endRow})`, 'Rata-rata tingkat pembayaran'],
-    ['Kontrak Bermasalah', `=COUNTIF('Kupon Belum Bayar'.L${startRow}:L${endRow},"Bermasalah")`, 'Jumlah kontrak dengan status bermasalah'],
-    ['Tingkat Kolektibilitas', `=1-B10/B2`, 'Persentase kontrak yang tidak bermasalah'],
+    ['Total Nilai Belum Bayar', `=SUM('Kupon Belum Bayar'.J${startRow}:J${endRow})`, 'Total nilai rupiah yang belum terbayar']
   ];
 
   summaryMetrics.forEach((rowData, index) => {
@@ -204,11 +177,9 @@ export const exportOutstandingCouponsToExcel = async (data: OutstandingCouponSum
       });
     } else {
       // Data formatting
-      if (index >= 5 && index <= 6) { // Nilai rupiah
+      if (index >= 5 && index <= 7) { // Nilai rupiah
         row.getCell(2).numFmt = '"Rp "#,##0';
-      } else if (index === 7 || index === 9) { // Persentase
-        row.getCell(2).numFmt = '0.0%';
-      } else if (index >= 2 && index <= 8) { // Angka biasa
+      } else if (index >= 2 && index <= 4) { // Angka biasa
         row.getCell(2).numFmt = '#,##0';
       }
     }
@@ -218,53 +189,6 @@ export const exportOutstandingCouponsToExcel = async (data: OutstandingCouponSum
   summarySheet.getColumn('A').width = 25;
   summarySheet.getColumn('B').width = 20;
   summarySheet.getColumn('C').width = 35;
-
-  // ============ Sheet 3: Status Breakdown ============
-  const statusSheet = workbook.addWorksheet('Status Breakdown');
-  
-  statusSheet.mergeCells('A1:C1');
-  const statusTitleCell = statusSheet.getCell('A1');
-  statusTitleCell.value = 'BREAKDOWN STATUS PEMBAYARAN';
-  statusTitleCell.font = { bold: true, size: 14 };
-  statusTitleCell.alignment = { horizontal: 'center' };
-
-  statusSheet.addRow([]);
-  statusSheet.addRow([]);
-  
-  const statusData = [
-    ['Status', 'Jumlah Kontrak', 'Persentase'],
-    ['Lancar (≥90%)', `=COUNTIF('Kupon Belum Bayar'.K${startRow}:K${endRow},">=0.9")`, `=B4/SUM(B4:B6)`],
-    ['Kurang Lancar (70-89%)', `=COUNTIFS('Kupon Belum Bayar'.K${startRow}:K${endRow},">=0.7",'Kupon Belum Bayar'.K${startRow}:K${endRow},"<0.9")`, `=B5/SUM(B4:B6)`],
-    ['Bermasalah (<70%)', `=COUNTIF('Kupon Belum Bayar'.K${startRow}:K${endRow},"<0.7")`, `=B6/SUM(B4:B6)`],
-    ['TOTAL', `=SUM(B4:B6)`, '100%'],
-  ];
-
-  statusData.forEach((rowData, index) => {
-    const row = statusSheet.addRow(rowData);
-    
-    if (index === 0 || index === statusData.length - 1) {
-      // Header and total row styling
-      row.font = { bold: true };
-      row.eachCell((cell) => {
-        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: index === 0 ? 'FF4472C4' : 'FFD9E2F3' } };
-        if (index === 0) {
-          cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
-        }
-        cell.alignment = { horizontal: 'center' };
-      });
-    }
-    
-    // Format percentage column
-    if (index > 0) {
-      row.getCell(3).numFmt = '0.0%';
-      row.getCell(3).alignment = { horizontal: 'center' };
-    }
-  });
-
-  // Set column widths
-  statusSheet.getColumn('A').width = 20;
-  statusSheet.getColumn('B').width = 15;
-  statusSheet.getColumn('C').width = 15;
 
   // Download
   const buffer = await workbook.xlsx.writeBuffer();

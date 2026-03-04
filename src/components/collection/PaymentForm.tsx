@@ -25,6 +25,7 @@ interface Contract {
   daily_installment_amount: number;
   total_loan_amount: number;
   tenor_days: number;
+  collector_id: string | null;
   customers: { name: string } | null;
 }
 
@@ -91,26 +92,34 @@ export function PaymentForm({ contracts, collectors, onSubmit, onBulkSubmit, isS
     ? (paymentAmount || selectedContractData.daily_installment_amount) * couponCount 
     : 0;
 
-  // Auto-fill collector from latest coupon_handovers when contract is selected
+  // Auto-fill collector from contract when contract is selected
   useEffect(() => {
     if (!selectedContract) {
       setPaymentCollector("");
       return;
     }
-    const fetchHandoverCollector = async () => {
-      const { data } = await supabase
-        .from('coupon_handovers')
-        .select('collector_id')
-        .eq('contract_id', selectedContract)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
-      if (data?.collector_id) {
-        setPaymentCollector(data.collector_id);
-      }
-    };
-    fetchHandoverCollector();
-  }, [selectedContract]);
+    
+    // Use collector assigned to the contract directly
+    const contract = contracts?.find(c => c.id === selectedContract);
+    if (contract?.collector_id) {
+      setPaymentCollector(contract.collector_id);
+    } else {
+      // Fallback: try to get from latest coupon_handovers if no collector in contract
+      const fetchHandoverCollector = async () => {
+        const { data } = await supabase
+          .from('coupon_handovers')
+          .select('collector_id')
+          .eq('contract_id', selectedContract)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
+        if (data?.collector_id) {
+          setPaymentCollector(data.collector_id);
+        }
+      };
+      fetchHandoverCollector();
+    }
+  }, [selectedContract, contracts]);
 
   useEffect(() => {
     if (selectedContract && nextCouponDueDate && paymentDate) {
@@ -443,6 +452,12 @@ export function PaymentForm({ contracts, collectors, onSubmit, onBulkSubmit, isS
                 </Command>
               </PopoverContent>
             </Popover>
+            {selectedContractData?.collector_id && paymentCollector === selectedContractData.collector_id && (
+              <p className="text-xs text-muted-foreground flex items-center gap-1">
+                <CheckCircle2 className="h-3 w-3 text-green-500" />
+                Otomatis dipilih dari kontrak
+              </p>
+            )}
           </div>
         </div>
 

@@ -90,14 +90,12 @@ export function OutstandingCouponsTable({ data, isLoading, handovers }: Props) {
               <TableHead className="text-right">Telah Dibayar</TableHead>
               <TableHead className="text-center">Belum Bayar</TableHead>
               <TableHead className="text-right">Total Belum Bayar</TableHead>
-              <TableHead className="text-center">Persentase</TableHead>
-              <TableHead className="text-center">Status</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {[...Array(5)].map((_, i) => (
               <TableRow key={i}>
-                {[...Array(12)].map((_, j) => (
+                {[...Array(10)].map((_, j) => (
                   <TableCell key={j}><Skeleton className="h-4 w-16" /></TableCell>
                 ))}
               </TableRow>
@@ -205,20 +203,11 @@ export function OutstandingCouponsTable({ data, isLoading, handovers }: Props) {
               <TableHead className="font-semibold text-right">Telah Dibayar</TableHead>
               <TableHead className="font-semibold text-center">Belum Bayar</TableHead>
               <TableHead className="font-semibold text-right">Total Belum Bayar</TableHead>
-              <TableHead className="font-semibold text-center">Persentase</TableHead>
-              <TableHead className="font-semibold text-center">Status</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {paginatedItems.map((row, i) => {
               const handoverCount = handoverMap.get(row.contract_id) || 0;
-              const paymentPercentage = row.total_coupons_issued > 0 ? (row.coupons_paid / row.total_coupons_issued) * 100 : 0;
-              const getStatus = (percentage: number) => {
-                if (percentage >= 90) return { text: 'Lancar', variant: 'default' as const };
-                if (percentage >= 70) return { text: 'Kurang Lancar', variant: 'secondary' as const };
-                return { text: 'Bermasalah', variant: 'destructive' as const };
-              };
-              const status = getStatus(paymentPercentage);
 
               return (
                 <TableRow key={row.contract_id} className="hover:bg-muted/30 transition-colors">
@@ -250,12 +239,6 @@ export function OutstandingCouponsTable({ data, isLoading, handovers }: Props) {
                   <TableCell className="text-right font-medium">
                     {formatRupiah(row.total_unpaid_amount)}
                   </TableCell>
-                  <TableCell className="text-center">
-                    <Badge variant="outline">{paymentPercentage.toFixed(1)}%</Badge>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <Badge variant={status.variant}>{status.text}</Badge>
-                  </TableCell>
                 </TableRow>
               );
             })}
@@ -269,8 +252,6 @@ export function OutstandingCouponsTable({ data, isLoading, handovers }: Props) {
               <TableCell className="text-right">{formatRupiah(filteredData.reduce((sum, row) => sum + (row.coupons_paid * row.daily_installment_amount), 0))}</TableCell>
               <TableCell className="text-center">{totalUnpaid}</TableCell>
               <TableCell className="text-right">{formatRupiah(totalUnpaidAmount)}</TableCell>
-              <TableCell />
-              <TableCell />
             </TableRow>
           </TableBody>
         </Table>

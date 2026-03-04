@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Check, ChevronsUpDown, Send, Users, FileText, Calendar, MessageSquare, DollarSign, Hash, AlertCircle } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Check, ChevronsUpDown, Send, Users, FileText, Calendar, MessageSquare, DollarSign, Hash, AlertCircle, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,6 +19,7 @@ interface Contract {
   current_installment_index: number;
   daily_installment_amount: number;
   tenor_days: number;
+  collector_id: string | null;
   customers: { name: string } | null;
 }
 
@@ -56,6 +57,20 @@ export function HandoverCouponForm({ contracts, collectors, onSubmit, isSubmitti
   const startIndex = selectedContract ? selectedContract.current_installment_index + 1 : 1;
   const endIndex = startIndex + couponCount - 1;
   const maxCoupons = selectedContract ? selectedContract.tenor_days - selectedContract.current_installment_index : 0;
+
+  // Auto-fill collector from contract when contract is selected
+  useEffect(() => {
+    if (!contractId) {
+      setCollectorId("");
+      return;
+    }
+    
+    // Use collector assigned to the contract directly
+    const contract = contracts?.find(c => c.id === contractId);
+    if (contract?.collector_id) {
+      setCollectorId(contract.collector_id);
+    }
+  }, [contractId, contracts]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -168,6 +183,12 @@ export function HandoverCouponForm({ contracts, collectors, onSubmit, isSubmitti
                   </Command>
                 </PopoverContent>
               </Popover>
+              {selectedContract?.collector_id && collectorId === selectedContract.collector_id && (
+                <p className="text-xs text-muted-foreground flex items-center gap-1">
+                  <CheckCircle2 className="h-3 w-3 text-green-500" />
+                  Otomatis dipilih dari kontrak
+                </p>
+              )}
             </div>
 
             {/* Kontrak Section */}
