@@ -110,6 +110,7 @@ export const useCreatePayment = () => {
       queryClient.invalidateQueries({ queryKey: ['aggregated_payments'] });
       queryClient.invalidateQueries({ queryKey: ['outstanding_coupons'] });
       queryClient.invalidateQueries({ queryKey: ['installment_coupons'] });
+      queryClient.invalidateQueries({ queryKey: ['coupon_handovers'] });
       
       logActivity.mutate({
         action: 'PAYMENT',
@@ -201,6 +202,7 @@ export const useCreateBulkPayment = () => {
       queryClient.invalidateQueries({ queryKey: ['aggregated_payments'] });
       queryClient.invalidateQueries({ queryKey: ['installment_coupons'] });
       queryClient.invalidateQueries({ queryKey: ['outstanding_coupons'] });
+      queryClient.invalidateQueries({ queryKey: ['coupon_handovers'] });
       
       logActivity.mutate({
         action: 'BULK_PAYMENT',

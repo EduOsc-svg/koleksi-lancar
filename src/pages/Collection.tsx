@@ -153,6 +153,7 @@ export default function Collection() {
             totalItems={manifestTotalItems}
             onPageChange={setManifestPage}
             searchQuery={searchQuery}
+            outstandingData={outstandingData}
           />
         </TabsContent>
 
