@@ -54,9 +54,10 @@ interface PaymentFormProps {
     notes: string;
   }) => Promise<void>;
   isSubmitting: boolean;
+  defaultCollectorId?: string;
 }
 
-export function PaymentForm({ contracts, collectors, onSubmit, onBulkSubmit, isSubmitting }: PaymentFormProps) {
+export function PaymentForm({ contracts, collectors, onSubmit, onBulkSubmit, isSubmitting, defaultCollectorId }: PaymentFormProps) {
   const { t } = useTranslation();
   
   const [selectedContract, setSelectedContract] = useState("");
