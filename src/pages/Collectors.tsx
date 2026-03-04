@@ -102,22 +102,43 @@ export default function Collectors() {
   }, [highlightId, collectors]);
 
   const handleOpenCreate = () => {
-    // Generate next collector code
+    // Generate next collector code based on the most recent pattern
     const generateNextCode = () => {
       if (!collectors || collectors.length === 0) return "KOL001";
       
+      // Sort collectors by creation date to get the most recent pattern
+      const sortedCollectors = [...collectors].sort((a, b) => 
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+      
+      // Get the most recent code to determine the pattern
+      const recentCode = sortedCollectors[0]?.collector_code;
+      
+      if (!recentCode) return "KOL001";
+      
+      // Extract pattern from recent code
+      const match = recentCode.match(/^([A-Z]+)(\d+)$/);
+      if (!match) {
+        // If no pattern found, use default
+        return "KOL001";
+      }
+      
+      const prefix = match[1];
+      const numberLength = match[2].length;
+      
+      // Find all codes with the same prefix
       const existingNumbers = collectors
         .map(c => c.collector_code)
-        .filter(code => code.startsWith("KOL"))
+        .filter(code => code.startsWith(prefix))
         .map(code => {
-          const match = code.match(/KOL(\d{3})/);
-          return match ? parseInt(match[1], 10) : 0;
+          const numMatch = code.match(new RegExp(`^${prefix}(\\d+)$`));
+          return numMatch ? parseInt(numMatch[1], 10) : 0;
         })
         .filter(num => !isNaN(num));
       
       const maxNumber = existingNumbers.length > 0 ? Math.max(...existingNumbers) : 0;
       const nextNumber = maxNumber + 1;
-      return `KOL${nextNumber.toString().padStart(3, '0')}`;
+      return `${prefix}${nextNumber.toString().padStart(numberLength, '0')}`;
     };
 
     setFormData({ 
@@ -300,21 +321,67 @@ export default function Collectors() {
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="collector_code">Kode Kolektor *</Label>
-              <Input
-                id="collector_code"
-                value={formData.collector_code}
-                onChange={(e) =>
-                  setFormData({ ...formData, collector_code: e.target.value })
+              <div className="flex gap-2">
+                <Input
+                  id="collector_code"
+                  value={formData.collector_code}
+                  onChange={(e) =>
+                    setFormData({ ...formData, collector_code: e.target.value })
+                  }
+                  placeholder="Contoh: KOL001, K001, COL001"
+                  className="flex-1"
+                />
+                {!selectedCollector && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      // Regenerate code using the same logic as handleOpenCreate
+                      const generateNextCode = () => {
+                        if (!collectors || collectors.length === 0) return "KOL001";
+                        
+                        const sortedCollectors = [...collectors].sort((a, b) => 
+                          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+                        );
+                        
+                        const recentCode = sortedCollectors[0]?.collector_code;
+                        if (!recentCode) return "KOL001";
+                        
+                        const match = recentCode.match(/^([A-Z]+)(\d+)$/);
+                        if (!match) return "KOL001";
+                        
+                        const prefix = match[1];
+                        const numberLength = match[2].length;
+                        
+                        const existingNumbers = collectors
+                          .map(c => c.collector_code)
+                          .filter(code => code.startsWith(prefix))
+                          .map(code => {
+                            const numMatch = code.match(new RegExp(`^${prefix}(\\d+)$`));
+                            return numMatch ? parseInt(numMatch[1], 10) : 0;
+                          })
+                          .filter(num => !isNaN(num));
+                        
+                        const maxNumber = existingNumbers.length > 0 ? Math.max(...existingNumbers) : 0;
+                        const nextNumber = maxNumber + 1;
+                        return `${prefix}${nextNumber.toString().padStart(numberLength, '0')}`;
+                      };
+                      
+                      setFormData({ ...formData, collector_code: generateNextCode() });
+                    }}
+                    className="px-3"
+                  >
+                    Auto
+                  </Button>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {!selectedCollector 
+                  ? "Dapat diinput manual atau klik 'Auto' untuk mengikuti pola kode sebelumnya"
+                  : "Kode kolektor"
                 }
-                placeholder="Contoh: KOL001"
-                readOnly={!selectedCollector}
-                className={!selectedCollector ? "bg-muted cursor-not-allowed" : ""}
-              />
-              {!selectedCollector && (
-                <p className="text-xs text-muted-foreground">
-                  Kode otomatis dibuat oleh sistem
-                </p>
-              )}
+              </p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="name">Nama *</Label>

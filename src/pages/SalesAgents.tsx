@@ -119,22 +119,43 @@ export default function SalesAgents() {
   }, [highlightId, agents, currentPage, goToPage, searchParams, setSearchParams]);
 
   const handleOpenCreate = () => {
-    // Generate next sales agent code
+    // Generate next sales agent code based on the most recent pattern
     const generateNextCode = () => {
-      if (!agents || agents.length === 0) return "SA001";
+      if (!agents || agents.length === 0) return "S001";
       
+      // Sort agents by creation date to get the most recent pattern
+      const sortedAgents = [...agents].sort((a, b) => 
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+      
+      // Get the most recent code to determine the pattern
+      const recentCode = sortedAgents[0]?.agent_code;
+      
+      if (!recentCode) return "S001";
+      
+      // Extract pattern from recent code
+      const match = recentCode.match(/^([A-Z]+)(\d+)$/);
+      if (!match) {
+        // If no pattern found, use default
+        return "S001";
+      }
+      
+      const prefix = match[1];
+      const numberLength = match[2].length;
+      
+      // Find all codes with the same prefix
       const existingNumbers = agents
         .map(a => a.agent_code)
-        .filter(code => code.startsWith("SA"))
+        .filter(code => code.startsWith(prefix))
         .map(code => {
-          const match = code.match(/SA(\d{3})/);
-          return match ? parseInt(match[1], 10) : 0;
+          const numMatch = code.match(new RegExp(`^${prefix}(\\d+)$`));
+          return numMatch ? parseInt(numMatch[1], 10) : 0;
         })
         .filter(num => !isNaN(num));
       
       const maxNumber = existingNumbers.length > 0 ? Math.max(...existingNumbers) : 0;
       const nextNumber = maxNumber + 1;
-      return `SA${nextNumber.toString().padStart(3, '0')}`;
+      return `${prefix}${nextNumber.toString().padStart(numberLength, '0')}`;
     };
 
     setSelectedAgent(null);
@@ -486,19 +507,65 @@ export default function SalesAgents() {
           <div className="space-y-4">
             <div>
               <Label htmlFor="agent_code">{t("salesAgents.agentCode")}</Label>
-              <Input
-                id="agent_code"
-                value={formData.agent_code}
-                onChange={(e) => setFormData({ ...formData, agent_code: e.target.value })}
-                placeholder="e.g., SA001"
-                readOnly={!selectedAgent}
-                className={!selectedAgent ? "bg-muted cursor-not-allowed" : ""}
-              />
-              {!selectedAgent && (
-                <p className="text-xs text-muted-foreground mt-1">
-                  Kode otomatis dibuat oleh sistem
-                </p>
-              )}
+              <div className="flex gap-2">
+                <Input
+                  id="agent_code"
+                  value={formData.agent_code}
+                  onChange={(e) => setFormData({ ...formData, agent_code: e.target.value })}
+                  placeholder="e.g., S001, B001, D001"
+                  className="flex-1"
+                />
+                {!selectedAgent && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      // Regenerate code using the same logic as handleOpenCreate
+                      const generateNextCode = () => {
+                        if (!agents || agents.length === 0) return "S001";
+                        
+                        const sortedAgents = [...agents].sort((a, b) => 
+                          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+                        );
+                        
+                        const recentCode = sortedAgents[0]?.agent_code;
+                        if (!recentCode) return "S001";
+                        
+                        const match = recentCode.match(/^([A-Z]+)(\d+)$/);
+                        if (!match) return "S001";
+                        
+                        const prefix = match[1];
+                        const numberLength = match[2].length;
+                        
+                        const existingNumbers = agents
+                          .map(a => a.agent_code)
+                          .filter(code => code.startsWith(prefix))
+                          .map(code => {
+                            const numMatch = code.match(new RegExp(`^${prefix}(\\d+)$`));
+                            return numMatch ? parseInt(numMatch[1], 10) : 0;
+                          })
+                          .filter(num => !isNaN(num));
+                        
+                        const maxNumber = existingNumbers.length > 0 ? Math.max(...existingNumbers) : 0;
+                        const nextNumber = maxNumber + 1;
+                        return `${prefix}${nextNumber.toString().padStart(numberLength, '0')}`;
+                      };
+                      
+                      setFormData({ ...formData, agent_code: generateNextCode() });
+                    }}
+                    className="px-3"
+                  >
+                    Auto
+                  </Button>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {!selectedAgent 
+                  ? "Dapat diinput manual atau klik 'Auto' untuk mengikuti pola kode sebelumnya"
+                  : "Kode sales agent"
+                }
+              </p>
             </div>
             <div>
               <Label htmlFor="name">{t("salesAgents.name")}</Label>
