@@ -78,6 +78,14 @@ export const useCreatePayment = () => {
         .single();
       if (paymentError) throw paymentError;
 
+      // Update coupon status to paid
+      const { error: couponError } = await supabase
+        .from('installment_coupons')
+        .update({ status: 'paid' })
+        .eq('contract_id', payment.contract_id)
+        .eq('installment_index', payment.installment_index);
+      if (couponError) throw couponError;
+
       // Update contract's current_installment_index
       const { error: updateError } = await supabase
         .from('credit_contracts')
@@ -100,6 +108,8 @@ export const useCreatePayment = () => {
       queryClient.invalidateQueries({ queryKey: ['invoice_details'] });
       queryClient.invalidateQueries({ queryKey: ['collection_trend'] });
       queryClient.invalidateQueries({ queryKey: ['aggregated_payments'] });
+      queryClient.invalidateQueries({ queryKey: ['outstanding_coupons'] });
+      queryClient.invalidateQueries({ queryKey: ['installment_coupons'] });
       
       logActivity.mutate({
         action: 'PAYMENT',
@@ -190,6 +200,7 @@ export const useCreateBulkPayment = () => {
       queryClient.invalidateQueries({ queryKey: ['collection_trend'] });
       queryClient.invalidateQueries({ queryKey: ['aggregated_payments'] });
       queryClient.invalidateQueries({ queryKey: ['installment_coupons'] });
+      queryClient.invalidateQueries({ queryKey: ['outstanding_coupons'] });
       
       logActivity.mutate({
         action: 'BULK_PAYMENT',
