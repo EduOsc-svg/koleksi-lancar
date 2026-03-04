@@ -102,7 +102,29 @@ export default function Collectors() {
   }, [highlightId, collectors]);
 
   const handleOpenCreate = () => {
-    setFormData({ collector_code: "", name: "", phone: "" });
+    // Generate next collector code
+    const generateNextCode = () => {
+      if (!collectors || collectors.length === 0) return "KOL001";
+      
+      const existingNumbers = collectors
+        .map(c => c.collector_code)
+        .filter(code => code.startsWith("KOL"))
+        .map(code => {
+          const match = code.match(/KOL(\d{3})/);
+          return match ? parseInt(match[1], 10) : 0;
+        })
+        .filter(num => !isNaN(num));
+      
+      const maxNumber = existingNumbers.length > 0 ? Math.max(...existingNumbers) : 0;
+      const nextNumber = maxNumber + 1;
+      return `KOL${nextNumber.toString().padStart(3, '0')}`;
+    };
+
+    setFormData({ 
+      collector_code: generateNextCode(), 
+      name: "", 
+      phone: "" 
+    });
     setSelectedCollector(null);
     setDialogOpen(true);
   };
@@ -285,7 +307,14 @@ export default function Collectors() {
                   setFormData({ ...formData, collector_code: e.target.value })
                 }
                 placeholder="Contoh: KOL001"
+                readOnly={!selectedCollector}
+                className={!selectedCollector ? "bg-muted cursor-not-allowed" : ""}
               />
+              {!selectedCollector && (
+                <p className="text-xs text-muted-foreground">
+                  Kode otomatis dibuat oleh sistem
+                </p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="name">Nama *</Label>

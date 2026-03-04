@@ -119,8 +119,30 @@ export default function SalesAgents() {
   }, [highlightId, agents, currentPage, goToPage, searchParams, setSearchParams]);
 
   const handleOpenCreate = () => {
+    // Generate next sales agent code
+    const generateNextCode = () => {
+      if (!agents || agents.length === 0) return "SA001";
+      
+      const existingNumbers = agents
+        .map(a => a.agent_code)
+        .filter(code => code.startsWith("SA"))
+        .map(code => {
+          const match = code.match(/SA(\d{3})/);
+          return match ? parseInt(match[1], 10) : 0;
+        })
+        .filter(num => !isNaN(num));
+      
+      const maxNumber = existingNumbers.length > 0 ? Math.max(...existingNumbers) : 0;
+      const nextNumber = maxNumber + 1;
+      return `SA${nextNumber.toString().padStart(3, '0')}`;
+    };
+
     setSelectedAgent(null);
-    setFormData({ agent_code: "", name: "", phone: "" });
+    setFormData({ 
+      agent_code: generateNextCode(), 
+      name: "", 
+      phone: "" 
+    });
     setDialogOpen(true);
   };
 
@@ -468,8 +490,15 @@ export default function SalesAgents() {
                 id="agent_code"
                 value={formData.agent_code}
                 onChange={(e) => setFormData({ ...formData, agent_code: e.target.value })}
-                placeholder="e.g., S, B, D"
+                placeholder="e.g., SA001"
+                readOnly={!selectedAgent}
+                className={!selectedAgent ? "bg-muted cursor-not-allowed" : ""}
               />
+              {!selectedAgent && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Kode otomatis dibuat oleh sistem
+                </p>
+              )}
             </div>
             <div>
               <Label htmlFor="name">{t("salesAgents.name")}</Label>
