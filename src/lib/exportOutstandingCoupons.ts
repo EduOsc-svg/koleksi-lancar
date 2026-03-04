@@ -86,13 +86,13 @@ export const exportOutstandingCouponsToExcel = async (data: OutstandingCouponSum
         cell.numFmt = '"Rp "#,##0';
         cell.alignment = { horizontal: 'right' };
       }
-      // Format percentage column
+      // Format percentage column (Persentase Terbayar)
       else if (colNumber === 10) {
         cell.numFmt = '0.0%';
         cell.alignment = { horizontal: 'center' };
       }
-      // Format number columns (center alignment)
-      else if (colNumber >= 4 && colNumber <= 8) {
+      // Format number columns - center alignment (Kupon Keluar, Kupon di Kolektor, Terbayar, Belum Bayar)
+      else if (colNumber === 4 || colNumber === 5 || colNumber === 7 || colNumber === 8) {
         cell.numFmt = '#,##0';
         cell.alignment = { horizontal: 'center' };
       }
@@ -131,16 +131,16 @@ export const exportOutstandingCouponsToExcel = async (data: OutstandingCouponSum
 
     if (colNumber === 3) {
       cell.alignment = { horizontal: 'right' };
-    } else if (colNumber === 5 || colNumber === 8) {
+    } else if (colNumber === 6 || colNumber === 9) { // Nominal Angsuran & Total Belum Bayar
       cell.numFmt = '"Rp "#,##0';
       cell.alignment = { horizontal: 'right' };
-    } else if (colNumber === 9) {
+    } else if (colNumber === 10) { // Persentase
       cell.numFmt = '0.0%';
       cell.alignment = { horizontal: 'center' };
-    } else if (colNumber >= 4 && colNumber <= 7) {
+    } else if (colNumber === 4 || colNumber === 5 || colNumber === 7 || colNumber === 8) { // Numbers
       cell.numFmt = '#,##0';
       cell.alignment = { horizontal: 'center' };
-    } else if (colNumber === 10) {
+    } else if (colNumber === 11) { // Status
       cell.alignment = { horizontal: 'center' };
     }
   });
