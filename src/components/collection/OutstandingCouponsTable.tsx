@@ -87,6 +87,7 @@ export function OutstandingCouponsTable({ data, isLoading, handovers }: Props) {
               <TableHead className="text-center">Kupon di Kolektor</TableHead>
               <TableHead className="text-right">Nominal Angsuran</TableHead>
               <TableHead className="text-center">Terbayar</TableHead>
+              <TableHead className="text-right">Telah Dibayar</TableHead>
               <TableHead className="text-center">Belum Bayar</TableHead>
               <TableHead className="text-right">Total Belum Bayar</TableHead>
               <TableHead className="text-center">Persentase</TableHead>
@@ -96,7 +97,7 @@ export function OutstandingCouponsTable({ data, isLoading, handovers }: Props) {
           <TableBody>
             {[...Array(5)].map((_, i) => (
               <TableRow key={i}>
-                {[...Array(11)].map((_, j) => (
+                {[...Array(12)].map((_, j) => (
                   <TableCell key={j}><Skeleton className="h-4 w-16" /></TableCell>
                 ))}
               </TableRow>
@@ -201,6 +202,7 @@ export function OutstandingCouponsTable({ data, isLoading, handovers }: Props) {
               <TableHead className="font-semibold text-center">Kupon di Kolektor</TableHead>
               <TableHead className="font-semibold text-right">Nominal Angsuran</TableHead>
               <TableHead className="font-semibold text-center">Terbayar</TableHead>
+              <TableHead className="font-semibold text-right">Telah Dibayar</TableHead>
               <TableHead className="font-semibold text-center">Belum Bayar</TableHead>
               <TableHead className="font-semibold text-right">Total Belum Bayar</TableHead>
               <TableHead className="font-semibold text-center">Persentase</TableHead>
@@ -235,6 +237,9 @@ export function OutstandingCouponsTable({ data, isLoading, handovers }: Props) {
                   <TableCell className="text-center">
                     <Badge variant="secondary">{row.coupons_paid}</Badge>
                   </TableCell>
+                  <TableCell className="text-right font-medium">
+                    {formatRupiah(row.coupons_paid * row.daily_installment_amount)}
+                  </TableCell>
                   <TableCell className="text-center">
                     {row.coupons_unpaid > 0 ? (
                       <Badge variant="destructive">{row.coupons_unpaid}</Badge>
@@ -261,6 +266,7 @@ export function OutstandingCouponsTable({ data, isLoading, handovers }: Props) {
               <TableCell className="text-center">{Array.from(handoverMap.values()).reduce((sum, count) => sum + count, 0)}</TableCell>
               <TableCell />
               <TableCell className="text-center">{totalPaid}</TableCell>
+              <TableCell className="text-right">{formatRupiah(filteredData.reduce((sum, row) => sum + (row.coupons_paid * row.daily_installment_amount), 0))}</TableCell>
               <TableCell className="text-center">{totalUnpaid}</TableCell>
               <TableCell className="text-right">{formatRupiah(totalUnpaidAmount)}</TableCell>
               <TableCell />

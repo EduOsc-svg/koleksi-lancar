@@ -39,7 +39,7 @@ export const exportOutstandingCouponsToExcel = async (data: OutstandingCouponSum
   // Headers with enhanced columns
   const headers = [
     'No', 'Nama Konsumen', 'Kode Kontrak', 'Kupon Keluar', 'Kupon di Kolektor',
-    'Nominal Angsuran', 'Terbayar', 'Belum Bayar', 'Total Belum Bayar',
+    'Nominal Angsuran', 'Terbayar', 'Telah Dibayar', 'Belum Bayar', 'Total Belum Bayar',
     'Persentase Terbayar', 'Status'
   ];
   const hRow = sheet.addRow(headers);
@@ -66,13 +66,15 @@ export const exportOutstandingCouponsToExcel = async (data: OutstandingCouponSum
       kuponDiKolektor,
       row.daily_installment_amount,
       row.coupons_paid,
+      // Dynamic formula: Terbayar × Nominal Angsuran
+      { formula: `G${rowNum}*F${rowNum}` },
       row.coupons_unpaid,
       // Dynamic formula: Belum Bayar × Nominal Angsuran
-      { formula: `H${rowNum}*F${rowNum}` },
+      { formula: `I${rowNum}*F${rowNum}` },
       // Dynamic formula: Persentase Terbayar = (Terbayar / Kupon Keluar) × 100%
       { formula: `IF(D${rowNum}=0,0,G${rowNum}/D${rowNum})` },
       // Dynamic formula: Status berdasarkan persentase
-      { formula: `IF(J${rowNum}>=0.9,"Lancar",IF(J${rowNum}>=0.7,"Kurang Lancar","Bermasalah"))` }
+      { formula: `IF(K${rowNum}>=0.9,"Lancar",IF(K${rowNum}>=0.7,"Kurang Lancar","Bermasalah"))` }
     ]);
 
     dataRow.eachCell((cell, colNumber) => {
@@ -81,23 +83,23 @@ export const exportOutstandingCouponsToExcel = async (data: OutstandingCouponSum
         left: { style: 'thin' }, right: { style: 'thin' },
       };
       
-      // Format currency columns (Nominal Angsuran & Total Belum Bayar)
-      if (colNumber === 6 || colNumber === 9) {
+      // Format currency columns (Nominal Angsuran, Telah Dibayar & Total Belum Bayar)
+      if (colNumber === 6 || colNumber === 8 || colNumber === 10) {
         cell.numFmt = '"Rp "#,##0';
         cell.alignment = { horizontal: 'right' };
       }
       // Format percentage column (Persentase Terbayar)
-      else if (colNumber === 10) {
+      else if (colNumber === 11) {
         cell.numFmt = '0.0%';
         cell.alignment = { horizontal: 'center' };
       }
       // Format number columns - center alignment (Kupon Keluar, Kupon di Kolektor, Terbayar, Belum Bayar)
-      else if (colNumber === 4 || colNumber === 5 || colNumber === 7 || colNumber === 8) {
+      else if (colNumber === 4 || colNumber === 5 || colNumber === 7 || colNumber === 9) {
         cell.numFmt = '#,##0';
         cell.alignment = { horizontal: 'center' };
       }
       // Status column styling
-      else if (colNumber === 11) {
+      else if (colNumber === 12) {
         cell.alignment = { horizontal: 'center' };
         // Conditional formatting akan ditambah nanti
       }
@@ -114,10 +116,11 @@ export const exportOutstandingCouponsToExcel = async (data: OutstandingCouponSum
     { formula: `SUM(E${startRow}:E${endRow})` }, // Total Kupon di Kolektor
     { formula: `AVERAGE(F${startRow}:F${endRow})` }, // Rata-rata Nominal Angsuran
     { formula: `SUM(G${startRow}:G${endRow})` }, // Total Terbayar
-    { formula: `SUM(H${startRow}:H${endRow})` }, // Total Belum Bayar
-    { formula: `SUM(I${startRow}:I${endRow})` }, // Total Nilai Belum Bayar
-    { formula: `AVERAGE(J${startRow}:J${endRow})` }, // Rata-rata Persentase
-    { formula: `COUNTIF(K${startRow}:K${endRow},"Bermasalah")&" Bermasalah"` } // Status Summary
+    { formula: `SUM(H${startRow}:H${endRow})` }, // Total Telah Dibayar
+    { formula: `SUM(I${startRow}:I${endRow})` }, // Total Belum Bayar
+    { formula: `SUM(J${startRow}:J${endRow})` }, // Total Nilai Belum Bayar
+    { formula: `AVERAGE(K${startRow}:K${endRow})` }, // Rata-rata Persentase
+    { formula: `COUNTIF(L${startRow}:L${endRow},"Bermasalah")&" Bermasalah"` } // Status Summary
   ]);
 
   // Style total row
@@ -131,16 +134,16 @@ export const exportOutstandingCouponsToExcel = async (data: OutstandingCouponSum
 
     if (colNumber === 3) {
       cell.alignment = { horizontal: 'right' };
-    } else if (colNumber === 6 || colNumber === 9) { // Nominal Angsuran & Total Belum Bayar
+    } else if (colNumber === 6 || colNumber === 8 || colNumber === 10) { // Nominal Angsuran, Telah Dibayar & Total Belum Bayar
       cell.numFmt = '"Rp "#,##0';
       cell.alignment = { horizontal: 'right' };
-    } else if (colNumber === 10) { // Persentase
+    } else if (colNumber === 11) { // Persentase
       cell.numFmt = '0.0%';
       cell.alignment = { horizontal: 'center' };
-    } else if (colNumber === 4 || colNumber === 5 || colNumber === 7 || colNumber === 8) { // Numbers
+    } else if (colNumber === 4 || colNumber === 5 || colNumber === 7 || colNumber === 9) { // Numbers
       cell.numFmt = '#,##0';
       cell.alignment = { horizontal: 'center' };
-    } else if (colNumber === 11) { // Status
+    } else if (colNumber === 12) { // Status
       cell.alignment = { horizontal: 'center' };
     }
   });
@@ -154,6 +157,7 @@ export const exportOutstandingCouponsToExcel = async (data: OutstandingCouponSum
     { width: 15 },  // Kupon di Kolektor
     { width: 18 },  // Nominal Angsuran
     { width: 12 },  // Terbayar
+    { width: 18 },  // Telah Dibayar
     { width: 12 },  // Belum Bayar
     { width: 20 },  // Total Belum Bayar
     { width: 16 },  // Persentase Terbayar
@@ -179,11 +183,12 @@ export const exportOutstandingCouponsToExcel = async (data: OutstandingCouponSum
     ['Total Kupon Keluar', `=SUM('Kupon Belum Bayar'.D${startRow}:D${endRow})`, 'Jumlah seluruh kupon yang diterbitkan'],
     ['Total Kupon di Kolektor', `=SUM('Kupon Belum Bayar'.E${startRow}:E${endRow})`, 'Jumlah kupon yang diserahkan ke kolektor'],
     ['Total Kupon Terbayar', `=SUM('Kupon Belum Bayar'.G${startRow}:G${endRow})`, 'Jumlah kupon yang sudah dibayar'],
-    ['Total Kupon Belum Bayar', `=SUM('Kupon Belum Bayar'.H${startRow}:H${endRow})`, 'Jumlah kupon yang belum dibayar'],
-    ['Total Nilai Belum Bayar', `=SUM('Kupon Belum Bayar'.I${startRow}:I${endRow})`, 'Total nilai rupiah yang belum terbayar'],
-    ['Rata-rata Persentase Bayar', `=AVERAGE('Kupon Belum Bayar'.J${startRow}:J${endRow})`, 'Rata-rata tingkat pembayaran'],
-    ['Kontrak Bermasalah', `=COUNTIF('Kupon Belum Bayar'.K${startRow}:K${endRow},"Bermasalah")`, 'Jumlah kontrak dengan status bermasalah'],
-    ['Tingkat Kolektibilitas', `=1-B9/B2`, 'Persentase kontrak yang tidak bermasalah'],
+    ['Total Nilai Telah Dibayar', `=SUM('Kupon Belum Bayar'.H${startRow}:H${endRow})`, 'Total nilai rupiah yang sudah dibayar'],
+    ['Total Kupon Belum Bayar', `=SUM('Kupon Belum Bayar'.I${startRow}:I${endRow})`, 'Jumlah kupon yang belum dibayar'],
+    ['Total Nilai Belum Bayar', `=SUM('Kupon Belum Bayar'.J${startRow}:J${endRow})`, 'Total nilai rupiah yang belum terbayar'],
+    ['Rata-rata Persentase Bayar', `=AVERAGE('Kupon Belum Bayar'.K${startRow}:K${endRow})`, 'Rata-rata tingkat pembayaran'],
+    ['Kontrak Bermasalah', `=COUNTIF('Kupon Belum Bayar'.L${startRow}:L${endRow},"Bermasalah")`, 'Jumlah kontrak dengan status bermasalah'],
+    ['Tingkat Kolektibilitas', `=1-B10/B2`, 'Persentase kontrak yang tidak bermasalah'],
   ];
 
   summaryMetrics.forEach((rowData, index) => {
@@ -228,9 +233,9 @@ export const exportOutstandingCouponsToExcel = async (data: OutstandingCouponSum
   
   const statusData = [
     ['Status', 'Jumlah Kontrak', 'Persentase'],
-    ['Lancar (≥90%)', `=COUNTIF('Kupon Belum Bayar'.J${startRow}:J${endRow},">=0.9")`, `=B4/SUM(B4:B6)`],
-    ['Kurang Lancar (70-89%)', `=COUNTIFS('Kupon Belum Bayar'.J${startRow}:J${endRow},">=0.7",'Kupon Belum Bayar'.J${startRow}:J${endRow},"<0.9")`, `=B5/SUM(B4:B6)`],
-    ['Bermasalah (<70%)', `=COUNTIF('Kupon Belum Bayar'.J${startRow}:J${endRow},"<0.7")`, `=B6/SUM(B4:B6)`],
+    ['Lancar (≥90%)', `=COUNTIF('Kupon Belum Bayar'.K${startRow}:K${endRow},">=0.9")`, `=B4/SUM(B4:B6)`],
+    ['Kurang Lancar (70-89%)', `=COUNTIFS('Kupon Belum Bayar'.K${startRow}:K${endRow},">=0.7",'Kupon Belum Bayar'.K${startRow}:K${endRow},"<0.9")`, `=B5/SUM(B4:B6)`],
+    ['Bermasalah (<70%)', `=COUNTIF('Kupon Belum Bayar'.K${startRow}:K${endRow},"<0.7")`, `=B6/SUM(B4:B6)`],
     ['TOTAL', `=SUM(B4:B6)`, '100%'],
   ];
 
