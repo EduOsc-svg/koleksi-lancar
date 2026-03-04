@@ -802,14 +802,10 @@ export default function Contracts() {
                     Modal awal untuk kontrak ini
                   </p>
                 </div>
-              </div>
             </div>
-            
-            {/* Scroll Indicator - Bottom Shadow */}
-            <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-background via-background/80 to-transparent z-10 opacity-100 transition-opacity duration-300 pointer-events-none" id="form-scroll-bottom" />
           </div>
           
-          <DialogFooter className="sticky bottom-0 z-10 bg-background pt-4 border-t">
+          <DialogFooter className="shrink-0 p-6 pt-4 border-t">
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Batal</Button>
             <Button onClick={handleSubmit} disabled={createContract.isPending || updateContract.isPending || generateCoupons.isPending}>
               {selectedContract ? "Perbarui" : "Buat & Generate Kupon"}
