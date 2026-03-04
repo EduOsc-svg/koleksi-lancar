@@ -56,6 +56,14 @@ export function OutstandingCouponsTable({ data, isLoading, handovers }: Props) {
     totalItems,
   } = usePagination(filteredData, ITEMS_PER_PAGE);
 
+  // Create handover map for quick lookup
+  const handoverMap = new Map<string, number>();
+  if (handovers) {
+    for (const h of handovers) {
+      handoverMap.set(h.contract_id, (handoverMap.get(h.contract_id) || 0) + h.coupon_count);
+    }
+  }
+
   const handleExport = async () => {
     if (filteredData.length === 0) return;
     try {
@@ -76,16 +84,19 @@ export function OutstandingCouponsTable({ data, isLoading, handovers }: Props) {
               <TableHead>Nama Konsumen</TableHead>
               <TableHead>Kode Kontrak</TableHead>
               <TableHead className="text-center">Kupon Keluar</TableHead>
+              <TableHead className="text-center">Kupon di Kolektor</TableHead>
               <TableHead className="text-right">Nominal Angsuran</TableHead>
               <TableHead className="text-center">Terbayar</TableHead>
               <TableHead className="text-center">Belum Bayar</TableHead>
               <TableHead className="text-right">Total Belum Bayar</TableHead>
+              <TableHead className="text-center">Persentase</TableHead>
+              <TableHead className="text-center">Status</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {[...Array(5)].map((_, i) => (
               <TableRow key={i}>
-                {[...Array(8)].map((_, j) => (
+                {[...Array(11)].map((_, j) => (
                   <TableCell key={j}><Skeleton className="h-4 w-16" /></TableCell>
                 ))}
               </TableRow>
@@ -187,47 +198,73 @@ export function OutstandingCouponsTable({ data, isLoading, handovers }: Props) {
               <TableHead className="font-semibold">Nama Konsumen</TableHead>
               <TableHead className="font-semibold">Kode Kontrak</TableHead>
               <TableHead className="font-semibold text-center">Kupon Keluar</TableHead>
+              <TableHead className="font-semibold text-center">Kupon di Kolektor</TableHead>
               <TableHead className="font-semibold text-right">Nominal Angsuran</TableHead>
               <TableHead className="font-semibold text-center">Terbayar</TableHead>
               <TableHead className="font-semibold text-center">Belum Bayar</TableHead>
               <TableHead className="font-semibold text-right">Total Belum Bayar</TableHead>
+              <TableHead className="font-semibold text-center">Persentase</TableHead>
+              <TableHead className="font-semibold text-center">Status</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {paginatedItems.map((row, i) => (
-              <TableRow key={row.contract_id} className="hover:bg-muted/30 transition-colors">
-                <TableCell className="text-muted-foreground">
-                  {(currentPage - 1) * ITEMS_PER_PAGE + i + 1}
-                </TableCell>
-                <TableCell className="font-medium">{row.customer_name}</TableCell>
-                <TableCell>
-                  <Badge variant="outline" className="font-mono">{row.contract_ref}</Badge>
-                </TableCell>
-                <TableCell className="text-center">{row.total_coupons_issued}</TableCell>
-                <TableCell className="text-right">{formatRupiah(row.daily_installment_amount)}</TableCell>
-                <TableCell className="text-center">
-                  <Badge variant="secondary">{row.coupons_paid}</Badge>
-                </TableCell>
-                <TableCell className="text-center">
-                  {row.coupons_unpaid > 0 ? (
-                    <Badge variant="destructive">{row.coupons_unpaid}</Badge>
-                  ) : (
-                    <Badge variant="secondary">0</Badge>
-                  )}
-                </TableCell>
-                <TableCell className="text-right font-medium">
-                  {formatRupiah(row.total_unpaid_amount)}
-                </TableCell>
-              </TableRow>
-            ))}
+            {paginatedItems.map((row, i) => {
+              const handoverCount = handoverMap.get(row.contract_id) || 0;
+              const paymentPercentage = row.total_coupons_issued > 0 ? (row.coupons_paid / row.total_coupons_issued) * 100 : 0;
+              const getStatus = (percentage: number) => {
+                if (percentage >= 90) return { text: 'Lancar', variant: 'default' as const };
+                if (percentage >= 70) return { text: 'Kurang Lancar', variant: 'secondary' as const };
+                return { text: 'Bermasalah', variant: 'destructive' as const };
+              };
+              const status = getStatus(paymentPercentage);
+
+              return (
+                <TableRow key={row.contract_id} className="hover:bg-muted/30 transition-colors">
+                  <TableCell className="text-muted-foreground">
+                    {(currentPage - 1) * ITEMS_PER_PAGE + i + 1}
+                  </TableCell>
+                  <TableCell className="font-medium">{row.customer_name}</TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className="font-mono">{row.contract_ref}</Badge>
+                  </TableCell>
+                  <TableCell className="text-center">{row.total_coupons_issued}</TableCell>
+                  <TableCell className="text-center">
+                    <Badge variant="outline">{handoverCount}</Badge>
+                  </TableCell>
+                  <TableCell className="text-right">{formatRupiah(row.daily_installment_amount)}</TableCell>
+                  <TableCell className="text-center">
+                    <Badge variant="secondary">{row.coupons_paid}</Badge>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    {row.coupons_unpaid > 0 ? (
+                      <Badge variant="destructive">{row.coupons_unpaid}</Badge>
+                    ) : (
+                      <Badge variant="secondary">0</Badge>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-right font-medium">
+                    {formatRupiah(row.total_unpaid_amount)}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <Badge variant="outline">{paymentPercentage.toFixed(1)}%</Badge>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <Badge variant={status.variant}>{status.text}</Badge>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
             {/* Footer totals */}
             <TableRow className="bg-muted/50 font-semibold border-t-2">
               <TableCell colSpan={3} className="text-right">TOTAL</TableCell>
               <TableCell className="text-center">{totalCouponsOut}</TableCell>
+              <TableCell className="text-center">{Array.from(handoverMap.values()).reduce((sum, count) => sum + count, 0)}</TableCell>
               <TableCell />
               <TableCell className="text-center">{totalPaid}</TableCell>
               <TableCell className="text-center">{totalUnpaid}</TableCell>
               <TableCell className="text-right">{formatRupiah(totalUnpaidAmount)}</TableCell>
+              <TableCell />
+              <TableCell />
             </TableRow>
           </TableBody>
         </Table>

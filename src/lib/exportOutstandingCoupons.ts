@@ -38,7 +38,7 @@ export const exportOutstandingCouponsToExcel = async (data: OutstandingCouponSum
 
   // Headers with enhanced columns
   const headers = [
-    'No', 'Nama Konsumen', 'Kode Kontrak', 'Kupon Keluar', 
+    'No', 'Nama Konsumen', 'Kode Kontrak', 'Kupon Keluar', 'Kupon di Kolektor',
     'Nominal Angsuran', 'Terbayar', 'Belum Bayar', 'Total Belum Bayar',
     'Persentase Terbayar', 'Status'
   ];
@@ -68,11 +68,11 @@ export const exportOutstandingCouponsToExcel = async (data: OutstandingCouponSum
       row.coupons_paid,
       row.coupons_unpaid,
       // Dynamic formula: Belum Bayar × Nominal Angsuran
-      { formula: `G${rowNum}*E${rowNum}` },
+      { formula: `H${rowNum}*F${rowNum}` },
       // Dynamic formula: Persentase Terbayar = (Terbayar / Kupon Keluar) × 100%
-      { formula: `IF(D${rowNum}=0,0,F${rowNum}/D${rowNum})` },
+      { formula: `IF(D${rowNum}=0,0,G${rowNum}/D${rowNum})` },
       // Dynamic formula: Status berdasarkan persentase
-      { formula: `IF(I${rowNum}>=0.9,"Lancar",IF(I${rowNum}>=0.7,"Kurang Lancar","Bermasalah"))` }
+      { formula: `IF(J${rowNum}>=0.9,"Lancar",IF(J${rowNum}>=0.7,"Kurang Lancar","Bermasalah"))` }
     ]);
 
     dataRow.eachCell((cell, colNumber) => {
@@ -81,23 +81,23 @@ export const exportOutstandingCouponsToExcel = async (data: OutstandingCouponSum
         left: { style: 'thin' }, right: { style: 'thin' },
       };
       
-      // Format currency columns
-      if (colNumber === 5 || colNumber === 8) {
+      // Format currency columns (Nominal Angsuran & Total Belum Bayar)
+      if (colNumber === 6 || colNumber === 9) {
         cell.numFmt = '"Rp "#,##0';
         cell.alignment = { horizontal: 'right' };
       }
       // Format percentage column
-      else if (colNumber === 9) {
+      else if (colNumber === 10) {
         cell.numFmt = '0.0%';
         cell.alignment = { horizontal: 'center' };
       }
-      // Format number columns (center)
-      else if (colNumber >= 4 && colNumber <= 7) {
+      // Format number columns (center alignment)
+      else if (colNumber >= 4 && colNumber <= 8) {
         cell.numFmt = '#,##0';
         cell.alignment = { horizontal: 'center' };
       }
       // Status column styling
-      else if (colNumber === 10) {
+      else if (colNumber === 11) {
         cell.alignment = { horizontal: 'center' };
         // Conditional formatting akan ditambah nanti
       }
@@ -111,12 +111,13 @@ export const exportOutstandingCouponsToExcel = async (data: OutstandingCouponSum
     '',
     'TOTAL',
     { formula: `SUM(D${startRow}:D${endRow})` }, // Total Kupon Keluar
-    { formula: `AVERAGE(E${startRow}:E${endRow})` }, // Rata-rata Nominal
-    { formula: `SUM(F${startRow}:F${endRow})` }, // Total Terbayar
-    { formula: `SUM(G${startRow}:G${endRow})` }, // Total Belum Bayar
-    { formula: `SUM(H${startRow}:H${endRow})` }, // Total Nilai Belum Bayar
-    { formula: `AVERAGE(I${startRow}:I${endRow})` }, // Rata-rata Persentase
-    { formula: `COUNTIF(J${startRow}:J${endRow},"Bermasalah")&" Bermasalah"` } // Status Summary
+    { formula: `SUM(E${startRow}:E${endRow})` }, // Total Kupon di Kolektor
+    { formula: `AVERAGE(F${startRow}:F${endRow})` }, // Rata-rata Nominal Angsuran
+    { formula: `SUM(G${startRow}:G${endRow})` }, // Total Terbayar
+    { formula: `SUM(H${startRow}:H${endRow})` }, // Total Belum Bayar
+    { formula: `SUM(I${startRow}:I${endRow})` }, // Total Nilai Belum Bayar
+    { formula: `AVERAGE(J${startRow}:J${endRow})` }, // Rata-rata Persentase
+    { formula: `COUNTIF(K${startRow}:K${endRow},"Bermasalah")&" Bermasalah"` } // Status Summary
   ]);
 
   // Style total row
@@ -150,6 +151,7 @@ export const exportOutstandingCouponsToExcel = async (data: OutstandingCouponSum
     { width: 25 },  // Nama Konsumen
     { width: 15 },  // Kode Kontrak
     { width: 12 },  // Kupon Keluar
+    { width: 15 },  // Kupon di Kolektor
     { width: 18 },  // Nominal Angsuran
     { width: 12 },  // Terbayar
     { width: 12 },  // Belum Bayar
@@ -175,12 +177,13 @@ export const exportOutstandingCouponsToExcel = async (data: OutstandingCouponSum
     ['Metrik', 'Nilai', 'Formula'],
     ['Total Kontrak', `=COUNTA('Kupon Belum Bayar'.B${startRow}:B${endRow})`, 'Menghitung jumlah kontrak'],
     ['Total Kupon Keluar', `=SUM('Kupon Belum Bayar'.D${startRow}:D${endRow})`, 'Jumlah seluruh kupon yang diterbitkan'],
-    ['Total Kupon Terbayar', `=SUM('Kupon Belum Bayar'.F${startRow}:F${endRow})`, 'Jumlah kupon yang sudah dibayar'],
-    ['Total Kupon Belum Bayar', `=SUM('Kupon Belum Bayar'.G${startRow}:G${endRow})`, 'Jumlah kupon yang belum dibayar'],
-    ['Total Nilai Belum Bayar', `=SUM('Kupon Belum Bayar'.H${startRow}:H${endRow})`, 'Total nilai rupiah yang belum terbayar'],
-    ['Rata-rata Persentase Bayar', `=AVERAGE('Kupon Belum Bayar'.I${startRow}:I${endRow})`, 'Rata-rata tingkat pembayaran'],
-    ['Kontrak Bermasalah', `=COUNTIF('Kupon Belum Bayar'.J${startRow}:J${endRow},"Bermasalah")`, 'Jumlah kontrak dengan status bermasalah'],
-    ['Tingkat Kolektibilitas', `=1-B8/B2`, 'Persentase kontrak yang tidak bermasalah'],
+    ['Total Kupon di Kolektor', `=SUM('Kupon Belum Bayar'.E${startRow}:E${endRow})`, 'Jumlah kupon yang diserahkan ke kolektor'],
+    ['Total Kupon Terbayar', `=SUM('Kupon Belum Bayar'.G${startRow}:G${endRow})`, 'Jumlah kupon yang sudah dibayar'],
+    ['Total Kupon Belum Bayar', `=SUM('Kupon Belum Bayar'.H${startRow}:H${endRow})`, 'Jumlah kupon yang belum dibayar'],
+    ['Total Nilai Belum Bayar', `=SUM('Kupon Belum Bayar'.I${startRow}:I${endRow})`, 'Total nilai rupiah yang belum terbayar'],
+    ['Rata-rata Persentase Bayar', `=AVERAGE('Kupon Belum Bayar'.J${startRow}:J${endRow})`, 'Rata-rata tingkat pembayaran'],
+    ['Kontrak Bermasalah', `=COUNTIF('Kupon Belum Bayar'.K${startRow}:K${endRow},"Bermasalah")`, 'Jumlah kontrak dengan status bermasalah'],
+    ['Tingkat Kolektibilitas', `=1-B9/B2`, 'Persentase kontrak yang tidak bermasalah'],
   ];
 
   summaryMetrics.forEach((rowData, index) => {
@@ -225,9 +228,9 @@ export const exportOutstandingCouponsToExcel = async (data: OutstandingCouponSum
   
   const statusData = [
     ['Status', 'Jumlah Kontrak', 'Persentase'],
-    ['Lancar (≥90%)', `=COUNTIF('Kupon Belum Bayar'.I${startRow}:I${endRow},">=0.9")`, `=B4/SUM(B4:B6)`],
-    ['Kurang Lancar (70-89%)', `=COUNTIFS('Kupon Belum Bayar'.I${startRow}:I${endRow},">=0.7",'Kupon Belum Bayar'.I${startRow}:I${endRow},"<0.9")`, `=B5/SUM(B4:B6)`],
-    ['Bermasalah (<70%)', `=COUNTIF('Kupon Belum Bayar'.I${startRow}:I${endRow},"<0.7")`, `=B6/SUM(B4:B6)`],
+    ['Lancar (≥90%)', `=COUNTIF('Kupon Belum Bayar'.J${startRow}:J${endRow},">=0.9")`, `=B4/SUM(B4:B6)`],
+    ['Kurang Lancar (70-89%)', `=COUNTIFS('Kupon Belum Bayar'.J${startRow}:J${endRow},">=0.7",'Kupon Belum Bayar'.J${startRow}:J${endRow},"<0.9")`, `=B5/SUM(B4:B6)`],
+    ['Bermasalah (<70%)', `=COUNTIF('Kupon Belum Bayar'.J${startRow}:J${endRow},"<0.7")`, `=B6/SUM(B4:B6)`],
     ['TOTAL', `=SUM(B4:B6)`, '100%'],
   ];
 
