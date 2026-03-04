@@ -11,12 +11,16 @@ import {
 import { TablePagination } from "@/components/TablePagination";
 import { formatRupiah } from "@/lib/format";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Progress } from "@/components/ui/progress";
+import { cn } from "@/lib/utils";
+import { OutstandingCouponSummary } from "@/hooks/useOutstandingCoupons";
 
 interface Contract {
   id: string;
   contract_ref: string;
   current_installment_index: number;
   daily_installment_amount: number;
+  tenor_days: number;
   customers: { name: string } | null;
 }
 
@@ -30,6 +34,7 @@ interface ManifestTableProps {
   onPageChange: (page: number) => void;
   itemsPerPage?: number;
   searchQuery?: string;
+  outstandingData?: OutstandingCouponSummary[];
 }
 
 export function ManifestTable({
@@ -42,7 +47,16 @@ export function ManifestTable({
   onPageChange,
   itemsPerPage = 10,
   searchQuery,
+  outstandingData,
 }: ManifestTableProps) {
+  // Build outstanding lookup
+  const outstandingMap = new Map<string, OutstandingCouponSummary>();
+  if (outstandingData) {
+    for (const d of outstandingData) {
+      outstandingMap.set(d.contract_id, d);
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="border rounded-lg print:hidden">
@@ -52,7 +66,9 @@ export function ManifestTable({
               <TableHead className="w-12">#</TableHead>
               <TableHead>Kode Kontrak</TableHead>
               <TableHead>Nama Pelanggan</TableHead>
-              <TableHead className="text-right">Jumlah</TableHead>
+              <TableHead className="text-center">Progress</TableHead>
+              <TableHead className="text-right">Angsuran</TableHead>
+              <TableHead className="text-right">Tunggakan</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -61,6 +77,8 @@ export function ManifestTable({
                 <TableCell><Skeleton className="h-4 w-6" /></TableCell>
                 <TableCell><Skeleton className="h-4 w-16" /></TableCell>
                 <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                <TableCell className="text-right"><Skeleton className="h-4 w-20 ml-auto" /></TableCell>
                 <TableCell className="text-right"><Skeleton className="h-4 w-20 ml-auto" /></TableCell>
               </TableRow>
             ))}
@@ -91,16 +109,40 @@ export function ManifestTable({
     );
   }
 
+  // Summary totals
+  const totalAngsuran = (contracts || []).reduce((s, c) => s + c.daily_installment_amount, 0);
+  const totalTunggakan = outstandingData
+    ? outstandingData.reduce((s, d) => s + d.total_unpaid_amount, 0)
+    : 0;
+
   return (
     <div className="print:hidden">
       {searchQuery && (
-        <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-          <p className="text-sm text-blue-700">
+        <div className="mb-3 p-3 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg">
+          <p className="text-sm text-blue-700 dark:text-blue-300">
             <span className="font-medium">Hasil pencarian:</span> Menampilkan {totalItems} kontrak yang mengandung "{searchQuery}"
           </p>
         </div>
       )}
       
+      {/* Summary row */}
+      <div className="mb-3 flex flex-wrap gap-4 text-sm">
+        <div className="flex items-center gap-1.5">
+          <span className="text-muted-foreground">Total kontrak:</span>
+          <span className="font-semibold">{totalItems}</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="text-muted-foreground">Total angsuran/hari:</span>
+          <span className="font-semibold">{formatRupiah(totalAngsuran)}</span>
+        </div>
+        {totalTunggakan > 0 && (
+          <div className="flex items-center gap-1.5">
+            <span className="text-muted-foreground">Total tunggakan:</span>
+            <span className="font-semibold text-destructive">{formatRupiah(totalTunggakan)}</span>
+          </div>
+        )}
+      </div>
+
       <div className="border rounded-lg overflow-hidden">
         <Table>
           <TableHeader>
@@ -108,26 +150,61 @@ export function ManifestTable({
               <TableHead className="w-12 font-semibold">#</TableHead>
               <TableHead className="font-semibold">Kode Pelanggan</TableHead>
               <TableHead className="font-semibold">Nama Pelanggan</TableHead>
-              <TableHead className="font-semibold text-right">Jumlah</TableHead>
+              <TableHead className="font-semibold text-center">Progress Bayar</TableHead>
+              <TableHead className="font-semibold text-right">Angsuran</TableHead>
+              <TableHead className="font-semibold text-right">Tunggakan</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {paginatedContracts.map((contract, i) => (
-              <TableRow key={contract.id} className="hover:bg-muted/30 transition-colors">
-                <TableCell className="text-muted-foreground">
-                  {(currentPage - 1) * itemsPerPage + i + 1}
-                </TableCell>
-                <TableCell>
-                  <Badge variant="outline" className="font-mono">
-                    {contract.contract_ref}
-                  </Badge>
-                </TableCell>
-                <TableCell className="font-medium">{contract.customers?.name}</TableCell>
-                <TableCell className="text-right font-medium">
-                  {formatRupiah(contract.daily_installment_amount)}
-                </TableCell>
-              </TableRow>
-            ))}
+            {paginatedContracts.map((contract, i) => {
+              const progress = contract.tenor_days > 0
+                ? (contract.current_installment_index / contract.tenor_days) * 100
+                : 0;
+              const outstanding = outstandingMap.get(contract.id);
+              const unpaidAmount = outstanding?.total_unpaid_amount || 0;
+              const unpaidCoupons = outstanding?.coupons_unpaid || 0;
+
+              return (
+                <TableRow key={contract.id} className="hover:bg-muted/30 transition-colors">
+                  <TableCell className="text-muted-foreground">
+                    {(currentPage - 1) * itemsPerPage + i + 1}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className="font-mono">
+                      {contract.contract_ref}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="font-medium">{contract.customers?.name}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2 justify-center">
+                      <Progress value={progress} className="h-1.5 w-16" />
+                      <span className="text-xs text-muted-foreground whitespace-nowrap">
+                        {contract.current_installment_index}/{contract.tenor_days}
+                      </span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-right font-medium">
+                    {formatRupiah(contract.daily_installment_amount)}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    {unpaidCoupons > 0 ? (
+                      <div className="flex flex-col items-end">
+                        <span className={cn("font-medium text-destructive")}>
+                          {formatRupiah(unpaidAmount)}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground">
+                          {unpaidCoupons} kupon
+                        </span>
+                      </div>
+                    ) : (
+                      <Badge variant="outline" className="text-green-600 dark:text-green-400 border-green-200 dark:border-green-800 text-xs">
+                        Lunas
+                      </Badge>
+                    )}
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </div>
