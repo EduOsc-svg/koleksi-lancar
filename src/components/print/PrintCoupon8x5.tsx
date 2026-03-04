@@ -277,7 +277,10 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
       /* Urgent Style Override */
       .coupon-urgent .data-row,
       .coupon-urgent .footer,
-      .coupon-urgent .voucher-title {
+      .coupon-urgent .voucher-title,
+      .coupon-urgent .contract-code,
+      .coupon-urgent .lbl-besar,
+      .coupon-urgent .val-besar {
         color: red !important;
       }
     `;
