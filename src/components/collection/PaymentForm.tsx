@@ -91,6 +91,13 @@ export function PaymentForm({ contracts, collectors, onSubmit, onBulkSubmit, isS
     ? (paymentAmount || selectedContractData.daily_installment_amount) * couponCount 
     : 0;
 
+  // Sync default collector from handover tab
+  useEffect(() => {
+    if (defaultCollectorId && !paymentCollector) {
+      setPaymentCollector(defaultCollectorId);
+    }
+  }, [defaultCollectorId]);
+
   useEffect(() => {
     if (selectedContract && nextCouponDueDate && paymentDate) {
       const info = calculateLateNoteFromDueDate(nextCouponDueDate, paymentDate);
