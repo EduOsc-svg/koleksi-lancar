@@ -536,40 +536,14 @@ export default function Contracts() {
 
       {/* Create/Edit Dialog - Enhanced with Scrolling Mechanism */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-lg max-h-[90vh]">
-          <DialogHeader className="sticky top-0 z-10 bg-background pb-4">
+        <DialogContent className="max-w-lg max-h-[90vh] flex flex-col overflow-hidden p-0">
+          <DialogHeader className="shrink-0 p-6 pb-4">
             <DialogTitle>{selectedContract ? "Edit Kontrak" : "Kontrak Kredit Baru"}</DialogTitle>
           </DialogHeader>
           
-          {/* Scrollable Content with Professional Scrolling */}
-          <div className="relative max-h-[60vh] overflow-hidden">
-            {/* Scroll Indicator - Top Shadow */}
-            <div className="absolute top-0 left-0 right-0 h-4 bg-gradient-to-b from-background via-background/80 to-transparent z-10 opacity-0 transition-opacity duration-300 pointer-events-none" id="form-scroll-top" />
-            
-            {/* Main Scrollable Content */}
-            <div 
-              className="h-full overflow-y-auto px-1 space-y-4 scrollbar-thin scrollbar-thumb-muted-foreground/20 scrollbar-track-transparent hover:scrollbar-thumb-muted-foreground/40 transition-colors"
-              onScroll={(e) => {
-                const target = e.target as HTMLDivElement;
-                const scrollTop = target.scrollTop;
-                const scrollHeight = target.scrollHeight;
-                const clientHeight = target.clientHeight;
-                
-                // Update scroll indicators
-                const topIndicator = document.getElementById('form-scroll-top');
-                const bottomIndicator = document.getElementById('form-scroll-bottom');
-                
-                if (topIndicator) {
-                  topIndicator.style.opacity = scrollTop > 20 ? '1' : '0';
-                }
-                
-                if (bottomIndicator) {
-                  const isNearBottom = scrollTop + clientHeight >= scrollHeight - 20;
-                  bottomIndicator.style.opacity = isNearBottom ? '0' : '1';
-                }
-              }}
-            >
-              <div className="pb-4 space-y-4">
+          {/* Scrollable Content */}
+          <div className="flex-1 overflow-y-auto px-6">
+            <div className="space-y-4 pb-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="contract_ref">Kode Kontrak</Label>
