@@ -181,10 +181,10 @@ export default function Customers() {
     try {
       const submitData = {
         name: formData.name.trim(),
-        nik: formData.nik.trim(),
+        nik: formData.nik.trim() || null,
         address: formData.address.trim() || null,
         business_address: formData.business_address.trim() || null,
-        phone: formData.phone.trim() || null,
+        phone: formData.phone.trim(),
       };
       
       if (selectedCustomer) {
