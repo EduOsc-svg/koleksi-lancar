@@ -165,6 +165,7 @@ export default function Collection() {
               onSubmit={handleSubmitPayment}
               onBulkSubmit={handleBulkSubmitPayment}
               isSubmitting={createPayment.isPending || createBulkPayment.isPending}
+              defaultCollectorId={sharedCollectorId}
             />
           </div>
         </TabsContent>
@@ -175,6 +176,7 @@ export default function Collection() {
             collectors={collectors}
             onSubmit={async (data) => {
               await createHandover.mutateAsync(data);
+              setSharedCollectorId(data.collector_id);
               toast.success(`Serah terima ${data.coupon_count} kupon berhasil dicatat`);
             }}
             isSubmitting={createHandover.isPending}
