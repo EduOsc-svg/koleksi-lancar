@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { formatRupiah } from "@/lib/format";
 import { useLastPaymentDate, useNextCouponDueDate, calculateLateNoteFromDueDate } from "@/hooks/useLastPaymentDate";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Contract {
   id: string;
@@ -54,10 +55,9 @@ interface PaymentFormProps {
     notes: string;
   }) => Promise<void>;
   isSubmitting: boolean;
-  defaultCollectorId?: string;
 }
 
-export function PaymentForm({ contracts, collectors, onSubmit, onBulkSubmit, isSubmitting, defaultCollectorId }: PaymentFormProps) {
+export function PaymentForm({ contracts, collectors, onSubmit, onBulkSubmit, isSubmitting }: PaymentFormProps) {
   const { t } = useTranslation();
   
   const [selectedContract, setSelectedContract] = useState("");
@@ -91,12 +91,26 @@ export function PaymentForm({ contracts, collectors, onSubmit, onBulkSubmit, isS
     ? (paymentAmount || selectedContractData.daily_installment_amount) * couponCount 
     : 0;
 
-  // Sync default collector from handover tab
+  // Auto-fill collector from latest coupon_handovers when contract is selected
   useEffect(() => {
-    if (defaultCollectorId && !paymentCollector) {
-      setPaymentCollector(defaultCollectorId);
+    if (!selectedContract) {
+      setPaymentCollector("");
+      return;
     }
-  }, [defaultCollectorId]);
+    const fetchHandoverCollector = async () => {
+      const { data } = await supabase
+        .from('coupon_handovers')
+        .select('collector_id')
+        .eq('contract_id', selectedContract)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+      if (data?.collector_id) {
+        setPaymentCollector(data.collector_id);
+      }
+    };
+    fetchHandoverCollector();
+  }, [selectedContract]);
 
   useEffect(() => {
     if (selectedContract && nextCouponDueDate && paymentDate) {
