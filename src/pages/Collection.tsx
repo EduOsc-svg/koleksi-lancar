@@ -26,9 +26,8 @@ export default function Collection() {
   const createHandover = useCreateCouponHandover();
   const { data: handovers } = useCouponHandovers();
 
-  // Shared state
+  // Manifest state
   const [searchQuery, setSearchQuery] = useState("");
-  const [sharedCollectorId, setSharedCollectorId] = useState("");
 
   // Filter contracts for manifest
   const manifestContracts = contracts?.filter((c) => {
@@ -165,7 +164,6 @@ export default function Collection() {
               onSubmit={handleSubmitPayment}
               onBulkSubmit={handleBulkSubmitPayment}
               isSubmitting={createPayment.isPending || createBulkPayment.isPending}
-              defaultCollectorId={sharedCollectorId}
             />
           </div>
         </TabsContent>
@@ -176,7 +174,6 @@ export default function Collection() {
             collectors={collectors}
             onSubmit={async (data) => {
               await createHandover.mutateAsync(data);
-              setSharedCollectorId(data.collector_id);
               toast.success(`Serah terima ${data.coupon_count} kupon berhasil dicatat`);
             }}
             isSubmitting={createHandover.isPending}
