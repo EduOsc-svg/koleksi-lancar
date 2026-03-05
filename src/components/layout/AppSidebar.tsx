@@ -5,7 +5,7 @@ import {
   UserCircle,
   FileText,
   Wallet,
-  BarChart3,
+  
   History,
   LogOut,
   Shield,
