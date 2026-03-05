@@ -5,7 +5,7 @@ import {
   UserCircle,
   FileText,
   Wallet,
-  BarChart3,
+  
   History,
   LogOut,
   Shield,
@@ -40,8 +40,6 @@ const masterItems = [
 
 const operationItems = [
   { title: "Penagihan", url: "/collection", icon: Wallet },
-  
-  { title: "Laporan", url: "/reports", icon: BarChart3 },
   { title: "Riwayat Pelanggan", url: "/history", icon: History },
 ];
 
