@@ -64,6 +64,11 @@ export default function Dashboard() {
   const { data: historyData, isLoading: isLoadingHistory } = useAgentContractHistory(selectedAgent?.id || null);
   const { createExpense, deleteExpense } = useOperationalExpenseMutations();
   
+  // Pagination for sales agent performance table
+  const AGENTS_PER_PAGE = 10;
+  const agentsList = useMemo(() => monthlyData?.agents || [], [monthlyData?.agents]);
+  const { currentPage: agentPage, totalPages: agentTotalPages, paginatedItems: paginatedAgents, goToPage: goToAgentPage, totalItems: agentTotalItems } = usePagination(agentsList, AGENTS_PER_PAGE);
+
   // Pagination for contract history
   const HISTORY_ITEMS_PER_PAGE = 5;
   const paginatedHistoryData = useMemo(() => historyData || [], [historyData]);
@@ -379,54 +384,62 @@ export default function Dashboard() {
           {isLoadingMonthly ? (
             <Skeleton className="h-[300px] w-full" />
           ) : (
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[50px]">#</TableHead>
-                    <TableHead>{t("dashboard.agentCode", "Kode Sales")}</TableHead>
-                    <TableHead className="text-right">{t("dashboard.modal", "Modal")}</TableHead>
-                    <TableHead className="text-right">{t("dashboard.omset", "Omset")}</TableHead>
-                    <TableHead className="text-right">{t("dashboard.profit", "Keuntungan")}</TableHead>
-                    <TableHead className="text-right">{t("dashboard.profitMargin", "Margin %")}</TableHead>
-                    <TableHead className="text-right">{t("dashboard.commission", "Komisi")}</TableHead>
-                    <TableHead className="w-[50px]"></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {monthlyData?.agents?.map((agent, index) => (
-                    <TableRow 
-                      key={agent.agent_id}
-                      className="cursor-pointer hover:bg-muted/50"
-                      onClick={() => setSelectedAgent({ id: agent.agent_id, name: agent.agent_name, code: agent.agent_code })}
-                    >
-                      <TableCell className="font-medium">{index + 1}</TableCell>
-                      <TableCell>
-                        <div>
-                          <p className="font-medium">{agent.agent_code}</p>
-                          <p className="text-xs text-muted-foreground">{agent.agent_name} • {agent.commission_percentage}%</p>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right text-blue-600">{formatRupiah(agent.total_modal)}</TableCell>
-                      <TableCell className="text-right">{formatRupiah(agent.total_omset)}</TableCell>
-                      <TableCell className="text-right text-green-600">{formatRupiah(agent.profit)}</TableCell>
-                      <TableCell className="text-right text-emerald-600">{agent.profit_margin.toFixed(1)}%</TableCell>
-                      <TableCell className="text-right text-purple-600">{formatRupiah(agent.total_commission)}</TableCell>
-                      <TableCell>
-                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                  {(!monthlyData?.agents || monthlyData.agents.length === 0) && (
+            <>
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
                     <TableRow>
-                      <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
-                        {t("dashboard.noAgentData", "Belum ada data sales agent bulan ini")}
-                      </TableCell>
+                      <TableHead className="w-[50px]">#</TableHead>
+                      <TableHead>{t("dashboard.agentCode", "Kode Sales")}</TableHead>
+                      <TableHead className="text-right">{t("dashboard.modal", "Modal")}</TableHead>
+                      <TableHead className="text-right">{t("dashboard.omset", "Omset")}</TableHead>
+                      <TableHead className="text-right">{t("dashboard.profit", "Keuntungan")}</TableHead>
+                      <TableHead className="text-right">{t("dashboard.profitMargin", "Margin %")}</TableHead>
+                      <TableHead className="text-right">{t("dashboard.commission", "Komisi")}</TableHead>
+                      <TableHead className="w-[50px]"></TableHead>
                     </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </div>
+                  </TableHeader>
+                  <TableBody>
+                    {paginatedAgents.map((agent, index) => (
+                      <TableRow 
+                        key={agent.agent_id}
+                        className="cursor-pointer hover:bg-muted/50"
+                        onClick={() => setSelectedAgent({ id: agent.agent_id, name: agent.agent_name, code: agent.agent_code })}
+                      >
+                        <TableCell className="font-medium">{(agentPage - 1) * AGENTS_PER_PAGE + index + 1}</TableCell>
+                        <TableCell>
+                          <div>
+                            <p className="font-medium">{agent.agent_code}</p>
+                            <p className="text-xs text-muted-foreground">{agent.agent_name} • {agent.commission_percentage}%</p>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right text-blue-600">{formatRupiah(agent.total_modal)}</TableCell>
+                        <TableCell className="text-right">{formatRupiah(agent.total_omset)}</TableCell>
+                        <TableCell className="text-right text-green-600">{formatRupiah(agent.profit)}</TableCell>
+                        <TableCell className="text-right text-emerald-600">{agent.profit_margin.toFixed(1)}%</TableCell>
+                        <TableCell className="text-right text-purple-600">{formatRupiah(agent.total_commission)}</TableCell>
+                        <TableCell>
+                          <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {paginatedAgents.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
+                          {t("dashboard.noAgentData", "Belum ada data sales agent bulan ini")}
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+              <TablePagination
+                currentPage={agentPage}
+                totalPages={agentTotalPages}
+                onPageChange={goToAgentPage}
+                totalItems={agentTotalItems}
+              />
+            </>
           )}
         </CardContent>
       </Card>
