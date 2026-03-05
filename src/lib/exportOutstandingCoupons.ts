@@ -14,12 +14,12 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 const HEADERS = [
-  'No', 'Tanggal', 'Kolektor', 'Kode Kolektor', 'Konsumen', 'Kode Kontrak',
-  'Pembayaran ke', 'Jumlah Kupon Bawa', 'Tertagih', 'Belum Tagih', 'Status',
+  'No', 'Tanggal', 'Kolektor', 'Kode Sales', 'Kode Kolektor', 'Konsumen', 'Kode Kontrak',
+  'Pembayaran ke', 'Jml Kupon', 'Tertagih', 'Belum Tagih', 'Status',
   'Nominal/Kupon', 'Total Nominal', 'Tertagih (Rp)', 'Sisa (Rp)',
 ];
 
-const COL_WIDTHS = [5, 14, 20, 14, 22, 15, 16, 10, 10, 12, 14, 16, 18, 18, 18];
+const COL_WIDTHS = [5, 14, 20, 14, 14, 22, 15, 16, 10, 10, 12, 14, 16, 18, 18, 18];
 
 function buildSheet(
   workbook: ExcelJS.Workbook,
@@ -30,14 +30,14 @@ function buildSheet(
   const sheet = workbook.addWorksheet(sheetName);
 
   // Title
-  sheet.mergeCells('A1:O1');
+  sheet.mergeCells('A1:P1');
   const titleCell = sheet.getCell('A1');
   titleCell.value = title;
   titleCell.font = { bold: true, size: 16, color: { argb: 'FFFFFFFF' } };
   titleCell.alignment = { horizontal: 'center' };
   titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4472C4' } };
 
-  sheet.mergeCells('A2:O2');
+  sheet.mergeCells('A2:P2');
   const dateCell = sheet.getCell('A2');
   dateCell.value = `Per tanggal: ${new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })}`;
   dateCell.font = { italic: true, size: 12 };
@@ -64,6 +64,7 @@ function buildSheet(
       i + 1,
       h.handover_date,
       h.collectors?.name || '-',
+      h.credit_contracts?.sales_agents?.agent_code || '-',
       h.collectors?.collector_code || '-',
       h.credit_contracts?.customers?.name || '-',
       h.credit_contracts?.contract_ref || '-',
@@ -73,23 +74,23 @@ function buildSheet(
       h.unpaidInRange,
       STATUS_LABELS[h.status] || h.status,
       amt,
-      { formula: `H${rowNum}*L${rowNum}` },
-      { formula: `I${rowNum}*L${rowNum}` },
-      { formula: `J${rowNum}*L${rowNum}` },
+      { formula: `I${rowNum}*M${rowNum}` },
+      { formula: `J${rowNum}*M${rowNum}` },
+      { formula: `K${rowNum}*M${rowNum}` },
     ]);
 
     dataRow.eachCell((cell, colNumber) => {
       cell.border = { top: { style: 'thin' }, bottom: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' } };
 
-      if ([12, 13, 14, 15].includes(colNumber)) {
+      if ([13, 14, 15, 16].includes(colNumber)) {
         cell.numFmt = '"Rp "#,##0';
         cell.alignment = { horizontal: 'right' };
-      } else if ([8, 9, 10].includes(colNumber)) {
+      } else if ([9, 10, 11].includes(colNumber)) {
         cell.numFmt = '#,##0';
         cell.alignment = { horizontal: 'center' };
       }
 
-      if (colNumber === 11) {
+      if (colNumber === 12) {
         cell.alignment = { horizontal: 'center' };
         if (h.status === 'fully_paid') {
           cell.font = { bold: true, color: { argb: 'FF228B22' } };
@@ -109,24 +110,24 @@ function buildSheet(
   if (handovers.length > 0) {
     const endRow = startRow + handovers.length - 1;
     const totalRow = sheet.addRow([
-      '', '', '', '', '', 'TOTAL', '',
-      { formula: `SUM(H${startRow}:H${endRow})` },
+      '', '', '', '', '', '', 'TOTAL', '',
       { formula: `SUM(I${startRow}:I${endRow})` },
       { formula: `SUM(J${startRow}:J${endRow})` },
+      { formula: `SUM(K${startRow}:K${endRow})` },
       '', '',
-      { formula: `SUM(M${startRow}:M${endRow})` },
       { formula: `SUM(N${startRow}:N${endRow})` },
       { formula: `SUM(O${startRow}:O${endRow})` },
+      { formula: `SUM(P${startRow}:P${endRow})` },
     ]);
 
     totalRow.eachCell((cell, colNumber) => {
       cell.font = { bold: true };
       cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD9E2F3' } };
       cell.border = { top: { style: 'double' }, bottom: { style: 'double' }, left: { style: 'thin' }, right: { style: 'thin' } };
-      if ([12, 13, 14, 15].includes(colNumber)) {
+      if ([13, 14, 15, 16].includes(colNumber)) {
         cell.numFmt = '"Rp "#,##0';
         cell.alignment = { horizontal: 'right' };
-      } else if ([8, 9, 10].includes(colNumber)) {
+      } else if ([9, 10, 11].includes(colNumber)) {
         cell.numFmt = '#,##0';
         cell.alignment = { horizontal: 'center' };
       }
