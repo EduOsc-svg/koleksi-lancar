@@ -28,14 +28,18 @@ interface Props {
 }
 
 function getHandoverStatus(handover: CouponHandover, outstandingData: OutstandingCouponSummary[]) {
-  const contractData = outstandingData.find(d => d.contract_id === handover.contract_id);
-  const totalPaidInContract = contractData?.coupons_paid || 0;
-  const paidInRange = Math.max(0, Math.min(totalPaidInContract, handover.end_index) - handover.start_index + 1);
-  const unpaidInRange = handover.coupon_count - paidInRange;
+  // Use current_installment_index from contract data (sequential payments)
+  const currentIndex = handover.credit_contracts?.current_installment_index || 0;
+  
+  // Coupons paid = those with index <= currentIndex within the handover range
+  const paidInRange = Math.max(0, Math.min(currentIndex, handover.end_index) - handover.start_index + 1);
+  const unpaidInRange = handover.coupon_count - Math.max(0, paidInRange);
+  
   let status: 'fully_paid' | 'partially_paid' | 'unpaid' = 'unpaid';
   if (paidInRange >= handover.coupon_count) status = 'fully_paid';
   else if (paidInRange > 0) status = 'partially_paid';
-  return { paidInRange, unpaidInRange, status };
+  
+  return { paidInRange: Math.max(0, paidInRange), unpaidInRange: Math.max(0, unpaidInRange), status };
 }
 
 /* ─── Summary Cards ─── */
