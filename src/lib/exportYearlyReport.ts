@@ -1,7 +1,7 @@
 import ExcelJS from 'exceljs';
 import { format } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
-import type { YearlyFinancialSummary } from '@/hooks/useYearlyFinancialSummary';
+import type { YearlyFinancialSummary, MonthlyDetailData } from '@/hooks/useYearlyFinancialSummary';
 
 export const exportYearlyReportToExcel = async (
   data: YearlyFinancialSummary,
