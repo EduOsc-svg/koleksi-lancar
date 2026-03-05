@@ -151,7 +151,7 @@ export default function Collection() {
             totalItems={manifestTotalItems}
             onPageChange={setManifestPage}
             searchQuery={searchQuery}
-            outstandingData={outstandingData}
+            outstandingData={undefined}
           />
         </TabsContent>
 
@@ -179,8 +179,7 @@ export default function Collection() {
           />
 
           <OutstandingCouponsTable
-            data={outstandingData}
-            isLoading={outstandingLoading}
+            isLoading={handoversLoading}
             handovers={handovers}
           />
         </TabsContent>
