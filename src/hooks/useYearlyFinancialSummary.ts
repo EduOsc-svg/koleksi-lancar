@@ -243,6 +243,23 @@ export const useYearlyFinancialSummary = (year: Date = new Date(), statusFilter:
           monthData.contracts_count++;
         }
 
+        // Add to monthly contract details
+        const agentInfo = contract.sales_agent_id ? agentLookup.get(contract.sales_agent_id) : null;
+        const customerName = (contract as any).customers?.name || 'N/A';
+        const details = monthlyContractDetails.get(monthKey);
+        if (details) {
+          details.push({
+            agent_code: agentInfo?.code || '-',
+            customer_name: customerName,
+            product_type: contract.product_type || '-',
+            price: omset,
+            modal,
+            omset,
+            commission,
+            net_profit: profit - commission,
+          });
+        }
+
         // Update agent performance with per-contract commission
         const salesAgentId = contract.sales_agent_id;
         if (salesAgentId) {
