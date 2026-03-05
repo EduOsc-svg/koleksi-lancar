@@ -19,6 +19,7 @@ export interface CouponHandover {
     tenor_days: number;
     status: string;
     customers: { name: string } | null;
+    sales_agents: { agent_code: string } | null;
   } | null;
 }
 
@@ -28,7 +29,7 @@ export const useCouponHandovers = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('coupon_handovers')
-        .select('*, collectors(name, collector_code), credit_contracts(contract_ref, daily_installment_amount, current_installment_index, tenor_days, status, customers(name))')
+        .select('*, collectors(name, collector_code), credit_contracts(contract_ref, daily_installment_amount, current_installment_index, tenor_days, status, customers(name), sales_agents(agent_code))')
         .order('created_at', { ascending: false });
       if (error) throw error;
       return data as CouponHandover[];

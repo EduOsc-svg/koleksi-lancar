@@ -14,12 +14,12 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 const HEADERS = [
-  'No', 'Tanggal', 'Kolektor', 'Kode Kolektor', 'Konsumen', 'Kode Kontrak',
-  'Pembayaran ke', 'Jumlah Kupon Bawa', 'Tertagih', 'Belum Tagih', 'Status',
+  'No', 'Tanggal', 'Kolektor', 'Kode Sales', 'Kode Kolektor', 'Konsumen', 'Kode Kontrak',
+  'Pembayaran ke', 'Jml Kupon', 'Tertagih', 'Belum Tagih', 'Status',
   'Nominal/Kupon', 'Total Nominal', 'Tertagih (Rp)', 'Sisa (Rp)',
 ];
 
-const COL_WIDTHS = [5, 14, 20, 14, 22, 15, 16, 10, 10, 12, 14, 16, 18, 18, 18];
+const COL_WIDTHS = [5, 14, 20, 14, 14, 22, 15, 16, 10, 10, 12, 14, 16, 18, 18, 18];
 
 function buildSheet(
   workbook: ExcelJS.Workbook,
