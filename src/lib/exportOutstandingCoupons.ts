@@ -1,126 +1,137 @@
 import ExcelJS from 'exceljs';
-import type { OutstandingCouponSummary } from '@/hooks/useOutstandingCoupons';
 import type { CouponHandover } from '@/hooks/useCouponHandovers';
+import { getHandoverStatus } from '@/components/collection/OutstandingCouponsTable';
 
-export const exportOutstandingCouponsToExcel = async (data: OutstandingCouponSummary[], handovers?: CouponHandover[]) => {
-  // Aggregate handover counts per contract
-  const handoverMap = new Map<string, number>();
-  if (handovers) {
-    for (const h of handovers) {
-      handoverMap.set(h.contract_id, (handoverMap.get(h.contract_id) || 0) + h.coupon_count);
-    }
-  }
+interface EnrichedHandover extends CouponHandover {
+  paidInRange: number;
+  unpaidInRange: number;
+  status: 'fully_paid' | 'partially_paid' | 'unpaid';
+}
+
+const STATUS_LABELS: Record<string, string> = {
+  fully_paid: 'Lunas',
+  partially_paid: 'Sebagian',
+  unpaid: 'Belum Bayar',
+};
+
+export const exportHandoversToExcel = async (handovers: EnrichedHandover[]) => {
   const workbook = new ExcelJS.Workbook();
   workbook.creator = 'Management System Kredit';
   workbook.created = new Date();
 
-  // ============ Sheet 1: Laporan Utama ============
-  const sheet = workbook.addWorksheet('Kupon Belum Bayar');
+  const sheet = workbook.addWorksheet('Serah Terima Kupon');
 
   // Title
-  sheet.mergeCells('A1:J1');
+  sheet.mergeCells('A1:K1');
   const titleCell = sheet.getCell('A1');
-  titleCell.value = 'LAPORAN KUPON BELUM TERBAYAR';
-  titleCell.font = { bold: true, size: 16 };
+  titleCell.value = 'LAPORAN SERAH TERIMA KUPON';
+  titleCell.font = { bold: true, size: 16, color: { argb: 'FFFFFFFF' } };
   titleCell.alignment = { horizontal: 'center' };
   titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4472C4' } };
-  titleCell.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 16 };
 
-  // Subtitle with date
-  sheet.mergeCells('A2:J2');
+  sheet.mergeCells('A2:K2');
   const dateCell = sheet.getCell('A2');
   dateCell.value = `Per tanggal: ${new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })}`;
   dateCell.font = { italic: true, size: 12 };
   dateCell.alignment = { horizontal: 'center' };
 
-  // Empty row
   sheet.addRow([]);
 
-  // Headers with enhanced columns
+  // Headers
   const headers = [
-    'No', 'Nama Konsumen', 'Kode Kontrak', 'Kupon Keluar', 'Kupon di Kolektor',
-    'Nominal Angsuran', 'Terbayar', 'Telah Dibayar', 'Belum Bayar', 'Total Belum Bayar'
+    'No', 'Tanggal', 'Kolektor', 'Kode Kolektor', 'Konsumen', 'Kode Kontrak',
+    'Kupon (#dari-#sampai)', 'Jml Kupon', 'Tertagih', 'Belum Tagih', 'Status',
   ];
-  const hRow = sheet.addRow(headers);
+  // We'll add calculated columns after
+  const fullHeaders = [...headers, 'Nominal/Kupon', 'Total Nominal', 'Tertagih (Rp)', 'Sisa (Rp)'];
+  const hRow = sheet.addRow(fullHeaders);
   hRow.eachCell((cell) => {
     cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
     cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF70AD47' } };
-    cell.alignment = { horizontal: 'center', vertical: 'middle' };
-    cell.border = {
-      top: { style: 'thin' }, bottom: { style: 'thin' },
-      left: { style: 'thin' }, right: { style: 'thin' },
-    };
+    cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+    cell.border = { top: { style: 'thin' }, bottom: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' } };
   });
 
-  // Data rows with enhanced formulas
   const startRow = hRow.number + 1;
-  data.forEach((row, i) => {
+
+  handovers.forEach((h, i) => {
     const rowNum = startRow + i;
-    const kuponDiKolektor = handoverMap.get(row.contract_id) || 0;
+    const amt = h.credit_contracts?.daily_installment_amount || 0;
+
     const dataRow = sheet.addRow([
       i + 1,
-      row.customer_name,
-      row.contract_ref,
-      row.total_coupons_issued,
-      kuponDiKolektor,
-      row.daily_installment_amount,
-      row.coupons_paid,
-      // Dynamic formula: Terbayar × Nominal Angsuran
-      { formula: `G${rowNum}*F${rowNum}` },
-      row.coupons_unpaid,
-      // Dynamic formula: Belum Bayar × Nominal Angsuran
-      { formula: `I${rowNum}*F${rowNum}` }
+      h.handover_date,
+      h.collectors?.name || '-',
+      h.collectors?.collector_code || '-',
+      h.credit_contracts?.customers?.name || '-',
+      h.credit_contracts?.contract_ref || '-',
+      `#${h.start_index}-#${h.end_index}`,
+      h.coupon_count,
+      h.paidInRange,
+      h.unpaidInRange,
+      STATUS_LABELS[h.status] || h.status,
+      amt,
+      // Total Nominal = Jml Kupon × Nominal/Kupon
+      { formula: `H${rowNum}*L${rowNum}` },
+      // Tertagih (Rp) = Tertagih × Nominal/Kupon
+      { formula: `I${rowNum}*L${rowNum}` },
+      // Sisa (Rp) = Belum Tagih × Nominal/Kupon
+      { formula: `J${rowNum}*L${rowNum}` },
     ]);
 
     dataRow.eachCell((cell, colNumber) => {
-      cell.border = {
-        top: { style: 'thin' }, bottom: { style: 'thin' },
-        left: { style: 'thin' }, right: { style: 'thin' },
-      };
-      
-      // Format currency columns (Nominal Angsuran, Telah Dibayar & Total Belum Bayar)
-      if (colNumber === 6 || colNumber === 8 || colNumber === 10) {
+      cell.border = { top: { style: 'thin' }, bottom: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' } };
+
+      // Currency columns
+      if ([12, 13, 14, 15].includes(colNumber)) {
         cell.numFmt = '"Rp "#,##0';
         cell.alignment = { horizontal: 'right' };
       }
-      // Format number columns - center alignment (Kupon Keluar, Kupon di Kolektor, Terbayar, Belum Bayar)
-      else if (colNumber === 4 || colNumber === 5 || colNumber === 7 || colNumber === 9) {
+      // Number columns
+      else if ([8, 9, 10].includes(colNumber)) {
         cell.numFmt = '#,##0';
         cell.alignment = { horizontal: 'center' };
+      }
+      // Status column - color
+      if (colNumber === 11) {
+        cell.alignment = { horizontal: 'center' };
+        if (h.status === 'fully_paid') {
+          cell.font = { bold: true, color: { argb: 'FF228B22' } };
+          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE8F5E9' } };
+        } else if (h.status === 'partially_paid') {
+          cell.font = { bold: true, color: { argb: 'FFB8860B' } };
+          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFF8E1' } };
+        } else {
+          cell.font = { bold: true, color: { argb: 'FFDC143C' } };
+          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFEBEE' } };
+        }
       }
     });
   });
 
-  // Total row with comprehensive formulas
-  const endRow = startRow + data.length - 1;
+  // Total row
+  const endRow = startRow + handovers.length - 1;
   const totalRow = sheet.addRow([
+    '', '', '', '', '', 'TOTAL',
+    '',
+    { formula: `SUM(H${startRow}:H${endRow})` },
+    { formula: `SUM(I${startRow}:I${endRow})` },
+    { formula: `SUM(J${startRow}:J${endRow})` },
     '',
     '',
-    'TOTAL',
-    { formula: `SUM(D${startRow}:D${endRow})` }, // Total Kupon Keluar
-    { formula: `SUM(E${startRow}:E${endRow})` }, // Total Kupon di Kolektor
-    { formula: `AVERAGE(F${startRow}:F${endRow})` }, // Rata-rata Nominal Angsuran
-    { formula: `SUM(G${startRow}:G${endRow})` }, // Total Terbayar
-    { formula: `SUM(H${startRow}:H${endRow})` }, // Total Telah Dibayar
-    { formula: `SUM(I${startRow}:I${endRow})` }, // Total Belum Bayar
-    { formula: `SUM(J${startRow}:J${endRow})` } // Total Nilai Belum Bayar
+    { formula: `SUM(M${startRow}:M${endRow})` },
+    { formula: `SUM(N${startRow}:N${endRow})` },
+    { formula: `SUM(O${startRow}:O${endRow})` },
   ]);
 
-  // Style total row
   totalRow.eachCell((cell, colNumber) => {
     cell.font = { bold: true };
     cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD9E2F3' } };
-    cell.border = {
-      top: { style: 'double' }, bottom: { style: 'double' },
-      left: { style: 'thin' }, right: { style: 'thin' },
-    };
-
-    if (colNumber === 3) {
-      cell.alignment = { horizontal: 'right' };
-    } else if (colNumber === 6 || colNumber === 8 || colNumber === 10) { // Nominal Angsuran, Telah Dibayar & Total Belum Bayar
+    cell.border = { top: { style: 'double' }, bottom: { style: 'double' }, left: { style: 'thin' }, right: { style: 'thin' } };
+    if ([12, 13, 14, 15].includes(colNumber)) {
       cell.numFmt = '"Rp "#,##0';
       cell.alignment = { horizontal: 'right' };
-    } else if (colNumber === 4 || colNumber === 5 || colNumber === 7 || colNumber === 9) { // Numbers
+    } else if ([8, 9, 10].includes(colNumber)) {
       cell.numFmt = '#,##0';
       cell.alignment = { horizontal: 'center' };
     }
@@ -129,66 +140,21 @@ export const exportOutstandingCouponsToExcel = async (data: OutstandingCouponSum
   // Column widths
   sheet.columns = [
     { width: 5 },   // No
-    { width: 25 },  // Nama Konsumen
+    { width: 14 },  // Tanggal
+    { width: 20 },  // Kolektor
+    { width: 12 },  // Kode Kolektor
+    { width: 22 },  // Konsumen
     { width: 15 },  // Kode Kontrak
-    { width: 12 },  // Kupon Keluar
-    { width: 15 },  // Kupon di Kolektor
-    { width: 18 },  // Nominal Angsuran
-    { width: 12 },  // Terbayar
-    { width: 18 },  // Telah Dibayar
-    { width: 12 },  // Belum Bayar
-    { width: 18 },  // Total Belum Bayar
+    { width: 16 },  // Kupon range
+    { width: 10 },  // Jml Kupon
+    { width: 10 },  // Tertagih
+    { width: 12 },  // Belum Tagih
+    { width: 14 },  // Status
+    { width: 16 },  // Nominal/Kupon
+    { width: 18 },  // Total Nominal
+    { width: 18 },  // Tertagih Rp
+    { width: 18 },  // Sisa Rp
   ];
-
-  // ============ Sheet 2: Analisis Ringkasan ============
-  const summarySheet = workbook.addWorksheet('Analisis Ringkasan');
-  
-  summarySheet.mergeCells('A1:C1');
-  const summaryTitleCell = summarySheet.getCell('A1');
-  summaryTitleCell.value = 'ANALISIS RINGKASAN PENAGIHAN BELUM BAYAR';
-  summaryTitleCell.font = { bold: true, size: 14 };
-  summaryTitleCell.alignment = { horizontal: 'center' };
-
-  // Summary metrics
-  summarySheet.addRow([]);
-  summarySheet.addRow([]);
-  
-  const summaryMetrics = [
-    ['Metrik', 'Nilai', 'Formula'],
-    ['Total Kontrak', `=COUNTA('Kupon Belum Bayar'.B${startRow}:B${endRow})`, 'Menghitung jumlah kontrak'],
-    ['Total Kupon Keluar', `=SUM('Kupon Belum Bayar'.D${startRow}:D${endRow})`, 'Jumlah seluruh kupon yang diterbitkan'],
-    ['Total Kupon di Kolektor', `=SUM('Kupon Belum Bayar'.E${startRow}:E${endRow})`, 'Jumlah kupon yang diserahkan ke kolektor'],
-    ['Total Kupon Terbayar', `=SUM('Kupon Belum Bayar'.G${startRow}:G${endRow})`, 'Jumlah kupon yang sudah dibayar'],
-    ['Total Nilai Telah Dibayar', `=SUM('Kupon Belum Bayar'.H${startRow}:H${endRow})`, 'Total nilai rupiah yang sudah dibayar'],
-    ['Total Kupon Belum Bayar', `=SUM('Kupon Belum Bayar'.I${startRow}:I${endRow})`, 'Jumlah kupon yang belum dibayar'],
-    ['Total Nilai Belum Bayar', `=SUM('Kupon Belum Bayar'.J${startRow}:J${endRow})`, 'Total nilai rupiah yang belum terbayar']
-  ];
-
-  summaryMetrics.forEach((rowData, index) => {
-    const row = summarySheet.addRow(rowData);
-    
-    if (index === 0) {
-      // Header styling
-      row.font = { bold: true };
-      row.eachCell((cell) => {
-        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4472C4' } };
-        cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
-        cell.alignment = { horizontal: 'center' };
-      });
-    } else {
-      // Data formatting
-      if (index >= 5 && index <= 7) { // Nilai rupiah
-        row.getCell(2).numFmt = '"Rp "#,##0';
-      } else if (index >= 2 && index <= 4) { // Angka biasa
-        row.getCell(2).numFmt = '#,##0';
-      }
-    }
-  });
-
-  // Set column widths for summary
-  summarySheet.getColumn('A').width = 25;
-  summarySheet.getColumn('B').width = 20;
-  summarySheet.getColumn('C').width = 35;
 
   // Download
   const buffer = await workbook.xlsx.writeBuffer();
@@ -196,7 +162,7 @@ export const exportOutstandingCouponsToExcel = async (data: OutstandingCouponSum
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `Kupon_Belum_Bayar_Dinamis_${new Date().toISOString().split('T')[0]}.xlsx`;
+  a.download = `Serah_Terima_Kupon_${new Date().toISOString().split('T')[0]}.xlsx`;
   a.click();
   URL.revokeObjectURL(url);
 };
