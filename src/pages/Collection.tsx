@@ -6,7 +6,6 @@ import { toast } from "sonner";
 import { useCollectors } from "@/hooks/useCollectors";
 import { useContracts } from "@/hooks/useContracts";
 import { useCreatePayment, useCreateBulkPayment } from "@/hooks/usePayments";
-import { useOutstandingCoupons } from "@/hooks/useOutstandingCoupons";
 import { usePagination } from "@/hooks/usePagination";
 import { useCreateCouponHandover, useCouponHandovers } from "@/hooks/useCouponHandovers";
 import { ManifestFilters } from "@/components/collection/ManifestFilters";
@@ -22,9 +21,8 @@ export default function Collection() {
   const { data: contracts, isLoading: contractsLoading } = useContracts("active");
   const createPayment = useCreatePayment();
   const createBulkPayment = useCreateBulkPayment();
-  const { data: outstandingData, isLoading: outstandingLoading } = useOutstandingCoupons();
   const createHandover = useCreateCouponHandover();
-  const { data: handovers } = useCouponHandovers();
+  const { data: handovers, isLoading: handoversLoading } = useCouponHandovers();
 
   // Manifest state
   const [searchQuery, setSearchQuery] = useState("");
@@ -153,7 +151,7 @@ export default function Collection() {
             totalItems={manifestTotalItems}
             onPageChange={setManifestPage}
             searchQuery={searchQuery}
-            outstandingData={outstandingData}
+            outstandingData={undefined}
           />
         </TabsContent>
 
@@ -181,8 +179,7 @@ export default function Collection() {
           />
 
           <OutstandingCouponsTable
-            data={outstandingData}
-            isLoading={outstandingLoading}
+            isLoading={handoversLoading}
             handovers={handovers}
           />
         </TabsContent>
