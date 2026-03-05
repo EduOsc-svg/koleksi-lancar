@@ -69,6 +69,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 export default function Contracts() {
   const [searchParams, setSearchParams] = useSearchParams();
   const highlightId = searchParams.get('highlight');
+  const newCustomerId = searchParams.get('newCustomerId');
   const { data: contracts, isLoading } = useContracts();
   const { data: invoiceDetails } = useInvoiceDetails();
   const { data: customers } = useCustomers();
@@ -180,6 +181,33 @@ export default function Contracts() {
       }
     }
   }, [highlightId, contracts, currentPage, goToPage, searchParams, setSearchParams]);
+
+  // Auto-open create dialog with pre-selected customer from Customers page
+  useEffect(() => {
+    if (newCustomerId && customers?.length) {
+      const customer = customers.find(c => c.id === newCustomerId);
+      if (customer) {
+        setSelectedContract(null);
+        setFormData({
+          contract_ref: generateNextContractCode(),
+          customer_id: newCustomerId,
+          sales_agent_id: "",
+          collector_id: "",
+          product_type: "",
+          total_loan_amount: 0,
+          tenor_days: "100",
+          daily_installment_amount: 0,
+          start_date: new Date().toISOString().split("T")[0],
+          status: "active",
+          modal: 0,
+        });
+        setDialogOpen(true);
+        // Remove param from URL
+        searchParams.delete('newCustomerId');
+        setSearchParams(searchParams, { replace: true });
+      }
+    }
+  }, [newCustomerId, customers]);
 
   const handleOpenCreate = () => {
     setSelectedContract(null);
