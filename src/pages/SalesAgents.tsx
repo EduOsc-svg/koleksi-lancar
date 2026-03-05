@@ -4,6 +4,7 @@ import ExcelJS from "exceljs";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -218,170 +219,144 @@ export default function SalesAgents() {
       return;
     }
 
-    const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet("Sales Agents");
+    // Fetch all contracts with customer details for per-agent sheets
+    const { data: allContracts, error: contractsError } = await supabase
+      .from('credit_contracts')
+      .select('id, contract_ref, product_type, total_loan_amount, start_date, sales_agent_id, customers(name, phone)')
+      .order('start_date', { ascending: false });
 
-    // Define columns with keys
-    // A: Kode Agent, B: Nama, C: Telepon, D: Komisi %, E: Total Omset, F: Total Modal, G: Profit, H: Komisi, I: Jumlah Kontrak
+    if (contractsError) {
+      toast.error("Gagal mengambil data kontrak");
+      return;
+    }
+
+    const workbook = new ExcelJS.Workbook();
+
+    // ===== SHEET 1: Semua Sales =====
+    const worksheet = workbook.addWorksheet("Semua Sales");
+
     worksheet.columns = [
-      { header: t("salesAgents.agentCode"), key: "agent_code", width: 15 },
-      { header: t("salesAgents.name"), key: "name", width: 25 },
-      { header: t("salesAgents.phone"), key: "phone", width: 20 },
+      { header: "Kode Sales", key: "agent_code", width: 15 },
+      { header: "Nama", key: "name", width: 25 },
+      { header: "Telepon", key: "phone", width: 20 },
       { header: "Komisi % (Dinamis)", key: "commission_percentage", width: 18 },
-      { header: t("salesAgents.totalOmset", "Total Omset"), key: "total_omset", width: 20 },
-      { header: t("salesAgents.totalModal", "Total Modal"), key: "total_modal", width: 20 },
-      { header: t("salesAgents.profit", "Keuntungan"), key: "profit", width: 20 },
+      { header: "Total Omset", key: "total_omset", width: 22 },
       { header: "Komisi (Berdasarkan Tier)", key: "total_commission", width: 25 },
-      { header: t("salesAgents.totalContracts", "Jumlah Kontrak"), key: "total_contracts", width: 18 },
+      { header: "Jumlah Kontrak", key: "total_contracts", width: 18 },
     ];
 
     // Style header row
-    worksheet.getRow(1).font = { bold: true };
+    worksheet.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
     worksheet.getRow(1).fill = {
       type: "pattern",
       pattern: "solid",
       fgColor: { argb: "FF4F81BD" },
     };
-    worksheet.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
 
-    // Add data rows with formulas
     agents.forEach((agent, index) => {
       const omsetData = getAgentOmset(agent.id);
-      const rowNumber = index + 2; // Row 1 is header, data starts from row 2
-      
-      // Calculate dynamic commission percentage based on omset using tiers
+      const rowNumber = index + 2;
       const totalOmset = omsetData?.total_omset || 0;
       const dynamicCommissionPct = calculateTieredCommission(totalOmset, commissionTiers) / 100;
-      
+
       worksheet.addRow({
         agent_code: agent.agent_code,
         name: agent.name,
         phone: agent.phone || "-",
-        commission_percentage: dynamicCommissionPct, // Dynamic percentage from tiers
-        total_omset: omsetData?.total_omset || 0,
-        total_modal: omsetData?.total_modal || 0,
-        profit: null, // Will be set as formula
-        total_commission: null, // Will be set as formula
+        commission_percentage: dynamicCommissionPct,
+        total_omset: totalOmset,
+        total_commission: null,
         total_contracts: omsetData?.total_contracts || 0,
       });
-      
-      // Set dynamic formulas
-      // Profit = Total Omset - Total Modal (Column E - Column F)
-      worksheet.getCell(`G${rowNumber}`).value = { formula: `E${rowNumber}-F${rowNumber}` };
-      
-      // Komisi = Profit * Komisi % (Column G * Column D)
-      worksheet.getCell(`H${rowNumber}`).value = { formula: `G${rowNumber}*D${rowNumber}` };
+
+      // Komisi = Total Omset * Komisi %
+      worksheet.getCell(`F${rowNumber}`).value = { formula: `E${rowNumber}*D${rowNumber}` };
     });
 
-    // Add total row with SUM formulas
+    // Total row
     const lastDataRow = agents.length + 1;
     const totalRowNumber = lastDataRow + 1;
-    
     const totalRow = worksheet.addRow({
       agent_code: "TOTAL",
-      name: "",
-      phone: "",
+      name: "", phone: "",
       commission_percentage: null,
       total_omset: null,
-      total_modal: null,
-      profit: null,
       total_commission: null,
       total_contracts: null,
     });
-    
-    // Set SUM formulas for total row
     worksheet.getCell(`E${totalRowNumber}`).value = { formula: `SUM(E2:E${lastDataRow})` };
     worksheet.getCell(`F${totalRowNumber}`).value = { formula: `SUM(F2:F${lastDataRow})` };
     worksheet.getCell(`G${totalRowNumber}`).value = { formula: `SUM(G2:G${lastDataRow})` };
-    worksheet.getCell(`H${totalRowNumber}`).value = { formula: `SUM(H2:H${lastDataRow})` };
-    worksheet.getCell(`I${totalRowNumber}`).value = { formula: `SUM(I2:I${lastDataRow})` };
-    
-    // Style total row
     totalRow.font = { bold: true };
-    totalRow.fill = {
-      type: "pattern",
-      pattern: "solid",
-      fgColor: { argb: "FFE2EFDA" },
-    };
+    totalRow.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFE2EFDA" } };
 
-    // Format columns
-    worksheet.getColumn("commission_percentage").numFmt = "0.00%"; // Display as percentage
+    worksheet.getColumn("commission_percentage").numFmt = "0.00%";
     worksheet.getColumn("total_omset").numFmt = "#,##0";
-    worksheet.getColumn("total_modal").numFmt = "#,##0";
-    worksheet.getColumn("profit").numFmt = "#,##0";
     worksheet.getColumn("total_commission").numFmt = "#,##0";
 
-    // Add Commission Tiers reference sheet
-    const tiersSheet = workbook.addWorksheet("Ketentuan Komisi");
-    
-    // Commission Tiers columns
-    tiersSheet.columns = [
-      { header: "Rentang Omset Minimum", key: "min_amount", width: 25 },
-      { header: "Rentang Omset Maksimum", key: "max_amount", width: 25 },
-      { header: "Persentase Komisi", key: "percentage", width: 20 },
-      { header: "Keterangan", key: "description", width: 30 },
-    ];
+    // ===== SHEET 2+: Per Sales Agent =====
+    agents.forEach((agent) => {
+      const agentContracts = (allContracts || []).filter(
+        (c: any) => c.sales_agent_id === agent.id
+      );
 
-    // Style tiers header
-    tiersSheet.getRow(1).font = { bold: true };
-    tiersSheet.getRow(1).fill = {
-      type: "pattern",
-      pattern: "solid",
-      fgColor: { argb: "FF2F5233" },
-    };
-    tiersSheet.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
+      // Limit sheet name to 31 chars (Excel limit)
+      const sheetName = `${agent.agent_code} - ${agent.name}`.substring(0, 31);
+      const sheet = workbook.addWorksheet(sheetName);
 
-    // Add commission tiers data
-    commissionTiers.forEach((tier, index) => {
-      const formatRange = (min: number, max: number | null) => {
-        if (max === null) {
-          return `Rp ${min.toLocaleString('id-ID')}`;
-        }
-        return `Rp ${min.toLocaleString('id-ID')}`;
+      sheet.columns = [
+        { header: "No", key: "no", width: 6 },
+        { header: "Tanggal", key: "tanggal", width: 15 },
+        { header: "Kode Kontrak", key: "kode_kontrak", width: 20 },
+        { header: "Produk", key: "produk", width: 25 },
+        { header: "Nama Konsumen", key: "nama_konsumen", width: 25 },
+        { header: "Telepon Konsumen", key: "telepon_konsumen", width: 20 },
+        { header: "Omset", key: "omset", width: 20 },
+      ];
+
+      // Style header
+      sheet.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
+      sheet.getRow(1).fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FF2F5233" },
       };
 
-      const formatMaxRange = (max: number | null) => {
-        if (max === null) {
-          return "Tidak Terbatas";
-        }
-        return `Rp ${max.toLocaleString('id-ID')}`;
-      };
-
-      const description = tier.max_amount === null 
-        ? "Tier tertinggi untuk omset di atas minimum"
-        : `Tier untuk omset antara ${formatRange(tier.min_amount, tier.max_amount)} - ${formatMaxRange(tier.max_amount)}`;
-
-      tiersSheet.addRow({
-        min_amount: formatRange(tier.min_amount, tier.max_amount),
-        max_amount: formatMaxRange(tier.max_amount),
-        percentage: tier.percentage / 100, // Store as decimal for percentage formatting
-        description: description,
+      agentContracts.forEach((contract: any, idx: number) => {
+        sheet.addRow({
+          no: idx + 1,
+          tanggal: contract.start_date,
+          kode_kontrak: contract.contract_ref,
+          produk: contract.product_type || "-",
+          nama_konsumen: contract.customers?.name || "-",
+          telepon_konsumen: contract.customers?.phone || "-",
+          omset: Number(contract.total_loan_amount || 0),
+        });
       });
+
+      // Total row for omset
+      if (agentContracts.length > 0) {
+        const lastRow = agentContracts.length + 1;
+        const totRow = lastRow + 1;
+        const tr = sheet.addRow({ no: "", tanggal: "", kode_kontrak: "", produk: "", nama_konsumen: "", telepon_konsumen: "TOTAL", omset: null });
+        sheet.getCell(`G${totRow}`).value = { formula: `SUM(G2:G${lastRow})` };
+        tr.font = { bold: true };
+        tr.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFE2EFDA" } };
+      }
+
+      sheet.getColumn("omset").numFmt = "#,##0";
     });
 
-    // Format tiers percentage column
-    tiersSheet.getColumn("percentage").numFmt = "0.00%";
-
-    // Add explanation section
-    const explanationRowStart = commissionTiers.length + 3;
-    tiersSheet.getCell(`A${explanationRowStart}`).value = "PENJELASAN SISTEM KOMISI DINAMIS:";
-    tiersSheet.getCell(`A${explanationRowStart}`).font = { bold: true, size: 12 };
-    
-    tiersSheet.getCell(`A${explanationRowStart + 1}`).value = "• Persentase komisi dihitung berdasarkan total omset sales agent";
-    tiersSheet.getCell(`A${explanationRowStart + 2}`).value = "• Semakin tinggi omset, semakin tinggi persentase komisi yang diterima";
-    tiersSheet.getCell(`A${explanationRowStart + 3}`).value = "• Komisi final = Keuntungan × Persentase Komisi (sesuai tier omset)";
-    tiersSheet.getCell(`A${explanationRowStart + 4}`).value = "• Sistem ini memotivasi sales untuk mencapai target omset yang lebih tinggi";
-
-    // Generate and download file
+    // Generate and download
     const buffer = await workbook.xlsx.writeBuffer();
     const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `sales-agents-komisi-dinamis-${new Date().toISOString().split("T")[0]}.xlsx`;
+    a.download = `sales-agents-${new Date().toISOString().split("T")[0]}.xlsx`;
     a.click();
     URL.revokeObjectURL(url);
-    toast.success("Excel berhasil di-export dengan komisi dinamis berdasarkan ketentuan tier!");
+    toast.success("Excel berhasil di-export dengan detail per sales agent!");
   };
 
   return (
