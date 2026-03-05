@@ -30,6 +30,25 @@ export interface AgentYearlyPerformance {
   contracts_count: number;
 }
 
+export interface MonthlyContractDetail {
+  agent_code: string;
+  customer_name: string;
+  product_type: string;
+  price: number; // total_loan_amount (harga barang / omset)
+  modal: number;
+  omset: number;
+  commission: number;
+  net_profit: number;
+}
+
+export interface MonthlyDetailData {
+  monthKey: string;
+  monthLabel: string;
+  contracts: MonthlyContractDetail[];
+  operational_expenses: { description: string; amount: number; category: string | null }[];
+  total_operational: number;
+}
+
 export interface YearlyFinancialSummary {
   total_modal: number;
   total_omset: number;
@@ -49,6 +68,7 @@ export interface YearlyFinancialSummary {
   collection_rate: number;
   monthly_breakdown: MonthlyBreakdown[];
   agents: AgentYearlyPerformance[];
+  monthly_details: MonthlyDetailData[];
 }
 
 // Calculate dynamic contract status based on days_per_due metric
@@ -94,11 +114,11 @@ export const useYearlyFinancialSummary = (year: Date = new Date(), statusFilter:
       ] = await Promise.all([
         supabase.from('sales_agents').select('id, name, agent_code, commission_percentage, use_tiered_commission').order('name'),
         // Get contracts started in this year
-        supabase.from('credit_contracts').select('id, omset, total_loan_amount, sales_agent_id, start_date, status, current_installment_index, tenor_days, created_at')
+        supabase.from('credit_contracts').select('id, omset, total_loan_amount, sales_agent_id, start_date, status, current_installment_index, tenor_days, created_at, product_type, customer_id, customers(name)')
           .gte('start_date', yearStart)
           .lte('start_date', yearEnd),
         supabase.from('payment_logs').select('amount_paid, payment_date, contract_id, credit_contracts!inner(sales_agent_id)').gte('payment_date', yearStart).lte('payment_date', yearEnd),
-        supabase.from('operational_expenses').select('amount, expense_date').gte('expense_date', yearStart).lte('expense_date', yearEnd),
+        supabase.from('operational_expenses').select('amount, expense_date, description, category').gte('expense_date', yearStart).lte('expense_date', yearEnd),
         supabase.from('installment_coupons').select('amount, due_date, contract_id').eq('status', 'unpaid').gte('due_date', yearStart).lte('due_date', yearEnd),
         supabase.from('commission_tiers').select('*').order('min_amount', { ascending: true }),
       ]);
@@ -112,9 +132,15 @@ export const useYearlyFinancialSummary = (year: Date = new Date(), statusFilter:
 
       const tiers = (commissionTiers || []) as CommissionTier[];
 
+      // Build agent lookup map
+      const agentLookup = new Map<string, { code: string; name: string }>();
+      (agents || []).forEach(a => agentLookup.set(a.id, { code: a.agent_code, name: a.name }));
+
       // Monthly breakdown calculation
       const months = eachMonthOfInterval({ start: startOfYear(year), end: endOfYear(year) });
       const monthlyData: Map<string, MonthlyBreakdown> = new Map();
+      const monthlyContractDetails: Map<string, MonthlyContractDetail[]> = new Map();
+      const monthlyExpenseDetails: Map<string, { description: string; amount: number; category: string | null }[]> = new Map();
       
       months.forEach(monthDate => {
         const monthKey = format(monthDate, 'yyyy-MM');
@@ -129,6 +155,8 @@ export const useYearlyFinancialSummary = (year: Date = new Date(), statusFilter:
           operational: 0,
           contracts_count: 0,
         });
+        monthlyContractDetails.set(monthKey, []);
+        monthlyExpenseDetails.set(monthKey, []);
       });
 
       // Agent performance calculation - track per-contract commission
@@ -215,6 +243,23 @@ export const useYearlyFinancialSummary = (year: Date = new Date(), statusFilter:
           monthData.contracts_count++;
         }
 
+        // Add to monthly contract details
+        const agentInfo = contract.sales_agent_id ? agentLookup.get(contract.sales_agent_id) : null;
+        const customerName = (contract as any).customers?.name || 'N/A';
+        const details = monthlyContractDetails.get(monthKey);
+        if (details) {
+          details.push({
+            agent_code: agentInfo?.code || '-',
+            customer_name: customerName,
+            product_type: contract.product_type || '-',
+            price: omset,
+            modal,
+            omset,
+            commission,
+            net_profit: profit - commission,
+          });
+        }
+
         // Update agent performance with per-contract commission
         const salesAgentId = contract.sales_agent_id;
         if (salesAgentId) {
@@ -256,6 +301,10 @@ export const useYearlyFinancialSummary = (year: Date = new Date(), statusFilter:
         if (monthData) {
           monthData.operational += amount;
         }
+        const expDetails = monthlyExpenseDetails.get(monthKey);
+        if (expDetails) {
+          expDetails.push({ description: exp.description, amount, category: exp.category || null });
+        }
       });
 
       // Calculate totals
@@ -295,6 +344,19 @@ export const useYearlyFinancialSummary = (year: Date = new Date(), statusFilter:
       }).filter(a => a.contracts_count > 0)
         .sort((a, b) => b.total_omset - a.total_omset);
 
+      // Build monthly details
+      const monthlyDetails: MonthlyDetailData[] = months.map(monthDate => {
+        const monthKey = format(monthDate, 'yyyy-MM');
+        const md = monthlyData.get(monthKey)!;
+        return {
+          monthKey,
+          monthLabel: md.monthLabel,
+          contracts: monthlyContractDetails.get(monthKey) || [],
+          operational_expenses: monthlyExpenseDetails.get(monthKey) || [],
+          total_operational: md.operational,
+        };
+      });
+
       return {
         total_modal: totalModal,
         total_omset: totalOmset,
@@ -314,6 +376,7 @@ export const useYearlyFinancialSummary = (year: Date = new Date(), statusFilter:
         collection_rate: collectionRate,
         monthly_breakdown: Array.from(monthlyData.values()),
         agents: agentResults,
+        monthly_details: monthlyDetails,
       };
     },
   });
