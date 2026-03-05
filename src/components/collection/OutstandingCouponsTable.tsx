@@ -355,14 +355,20 @@ export function OutstandingCouponsTable({ data, isLoading, handovers }: Props) {
                 </div>
                 <div>
                   <CardTitle className="text-lg font-semibold">
-                    Riwayat Serah Terima Kupon
+                    Riwayat Serah Terima Kupon (Lengkap)
                   </CardTitle>
                   <p className="text-sm text-muted-foreground mt-1">
-                    {handovers.length} transaksi serah terima • Menampilkan 20 terbaru
+                    {handovers.length} transaksi serah terima • Semua riwayat ditampilkan
+                  </p>
+                  <p className="text-xs text-muted-foreground/80 mt-0.5">
+                    Dokumentasi lengkap seluruh penyerahan kupon untuk tracking dan audit
                   </p>
                 </div>
               </div>
-              <Badge variant="outline">Riwayat</Badge>
+              <div className="flex flex-col items-end gap-1">
+                <Badge variant="outline">Dokumentasi</Badge>
+                <Badge variant="secondary" className="text-xs">Semua Status</Badge>
+              </div>
             </div>
           </CardHeader>
           <CardContent>
@@ -400,6 +406,12 @@ export function OutstandingCouponsTable({ data, isLoading, handovers }: Props) {
                         Kupon
                       </div>
                     </TableHead>
+                    <TableHead className="font-semibold text-center">
+                      <div className="flex items-center justify-center gap-2">
+                        <BarChart3 className="h-4 w-4" />
+                        Status
+                      </div>
+                    </TableHead>
                     <TableHead className="font-semibold text-right">
                       <div className="flex items-center justify-end gap-2">
                         <DollarSign className="h-4 w-4" />
@@ -409,7 +421,7 @@ export function OutstandingCouponsTable({ data, isLoading, handovers }: Props) {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {handovers.slice(0, 20).map((h, index) => {
+                  {handovers.map((h, index) => {
                     const amount = h.credit_contracts?.daily_installment_amount || 0;
                     const totalAmount = h.coupon_count * amount;
                     const isRecent = index < 3;
@@ -442,9 +454,21 @@ export function OutstandingCouponsTable({ data, isLoading, handovers }: Props) {
                             <UserCheck className="h-4 w-4 text-primary" />
                             <div>
                               <p className="text-sm font-medium">{h.collectors?.name}</p>
-                              <Badge variant="secondary" className="text-xs">
-                                {h.collectors?.collector_code}
-                              </Badge>
+                              <div className="flex items-center gap-2">
+                                <Badge variant="secondary" className="text-xs">
+                                  {h.collectors?.collector_code}
+                                </Badge>
+                                {h.notes && (
+                                  <Badge variant="outline" className="text-xs text-blue-600 bg-blue-50 border-blue-200">
+                                    📝 Catatan
+                                  </Badge>
+                                )}
+                              </div>
+                              {h.notes && (
+                                <p className="text-xs text-muted-foreground mt-1 italic max-w-32 truncate" title={h.notes}>
+                                  {h.notes}
+                                </p>
+                              )}
                             </div>
                           </div>
                         </TableCell>
@@ -475,6 +499,20 @@ export function OutstandingCouponsTable({ data, isLoading, handovers }: Props) {
                           </div>
                         </TableCell>
                         
+                        <TableCell className="text-center py-4">
+                          <div className="flex flex-col items-center gap-1">
+                            <Badge 
+                              variant="outline"
+                              className="text-xs bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-950 dark:border-blue-800 dark:text-blue-300"
+                            >
+                              Diserahkan
+                            </Badge>
+                            <span className="text-xs text-muted-foreground">
+                              {formatDate(h.handover_date)}
+                            </span>
+                          </div>
+                        </TableCell>
+                        
                         <TableCell className="text-right py-4">
                           <div className="flex flex-col items-end gap-1">
                             <p className="text-sm font-bold">
@@ -492,18 +530,35 @@ export function OutstandingCouponsTable({ data, isLoading, handovers }: Props) {
               </Table>
             </div>
             
-            {handovers.length > 20 && (
-              <div className="mt-4 p-3 rounded-lg bg-muted/50 border">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">
-                      Menampilkan 20 dari {handovers.length} total transaksi
-                    </span>
-                  </div>
-                  <Button variant="outline" size="sm">
-                    Lihat Semua
-                  </Button>
+            {/* Documentation Note */}
+            <div className="mt-4 p-4 rounded-lg bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200/50 dark:border-blue-800/50">
+              <div className="flex items-start gap-3">
+                <FileText className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                <div>
+                  <h4 className="text-sm font-semibold text-blue-900 dark:text-blue-100 mb-1">
+                    Dokumentasi Lengkap Penyerahan Kupon
+                  </h4>
+                  <p className="text-sm text-blue-700 dark:text-blue-300 leading-relaxed">
+                    Riwayat ini menampilkan <strong>semua transaksi penyerahan kupon</strong> kepada kolektor, 
+                    baik yang sudah lunas maupun yang masih tertunggak. Data ini berguna untuk:
+                  </p>
+                  <ul className="text-xs text-blue-600 dark:text-blue-400 mt-2 space-y-1 ml-4">
+                    <li>• <strong>Tracking lengkap</strong> alur penyerahan kupon</li>
+                    <li>• <strong>Audit trail</strong> untuk keperluan pengendalian</li>
+                    <li>• <strong>Dokumentasi</strong> tanggung jawab kolektor</li>
+                    <li>• <strong>Analisis</strong> performa dan pola pembayaran</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            {handovers.length > 50 && (
+              <div className="mt-4 p-3 rounded-lg bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200/50 dark:border-amber-800/50">
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                  <span className="text-sm text-amber-700 dark:text-amber-300">
+                    Menampilkan {handovers.length} transaksi lengkap. Untuk performa yang lebih baik, pertimbangkan menggunakan filter atau pagination.
+                  </span>
                 </div>
               </div>
             )}
