@@ -399,13 +399,13 @@ export default function Dashboard() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {monthlyData?.agents?.map((agent, index) => (
+                  {paginatedAgents.map((agent, index) => (
                     <TableRow 
                       key={agent.agent_id}
                       className="cursor-pointer hover:bg-muted/50"
                       onClick={() => setSelectedAgent({ id: agent.agent_id, name: agent.agent_name, code: agent.agent_code })}
                     >
-                      <TableCell className="font-medium">{index + 1}</TableCell>
+                      <TableCell className="font-medium">{(agentPage - 1) * AGENTS_PER_PAGE + index + 1}</TableCell>
                       <TableCell>
                         <div>
                           <p className="font-medium">{agent.agent_code}</p>
@@ -422,7 +422,7 @@ export default function Dashboard() {
                       </TableCell>
                     </TableRow>
                   ))}
-                  {(!monthlyData?.agents || monthlyData.agents.length === 0) && (
+                  {paginatedAgents.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
                         {t("dashboard.noAgentData", "Belum ada data sales agent bulan ini")}
@@ -432,6 +432,12 @@ export default function Dashboard() {
                 </TableBody>
               </Table>
             </div>
+            <TablePagination
+              currentPage={agentPage}
+              totalPages={agentTotalPages}
+              onPageChange={goToAgentPage}
+              totalItems={agentTotalItems}
+            />
           )}
         </CardContent>
       </Card>
