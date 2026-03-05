@@ -344,6 +344,19 @@ export const useYearlyFinancialSummary = (year: Date = new Date(), statusFilter:
       }).filter(a => a.contracts_count > 0)
         .sort((a, b) => b.total_omset - a.total_omset);
 
+      // Build monthly details
+      const monthlyDetails: MonthlyDetailData[] = months.map(monthDate => {
+        const monthKey = format(monthDate, 'yyyy-MM');
+        const md = monthlyData.get(monthKey)!;
+        return {
+          monthKey,
+          monthLabel: md.monthLabel,
+          contracts: monthlyContractDetails.get(monthKey) || [],
+          operational_expenses: monthlyExpenseDetails.get(monthKey) || [],
+          total_operational: md.operational,
+        };
+      });
+
       return {
         total_modal: totalModal,
         total_omset: totalOmset,
@@ -363,6 +376,7 @@ export const useYearlyFinancialSummary = (year: Date = new Date(), statusFilter:
         collection_rate: collectionRate,
         monthly_breakdown: Array.from(monthlyData.values()),
         agents: agentResults,
+        monthly_details: monthlyDetails,
       };
     },
   });
