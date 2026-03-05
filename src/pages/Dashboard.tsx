@@ -64,6 +64,11 @@ export default function Dashboard() {
   const { data: historyData, isLoading: isLoadingHistory } = useAgentContractHistory(selectedAgent?.id || null);
   const { createExpense, deleteExpense } = useOperationalExpenseMutations();
   
+  // Pagination for sales agent performance table
+  const AGENTS_PER_PAGE = 10;
+  const agentsList = useMemo(() => monthlyData?.agents || [], [monthlyData?.agents]);
+  const { currentPage: agentPage, totalPages: agentTotalPages, paginatedItems: paginatedAgents, goToPage: goToAgentPage, totalItems: agentTotalItems } = usePagination(agentsList, AGENTS_PER_PAGE);
+
   // Pagination for contract history
   const HISTORY_ITEMS_PER_PAGE = 5;
   const paginatedHistoryData = useMemo(() => historyData || [], [historyData]);
