@@ -6,7 +6,6 @@ import { toast } from "sonner";
 import { useCollectors } from "@/hooks/useCollectors";
 import { useContracts } from "@/hooks/useContracts";
 import { useCreatePayment, useCreateBulkPayment } from "@/hooks/usePayments";
-import { useOutstandingCoupons } from "@/hooks/useOutstandingCoupons";
 import { usePagination } from "@/hooks/usePagination";
 import { useCreateCouponHandover, useCouponHandovers } from "@/hooks/useCouponHandovers";
 import { ManifestFilters } from "@/components/collection/ManifestFilters";
