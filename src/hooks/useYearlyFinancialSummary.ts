@@ -132,9 +132,15 @@ export const useYearlyFinancialSummary = (year: Date = new Date(), statusFilter:
 
       const tiers = (commissionTiers || []) as CommissionTier[];
 
+      // Build agent lookup map
+      const agentLookup = new Map<string, { code: string; name: string }>();
+      (agents || []).forEach(a => agentLookup.set(a.id, { code: a.agent_code, name: a.name }));
+
       // Monthly breakdown calculation
       const months = eachMonthOfInterval({ start: startOfYear(year), end: endOfYear(year) });
       const monthlyData: Map<string, MonthlyBreakdown> = new Map();
+      const monthlyContractDetails: Map<string, MonthlyContractDetail[]> = new Map();
+      const monthlyExpenseDetails: Map<string, { description: string; amount: number; category: string | null }[]> = new Map();
       
       months.forEach(monthDate => {
         const monthKey = format(monthDate, 'yyyy-MM');
@@ -149,6 +155,8 @@ export const useYearlyFinancialSummary = (year: Date = new Date(), statusFilter:
           operational: 0,
           contracts_count: 0,
         });
+        monthlyContractDetails.set(monthKey, []);
+        monthlyExpenseDetails.set(monthKey, []);
       });
 
       // Agent performance calculation - track per-contract commission
