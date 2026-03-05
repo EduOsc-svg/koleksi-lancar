@@ -30,6 +30,25 @@ export interface AgentYearlyPerformance {
   contracts_count: number;
 }
 
+export interface MonthlyContractDetail {
+  agent_code: string;
+  customer_name: string;
+  product_type: string;
+  price: number; // total_loan_amount (harga barang / omset)
+  modal: number;
+  omset: number;
+  commission: number;
+  net_profit: number;
+}
+
+export interface MonthlyDetailData {
+  monthKey: string;
+  monthLabel: string;
+  contracts: MonthlyContractDetail[];
+  operational_expenses: { description: string; amount: number; category: string | null }[];
+  total_operational: number;
+}
+
 export interface YearlyFinancialSummary {
   total_modal: number;
   total_omset: number;
@@ -49,6 +68,7 @@ export interface YearlyFinancialSummary {
   collection_rate: number;
   monthly_breakdown: MonthlyBreakdown[];
   agents: AgentYearlyPerformance[];
+  monthly_details: MonthlyDetailData[];
 }
 
 // Calculate dynamic contract status based on days_per_due metric
