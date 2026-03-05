@@ -87,7 +87,7 @@ export const exportYearlyReportToExcel = async (
   const monthlySheet = workbook.addWorksheet('Breakdown Bulanan');
   
   // Header
-  const monthlyHeaders = ['Bulan', 'Modal', 'Omset', 'Keuntungan', 'Komisi', 'Tertagih', 'Jumlah Kontrak'];
+  const monthlyHeaders = ['Bulan', 'Modal', 'Omset', 'Operasional', 'Keuntungan', 'Komisi', 'Tertagih', 'Jumlah Kontrak'];
   const headerRow = monthlySheet.addRow(monthlyHeaders);
   headerRow.font = { bold: true };
   headerRow.eachCell((cell) => {
@@ -103,14 +103,15 @@ export const exportYearlyReportToExcel = async (
       month.monthLabel,
       month.total_modal,
       month.total_omset,
+      month.operational,
       month.profit,
       month.commission,
       month.collected,
       month.contracts_count,
     ]);
 
-    // Format currency columns
-    [2, 3, 4, 5, 6].forEach(colIndex => {
+    // Format currency columns (B-G = 2-7)
+    [2, 3, 4, 5, 6, 7].forEach(colIndex => {
       row.getCell(colIndex).numFmt = '"Rp "#,##0';
     });
   });
@@ -125,21 +126,22 @@ export const exportYearlyReportToExcel = async (
     { formula: `SUM(E${monthlyStartRow}:E${dataEndRow})` },
     { formula: `SUM(F${monthlyStartRow}:F${dataEndRow})` },
     { formula: `SUM(G${monthlyStartRow}:G${dataEndRow})` },
+    { formula: `SUM(H${monthlyStartRow}:H${dataEndRow})` },
   ]);
   totalsRow.font = { bold: true };
   totalsRow.eachCell((cell, colNumber) => {
     cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD9E2F3' } };
-    if (colNumber >= 2 && colNumber <= 6) {
+    if (colNumber >= 2 && colNumber <= 7) {
       cell.numFmt = '"Rp "#,##0';
     }
   });
 
   // Set column widths
   monthlySheet.getColumn(1).width = 15;
-  [2, 3, 4, 5, 6].forEach(col => {
+  [2, 3, 4, 5, 6, 7].forEach(col => {
     monthlySheet.getColumn(col).width = 18;
   });
-  monthlySheet.getColumn(7).width = 15;
+  monthlySheet.getColumn(8).width = 15;
 
   // ============ Sheet 3: Performa Sales Agent ============
   const agentSheet = workbook.addWorksheet('Performa Sales Agent');
