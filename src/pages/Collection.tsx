@@ -21,9 +21,8 @@ export default function Collection() {
   const { data: contracts, isLoading: contractsLoading } = useContracts("active");
   const createPayment = useCreatePayment();
   const createBulkPayment = useCreateBulkPayment();
-  const { data: outstandingData, isLoading: outstandingLoading } = useOutstandingCoupons();
   const createHandover = useCreateCouponHandover();
-  const { data: handovers } = useCouponHandovers();
+  const { data: handovers, isLoading: handoversLoading } = useCouponHandovers();
 
   // Manifest state
   const [searchQuery, setSearchQuery] = useState("");
