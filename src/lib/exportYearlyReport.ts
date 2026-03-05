@@ -280,7 +280,143 @@ export const exportYearlyReportToExcel = async (
   trendSheet.getColumn('C').width = 20;
   trendSheet.getColumn('D').width = 20;
 
-  // ============ Sheet 5: Rumus Kalkulasi ============
+  // ============ Sheet 5-16: Detail Bulanan (Jan - Des) ============
+  const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+  
+  data.monthly_details.forEach((monthDetail: MonthlyDetailData, monthIndex: number) => {
+    const sheetName = monthNames[monthIndex] || monthDetail.monthLabel;
+    const sheet = workbook.addWorksheet(sheetName);
+
+    // Title
+    sheet.mergeCells('A1:I1');
+    const mTitleCell = sheet.getCell('A1');
+    mTitleCell.value = `DETAIL TRANSAKSI - ${sheetName.toUpperCase()} ${year}`;
+    mTitleCell.font = { bold: true, size: 14 };
+    mTitleCell.alignment = { horizontal: 'center' };
+
+    // Contract details table
+    sheet.addRow([]);
+    const detailHeaders = ['No', 'Kode Sales', 'Nama Konsumen', 'Orderan Barang', 'Harga Barang', 'Modal', 'Omset', 'Komisi', 'Laba Bersih'];
+    const detailHeaderRow = sheet.addRow(detailHeaders);
+    detailHeaderRow.font = { bold: true };
+    detailHeaderRow.eachCell((cell) => {
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4472C4' } };
+      cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+      cell.alignment = { horizontal: 'center' };
+      cell.border = {
+        top: { style: 'thin' }, bottom: { style: 'thin' },
+        left: { style: 'thin' }, right: { style: 'thin' },
+      };
+    });
+
+    const detailStartRow = 4;
+    if (monthDetail.contracts.length > 0) {
+      monthDetail.contracts.forEach((contract, idx) => {
+        const row = sheet.addRow([
+          idx + 1,
+          contract.agent_code,
+          contract.customer_name,
+          contract.product_type,
+          contract.price,
+          contract.modal,
+          contract.omset,
+          contract.commission,
+          contract.net_profit,
+        ]);
+        [5, 6, 7, 8, 9].forEach(col => {
+          row.getCell(col).numFmt = '"Rp "#,##0';
+        });
+        row.eachCell((cell) => {
+          cell.border = {
+            top: { style: 'thin' }, bottom: { style: 'thin' },
+            left: { style: 'thin' }, right: { style: 'thin' },
+          };
+        });
+      });
+
+      // Totals row with SUM formulas
+      const detailEndRow = detailStartRow + monthDetail.contracts.length - 1;
+      const totalRow = sheet.addRow([
+        '', '', '', 'TOTAL',
+        { formula: `SUM(E${detailStartRow}:E${detailEndRow})` },
+        { formula: `SUM(F${detailStartRow}:F${detailEndRow})` },
+        { formula: `SUM(G${detailStartRow}:G${detailEndRow})` },
+        { formula: `SUM(H${detailStartRow}:H${detailEndRow})` },
+        { formula: `SUM(I${detailStartRow}:I${detailEndRow})` },
+      ]);
+      totalRow.font = { bold: true };
+      totalRow.eachCell((cell, colNumber) => {
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD9E2F3' } };
+        if (colNumber >= 5 && colNumber <= 9) {
+          cell.numFmt = '"Rp "#,##0';
+        }
+        cell.border = {
+          top: { style: 'thin' }, bottom: { style: 'thin' },
+          left: { style: 'thin' }, right: { style: 'thin' },
+        };
+      });
+    } else {
+      const emptyRow = sheet.addRow(['', '', 'Tidak ada transaksi bulan ini']);
+      emptyRow.getCell(3).font = { italic: true, color: { argb: 'FF999999' } };
+    }
+
+    // Operational expenses section
+    const opsStartRowNum = detailStartRow + monthDetail.contracts.length + 3;
+    sheet.getCell(`A${opsStartRowNum}`).value = 'DETAIL OPERASIONAL';
+    sheet.getCell(`A${opsStartRowNum}`).font = { bold: true, size: 12 };
+
+    const opsHeaderRow = sheet.addRow(['No', 'Deskripsi', 'Kategori', 'Jumlah']);
+    opsHeaderRow.font = { bold: true };
+    opsHeaderRow.eachCell((cell) => {
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFED7D31' } };
+      cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+      cell.alignment = { horizontal: 'center' };
+      cell.border = {
+        top: { style: 'thin' }, bottom: { style: 'thin' },
+        left: { style: 'thin' }, right: { style: 'thin' },
+      };
+    });
+
+    if (monthDetail.operational_expenses.length > 0) {
+      const opsDataStart = opsStartRowNum + 2;
+      monthDetail.operational_expenses.forEach((exp, idx) => {
+        const row = sheet.addRow([idx + 1, exp.description, exp.category || '-', exp.amount]);
+        row.getCell(4).numFmt = '"Rp "#,##0';
+        row.eachCell((cell) => {
+          cell.border = {
+            top: { style: 'thin' }, bottom: { style: 'thin' },
+            left: { style: 'thin' }, right: { style: 'thin' },
+          };
+        });
+      });
+
+      const opsDataEnd = opsDataStart + monthDetail.operational_expenses.length - 1;
+      const opsTotalRow = sheet.addRow(['', '', 'TOTAL', { formula: `SUM(D${opsDataStart}:D${opsDataEnd})` }]);
+      opsTotalRow.font = { bold: true };
+      opsTotalRow.getCell(4).numFmt = '"Rp "#,##0';
+      opsTotalRow.eachCell((cell) => {
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFCE4D6' } };
+        cell.border = {
+          top: { style: 'thin' }, bottom: { style: 'thin' },
+          left: { style: 'thin' }, right: { style: 'thin' },
+        };
+      });
+    } else {
+      const emptyOpsRow = sheet.addRow(['', 'Tidak ada biaya operasional bulan ini']);
+      emptyOpsRow.getCell(2).font = { italic: true, color: { argb: 'FF999999' } };
+    }
+
+    // Set column widths
+    sheet.getColumn(1).width = 5;
+    sheet.getColumn(2).width = 12;
+    sheet.getColumn(3).width = 25;
+    sheet.getColumn(4).width = 20;
+    [5, 6, 7, 8, 9].forEach(col => {
+      sheet.getColumn(col).width = 18;
+    });
+  });
+
+  // ============ Sheet 17: Rumus Kalkulasi ============
   const formulaSheet = workbook.addWorksheet('Rumus Kalkulasi');
   
   formulaSheet.mergeCells('A1:C1');
