@@ -40,7 +40,7 @@ const masterItems = [
 
 const operationItems = [
   { title: "Penagihan", url: "/collection", icon: Wallet },
-  { title: "Performa Kolektor", url: "/collector", icon: BarChart3 },
+  
   { title: "Laporan", url: "/reports", icon: BarChart3 },
   { title: "Riwayat Pelanggan", url: "/history", icon: History },
 ];
