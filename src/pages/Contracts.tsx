@@ -69,6 +69,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 export default function Contracts() {
   const [searchParams, setSearchParams] = useSearchParams();
   const highlightId = searchParams.get('highlight');
+  const newCustomerId = searchParams.get('newCustomerId');
   const { data: contracts, isLoading } = useContracts();
   const { data: invoiceDetails } = useInvoiceDetails();
   const { data: customers } = useCustomers();
