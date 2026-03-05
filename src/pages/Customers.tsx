@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, FileText } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -55,6 +55,7 @@ import { SearchInput } from "@/components/ui/search-input";
 
 export default function Customers() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const highlightId = searchParams.get('highlight');
   const { data: customers, isLoading } = useCustomers();
@@ -152,7 +153,7 @@ export default function Customers() {
     setDialogOpen(true);
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (redirectToContract = false) => {
     // Validate required fields
     if (!formData.name.trim()) {
       toast.error(t("errors.nameRequired", "Nama customer wajib diisi"));
@@ -191,8 +192,14 @@ export default function Customers() {
         await updateCustomer.mutateAsync({ id: selectedCustomer.id, ...submitData });
         toast.success(t("success.updated", "Data berhasil diperbarui"));
       } else {
-        await createCustomer.mutateAsync(submitData);
+        const newCustomer = await createCustomer.mutateAsync(submitData);
         toast.success(t("success.created", "Customer berhasil ditambahkan"));
+        
+        if (redirectToContract && newCustomer?.id) {
+          setDialogOpen(false);
+          navigate(`/contracts?newCustomerId=${newCustomer.id}`);
+          return;
+        }
       }
       setDialogOpen(false);
     } catch (error: any) {
@@ -421,8 +428,18 @@ export default function Customers() {
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
               {t("common.cancel", "Batal")}
             </Button>
+            {!selectedCustomer && (
+              <Button 
+                variant="secondary"
+                onClick={() => handleSubmit(true)} 
+                disabled={createCustomer.isPending || updateCustomer.isPending}
+              >
+                <FileText className="mr-2 h-4 w-4" />
+                {createCustomer.isPending ? "..." : "Simpan & Buat Kontrak"}
+              </Button>
+            )}
             <Button 
-              onClick={handleSubmit} 
+              onClick={() => handleSubmit(false)} 
               disabled={createCustomer.isPending || updateCustomer.isPending}
               className="min-w-[80px]"
             >
