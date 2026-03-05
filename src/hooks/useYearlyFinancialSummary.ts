@@ -14,6 +14,7 @@ export interface MonthlyBreakdown {
   profit: number;
   commission: number;
   collected: number;
+  operational: number;
   contracts_count: number;
 }
 
@@ -125,6 +126,7 @@ export const useYearlyFinancialSummary = (year: Date = new Date(), statusFilter:
           profit: 0,
           commission: 0,
           collected: 0,
+          operational: 0,
           contracts_count: 0,
         });
       });
@@ -244,9 +246,20 @@ export const useYearlyFinancialSummary = (year: Date = new Date(), statusFilter:
         }
       });
 
+      // Process expenses by month
+      let totalExpenses = 0;
+      (expenses || []).forEach((exp: any) => {
+        const monthKey = format(new Date(exp.expense_date), 'yyyy-MM');
+        const amount = Number(exp.amount || 0);
+        totalExpenses += amount;
+        const monthData = monthlyData.get(monthKey);
+        if (monthData) {
+          monthData.operational += amount;
+        }
+      });
+
       // Calculate totals
       const totalProfit = totalOmset - totalModal;
-      const totalExpenses = (expenses || []).reduce((sum, exp: any) => sum + Number(exp.amount || 0), 0);
       const totalToCollect = (unpaidCoupons || []).reduce((sum, c: any) => sum + Number(c.amount || 0), 0);
       const netProfit = totalProfit - totalCommission - totalExpenses;
       const profitMargin = totalOmset > 0 ? (totalProfit / totalOmset) * 100 : 0;
