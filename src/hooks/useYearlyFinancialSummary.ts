@@ -301,6 +301,10 @@ export const useYearlyFinancialSummary = (year: Date = new Date(), statusFilter:
         if (monthData) {
           monthData.operational += amount;
         }
+        const expDetails = monthlyExpenseDetails.get(monthKey);
+        if (expDetails) {
+          expDetails.push({ description: exp.description, amount, category: exp.category || null });
+        }
       });
 
       // Calculate totals
