@@ -63,12 +63,12 @@ export function ManifestTable({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-12">#</TableHead>
+              <TableHead className="w-12">No</TableHead>
               <TableHead>Kode Kontrak</TableHead>
               <TableHead>Nama Pelanggan</TableHead>
               <TableHead className="text-center">Progress</TableHead>
               <TableHead className="text-right">Angsuran</TableHead>
-              <TableHead className="text-right">Tunggakan</TableHead>
+              <TableHead className="text-right">Status</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
