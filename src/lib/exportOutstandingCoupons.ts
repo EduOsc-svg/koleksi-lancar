@@ -67,7 +67,7 @@ function buildSheet(
       h.collectors?.collector_code || '-',
       h.credit_contracts?.customers?.name || '-',
       h.credit_contracts?.contract_ref || '-',
-      `#${h.start_index}-#${h.end_index}`,
+      `${h.start_index}-${h.end_index}`,
       h.coupon_count,
       h.paidInRange,
       h.unpaidInRange,
