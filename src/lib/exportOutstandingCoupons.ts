@@ -15,7 +15,7 @@ const STATUS_LABELS: Record<string, string> = {
 
 const HEADERS = [
   'No', 'Tanggal', 'Kolektor', 'Kode Kolektor', 'Konsumen', 'Kode Kontrak',
-  'Pembayaran ke', 'Jml Kupon', 'Tertagih', 'Belum Tagih', 'Status',
+  'Pembayaran ke', 'Jumlah Kupon Bawa', 'Tertagih', 'Belum Tagih', 'Status',
   'Nominal/Kupon', 'Total Nominal', 'Tertagih (Rp)', 'Sisa (Rp)',
 ];
 

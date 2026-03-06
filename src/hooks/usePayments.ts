@@ -116,7 +116,7 @@ export const useCreatePayment = () => {
         action: 'PAYMENT',
         entity_type: 'payment',
         entity_id: data.id,
-        description: `Payment received for coupon #${data.installment_index} on contract ${data.contract_ref || data.contract_id} (${data.customer_name || 'Unknown'}) - Rp ${data.amount_paid.toLocaleString()}`,
+        description: `Payment received for coupon ${data.installment_index} on contract ${data.contract_ref || data.contract_id} (${data.customer_name || 'Unknown'}) - Rp ${data.amount_paid.toLocaleString()}`,
         contract_id: data.contract_id,
       });
     },
@@ -208,7 +208,7 @@ export const useCreateBulkPayment = () => {
         action: 'BULK_PAYMENT',
         entity_type: 'payment',
         entity_id: data.payments?.[0]?.id || null,
-        description: `Bulk payment received for coupons #${data.start_index}-#${data.end_index} on contract ${data.contract_ref} (${data.customer_name || 'Unknown'}) - Total Rp ${data.total_amount.toLocaleString()}`,
+        description: `Bulk payment received for coupons ${data.start_index}-${data.end_index} on contract ${data.contract_ref} (${data.customer_name || 'Unknown'}) - Total Rp ${data.total_amount.toLocaleString()}`,
         contract_id: data.payments?.[0]?.contract_id,
       });
     },

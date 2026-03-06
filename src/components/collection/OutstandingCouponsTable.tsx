@@ -262,7 +262,7 @@ export function OutstandingCouponsTable({ isLoading, handovers }: Props) {
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/50">
-              <TableHead className="w-10 text-sm">#</TableHead>
+              <TableHead className="w-10 text-sm">No</TableHead>
               <TableHead className="text-sm">Tanggal</TableHead>
               <TableHead className="text-sm">Kolektor</TableHead>
               <TableHead className="text-sm">Konsumen / Kontrak</TableHead>
@@ -307,7 +307,7 @@ export function OutstandingCouponsTable({ isLoading, handovers }: Props) {
                   </TableCell>
 
                   <TableCell className="text-center py-3">
-                    <Badge variant="secondary" className="font-mono text-xs px-2 py-0.5">#{h.start_index}-#{h.end_index}</Badge>
+                    <Badge variant="secondary" className="font-mono text-xs px-2 py-0.5">{h.start_index}-{h.end_index}</Badge>
                     <p className="text-xs text-muted-foreground mt-0.5">{h.coupon_count} kupon</p>
                   </TableCell>
 
@@ -337,7 +337,7 @@ export function OutstandingCouponsTable({ isLoading, handovers }: Props) {
             {/* Footer */}
             <TableRow className="bg-muted/50 font-semibold border-t-2">
               <TableCell colSpan={4} className="text-right text-sm py-3">TOTAL</TableCell>
-              <TableCell className="text-center text-sm py-3">{fCoupons} kpn</TableCell>
+              <TableCell className="text-center text-sm py-3">{fCoupons} kupon</TableCell>
               <TableCell className="text-center py-3">
                 <span className="text-sm text-green-600 dark:text-green-400">{fPaid}</span>
                 <span className="text-sm text-muted-foreground"> / </span>
