@@ -369,7 +369,7 @@ export default function Dashboard() {
         <CardHeader>
           <div className="flex items-center gap-2">
             <Users className="h-5 w-5 text-primary" />
-            <CardTitle>{t("dashboard.salesPerformance", "Performa Sales Agent")} - {format(selectedMonth, 'MMMM yyyy', { locale: idLocale })}</CardTitle>
+            <CardTitle>{t("dashboard.salesPerformance", "Performa Sales")} - {format(selectedMonth, 'MMMM yyyy', { locale: idLocale })}</CardTitle>
           </div>
           <p className="text-sm text-muted-foreground">
             {t("dashboard.clickToViewHistory", "Klik untuk melihat kontrak yang didapat")}
@@ -593,7 +593,7 @@ export default function Dashboard() {
                 <div>
                   <div className="flex items-center gap-2 mb-3">
                     <Users className="h-5 w-5 text-primary" />
-                    <h4 className="text-sm font-medium">Performa Sales Agent Tahunan</h4>
+                    <h4 className="text-sm font-medium">Performa Sales Tahunan</h4>
                   </div>
                   <p className="text-xs text-muted-foreground mb-3">
                     Klik untuk melihat kontrak yang didapat

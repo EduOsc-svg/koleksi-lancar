@@ -45,7 +45,7 @@ export const exportYearlyReportToExcel = async (
     ['Total Modal', data.total_modal, '"Rp "#,##0', 'Total modal yang dikeluarkan'],
     ['Total Omset', data.total_omset, '"Rp "#,##0', 'Total pinjaman yang disalurkan'],
     ['Keuntungan Kotor', data.total_profit, '"Rp "#,##0', 'Omset - Modal'],
-    ['Total Komisi', data.total_commission, '"Rp "#,##0', 'Komisi sales agent'],
+    ['Total Komisi', data.total_commission, '"Rp "#,##0', 'Komisi sales'],
     ['Biaya Operasional', data.total_expenses, '"Rp "#,##0', 'Total biaya operasional'],
     ['Keuntungan Bersih', data.net_profit, '"Rp "#,##0', 'Profit - Komisi - Operasional'],
     ['Jumlah Kontrak', data.contracts_count, '#,##0', 'Total kontrak aktif'],
@@ -144,7 +144,7 @@ export const exportYearlyReportToExcel = async (
   monthlySheet.getColumn(8).width = 15;
 
   // ============ Sheet 3: Performa Sales Agent ============
-  const agentSheet = workbook.addWorksheet('Performa Sales Agent');
+  const agentSheet = workbook.addWorksheet('Performa Sales');
   
   // Header
   const agentHeaders = ['No', 'Kode', 'Nama', 'Komisi %', 'Modal', 'Omset', 'Keuntungan', 'Komisi (Rp)', 'Jumlah Kontrak'];

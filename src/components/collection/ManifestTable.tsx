@@ -147,12 +147,12 @@ export function ManifestTable({
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/50">
-              <TableHead className="w-12 font-semibold">#</TableHead>
+              <TableHead className="w-12 font-semibold">No</TableHead>
               <TableHead className="font-semibold">Kode Pelanggan</TableHead>
               <TableHead className="font-semibold">Nama Pelanggan</TableHead>
               <TableHead className="font-semibold text-center">Progress Bayar</TableHead>
               <TableHead className="font-semibold text-right">Angsuran</TableHead>
-              <TableHead className="font-semibold text-right">Tunggakan</TableHead>
+              <TableHead className="font-semibold text-right">Status</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
