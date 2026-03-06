@@ -760,28 +760,6 @@ function HandoverHistorySection({
           </Table>
         </div>
 
-        {/* Documentation Note */}
-        <div className="mt-4 p-4 rounded-lg bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200/50 dark:border-blue-800/50">
-          <div className="flex items-start gap-3">
-            <FileText className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
-            <div>
-              <h4 className="text-sm font-semibold text-blue-900 dark:text-blue-100 mb-1">
-                Dokumentasi Lengkap Penyerahan Kupon
-              </h4>
-              <p className="text-sm text-blue-700 dark:text-blue-300 leading-relaxed">
-                Riwayat ini menampilkan <strong>semua transaksi penyerahan kupon</strong> kepada kolektor, 
-                baik yang sudah lunas maupun yang masih tertunggak. Data ini berguna untuk:
-              </p>
-              <ul className="text-xs text-blue-600 dark:text-blue-400 mt-2 space-y-1 ml-4">
-                <li>• <strong>Tracking lengkap</strong> alur penyerahan kupon</li>
-                <li>• <strong>Audit trail</strong> untuk keperluan pengendalian</li>
-                <li>• <strong>Dokumentasi</strong> tanggung jawab kolektor</li>
-                <li>• <strong>Analisis</strong> performa dan pola pembayaran</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-
         {filteredHandovers.length > 20 && (
           <div className="mt-4 p-3 rounded-lg bg-muted/50 border">
             <div className="flex items-center justify-between">
