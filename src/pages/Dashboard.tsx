@@ -80,8 +80,10 @@ export default function Dashboard() {
   }, [expenses]);
 
   const netProfit = useMemo(() => {
-    return (monthlyData?.total_profit ?? 0) - totalExpenses;
-  }, [monthlyData?.total_profit, totalExpenses]);
+    const profit = monthlyData?.total_profit ?? 0;
+    const commission = monthlyData?.total_commission ?? 0;
+    return profit - commission - totalExpenses;
+  }, [monthlyData?.total_profit, monthlyData?.total_commission, totalExpenses]);
 
   const locale = i18n.language === 'id' ? 'id-ID' : 'en-US';
 
@@ -309,61 +311,105 @@ export default function Dashboard() {
           {isLoadingExpenses ? (
             <Skeleton className="h-[150px] w-full" />
           ) : expenses && expenses.length > 0 ? (
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Tanggal</TableHead>
-                    <TableHead>Deskripsi</TableHead>
-                    <TableHead>Kategori</TableHead>
-                    <TableHead className="text-right">Jumlah</TableHead>
-                    <TableHead>Catatan</TableHead>
-                    <TableHead className="w-[50px]"></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {expenses.map((expense) => (
-                    <TableRow key={expense.id}>
-                      <TableCell>
-                        {new Date(expense.expense_date).toLocaleDateString(locale, {
-                          day: 'numeric',
-                          month: 'short'
-                        })}
-                      </TableCell>
-                      <TableCell className="font-medium">{expense.description}</TableCell>
-                      <TableCell className="text-muted-foreground">{expense.category || '-'}</TableCell>
-                      <TableCell className="text-right text-orange-600 font-medium">
-                        {formatRupiah(expense.amount)}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground text-sm max-w-[150px] truncate">
-                        {expense.notes || '-'}
-                      </TableCell>
-                      <TableCell>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => deleteExpense.mutate(expense.id)}
-                          disabled={deleteExpense.isPending}
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </TableCell>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              {/* Left: Expenses table (span 2 on large screens) */}
+              <div className="lg:col-span-2 rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Tanggal</TableHead>
+                      <TableHead>Deskripsi</TableHead>
+                      <TableHead>Kategori</TableHead>
+                      <TableHead className="text-right">Jumlah</TableHead>
+                      <TableHead>Catatan</TableHead>
+                      <TableHead className="w-[50px]"></TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {expenses.map((expense) => (
+                      <TableRow key={expense.id}>
+                        <TableCell>
+                          {new Date(expense.expense_date).toLocaleDateString(locale, {
+                            day: 'numeric',
+                            month: 'short'
+                          })}
+                        </TableCell>
+                        <TableCell className="font-medium">{expense.description}</TableCell>
+                        <TableCell className="text-muted-foreground">{expense.category || '-'}</TableCell>
+                        <TableCell className="text-right text-orange-600 font-medium">
+                          {formatRupiah(expense.amount)}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground text-sm max-w-[150px] truncate">
+                          {expense.notes || '-'}
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => deleteExpense.mutate(expense.id)}
+                            disabled={deleteExpense.isPending}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Right: Keuntungan Akhir summary (compact table with percent column) */}
+              <div className="lg:col-span-1 flex flex-col gap-3">
+                <div className="rounded-md border p-4">
+                  <h5 className="text-sm font-medium mb-2">Keuntungan Akhir</h5>
+                  <div className="space-y-3">
+                    {/* Keuntungan Kotor */}
+                    <div className="flex items-center justify-between">
+                      <div className="text-sm text-muted-foreground">Keuntungan Kotor</div>
+                      <div className="text-right">
+                        <div className="font-medium text-green-600">{formatRupiah(monthlyData?.total_profit ?? 0)}</div>
+                        <div className="text-xs text-muted-foreground">{monthlyData?.total_omset ? `${(((monthlyData?.total_profit ?? 0) / monthlyData.total_omset) * 100).toFixed(1)}%` : '0.0%'}</div>
+                      </div>
+                    </div>
+
+                    {/* Komisi */}
+                    <div className="flex items-center justify-between">
+                      <div className="text-sm text-muted-foreground">Komisi</div>
+                      <div className="text-right">
+                        <div className="font-medium text-purple-600">{formatRupiah(monthlyData?.total_commission ?? 0)}</div>
+                        <div className="text-xs text-muted-foreground">{monthlyData?.total_omset ? `${(((monthlyData?.total_commission ?? 0) / monthlyData.total_omset) * 100).toFixed(1)}%` : '0.0%'}</div>
+                      </div>
+                    </div>
+
+                    {/* Total Operasional */}
+                    <div className="flex items-center justify-between">
+                      <div className="text-sm text-muted-foreground">Total Operasional</div>
+                      <div className="text-right">
+                        <div className="font-medium text-orange-600">{formatRupiah(totalExpenses)}</div>
+                        <div className="text-xs text-muted-foreground">{monthlyData?.total_omset ? `${((totalExpenses / monthlyData.total_omset) * 100).toFixed(1)}%` : '0.0%'}</div>
+                      </div>
+                    </div>
+
+                    <div className="border-t pt-2">
+                      <div className="flex items-center justify-between">
+                        <div className="text-sm font-medium">Keuntungan Bersih</div>
+                        <div className={`text-right font-bold ${netProfit >= 0 ? 'text-green-600' : 'text-destructive'}`}>
+                          <div>{formatRupiah(netProfit)}</div>
+                          <div className="text-xs text-muted-foreground">{monthlyData?.total_omset ? `${((netProfit / monthlyData.total_omset) * 100).toFixed(1)}%` : '0.0%'}</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="text-xs text-muted-foreground">
+                  Nilai persen diambil dari perbandingan terhadap Omset bulan ini.
+                </div>
+              </div>
             </div>
           ) : (
             <div className="text-center py-8 text-muted-foreground">
               Belum ada biaya operasional bulan ini
-            </div>
-          )}
-          {expenses && expenses.length > 0 && (
-            <div className="mt-4 flex justify-end">
-              <div className="text-right">
-                <p className="text-sm text-muted-foreground">Total Operasional</p>
-                <p className="text-xl font-bold text-orange-600">{formatRupiah(totalExpenses)}</p>
-              </div>
             </div>
           )}
         </CardContent>

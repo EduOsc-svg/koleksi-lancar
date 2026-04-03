@@ -23,10 +23,10 @@ const COL_WIDTHS = [5, 14, 20, 14, 14, 22, 15, 16, 10, 10, 12, 14, 16, 18, 18, 1
 
 // Per-collector sheet (single collector) — different column layout as requested
 const COLLECTOR_HEADERS = [
-  'No', 'Tanggal', 'Konsumen', 'Kode Kontrak', 'Pembayaran Ke', 'Jumlah Kupon', 'Tertagih', 'Angsuran', 'Tertagih (Rp)'
+  'No', 'Tanggal', 'Konsumen', 'No Kupon', 'Jumlah Kupon', 'Tertagih', 'Angsuran', 'Tertagih (Rp)'
 ];
 
-const COLLECTOR_COL_WIDTHS = [5, 14, 30, 16, 14, 12, 12, 14, 18];
+const COLLECTOR_COL_WIDTHS = [5, 14, 30, 16, 12, 12, 14, 18];
 
 function buildSheet(
   workbook: ExcelJS.Workbook,
@@ -39,7 +39,7 @@ function buildSheet(
 
   // Title
   if (isCollectorSheet) {
-    sheet.mergeCells('A1:I1');
+    sheet.mergeCells('A1:H1');
   } else {
     sheet.mergeCells('A1:P1');
   }
@@ -50,7 +50,7 @@ function buildSheet(
   titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4472C4' } };
 
   if (isCollectorSheet) {
-    sheet.mergeCells('A2:I2');
+    sheet.mergeCells('A2:H2');
   } else {
     sheet.mergeCells('A2:P2');
   }
@@ -79,17 +79,16 @@ function buildSheet(
 
     let dataRowValues: any[] = [];
     if (isCollectorSheet) {
-      // Per-collector layout: No, Tanggal, Konsumen, Kode Kontrak, Pembayaran Ke, Jumlah Kupon, Tertagih, Angsuran, Tertagih (Rp)
+      // Per-collector layout: No, Tanggal, Konsumen, No Kupon, Jumlah Kupon, Tertagih, Angsuran, Tertagih (Rp)
       dataRowValues = [
         i + 1,
         h.handover_date,
         h.credit_contracts?.customers?.name || '-',
-        h.credit_contracts?.contract_ref || '-',
         `${h.start_index}-${h.end_index}`,
         h.coupon_count,
         h.paidInRange,
         amt,
-        { formula: `G${rowNum}*H${rowNum}` }, // Tertagih(Rp) = Tertagih * Angsuran
+        { formula: `F${rowNum}*G${rowNum}` }, // Tertagih(Rp) = Tertagih * Angsuran
       ];
     } else {
       dataRowValues = [
@@ -118,11 +117,11 @@ function buildSheet(
       cell.border = { top: { style: 'thin' }, bottom: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' } };
 
       if (isCollectorSheet) {
-        // Collector sheet formatting: columns 6 and 7 numeric, 8 and 9 currency
-        if ([6, 7].includes(colNumber)) {
+        // Collector sheet formatting: columns 5 and 6 numeric (Jumlah Kupon, Tertagih), 7 and 8 currency (Angsuran, Tertagih Rp)
+        if ([5, 6].includes(colNumber)) {
           cell.numFmt = '#,##0';
           cell.alignment = { horizontal: 'center' };
-        } else if ([8, 9].includes(colNumber)) {
+        } else if ([7, 8].includes(colNumber)) {
           cell.numFmt = '"Rp "#,##0';
           cell.alignment = { horizontal: 'right' };
         }
@@ -157,13 +156,13 @@ function buildSheet(
     const endRow = startRow + handovers.length - 1;
     let totalRowValues: any[] = [];
     if (isCollectorSheet) {
-      // Totals for collector sheet: total jumlah kupon (F), total tertagih (G), total tertagih Rp (I)
+      // Totals for collector sheet: total jumlah kupon (E), total tertagih (F), total tertagih Rp (H)
       totalRowValues = [
-        '', '', 'TOTAL', '', '',
+        '', '', 'TOTAL', '',
+        { formula: `SUM(E${startRow}:E${endRow})` },
         { formula: `SUM(F${startRow}:F${endRow})` },
-        { formula: `SUM(G${startRow}:G${endRow})` },
         '',
-        { formula: `SUM(I${startRow}:I${endRow})` },
+        { formula: `SUM(H${startRow}:H${endRow})` },
       ];
     } else {
       totalRowValues = [
@@ -185,10 +184,10 @@ function buildSheet(
       cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD9E2F3' } };
       cell.border = { top: { style: 'double' }, bottom: { style: 'double' }, left: { style: 'thin' }, right: { style: 'thin' } };
       if (isCollectorSheet) {
-        if ([6, 7].includes(colNumber)) {
+        if ([5, 6].includes(colNumber)) {
           cell.numFmt = '#,##0';
           cell.alignment = { horizontal: 'center' };
-        } else if ([8, 9].includes(colNumber)) {
+        } else if ([7, 8].includes(colNumber)) {
           cell.numFmt = '"Rp "#,##0';
           cell.alignment = { horizontal: 'right' };
         }

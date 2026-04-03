@@ -150,10 +150,10 @@ export function PaymentForm({ contracts, collectors, onSubmit, onBulkSubmit, isS
     const amount = getNumericAmount() || selectedContractData?.daily_installment_amount || 0;
 
     try {
-      if (isBulkPayment) {
-        // Bulk payment
-        const defaultNote = `Pembayaran kupon #${nextCoupon}-#${endCoupon}`;
-        const finalNotes = paymentNotes.trim() || defaultNote;
+  if (isBulkPayment) {
+  // Bulk payment
+  const defaultNote = `Pembayaran kupon ${nextCoupon}-${endCoupon}`;
+  const finalNotes = paymentNotes.trim() || defaultNote;
 
         await onBulkSubmit({
           contract_id: selectedContract,
@@ -274,7 +274,7 @@ export function PaymentForm({ contracts, collectors, onSubmit, onBulkSubmit, isS
               <div className="flex items-center justify-between">
                 <h4 className="font-semibold text-sm">{t("collection.contractDetails")}</h4>
                 <Badge variant="outline" className="text-lg font-bold px-3 py-1">
-                  {isBulkPayment ? `#${nextCoupon} - #${endCoupon}` : `#${nextCoupon}`}
+                  {isBulkPayment ? `${nextCoupon} - ${endCoupon}` : `${nextCoupon}`}
                 </Badge>
               </div>
 
@@ -396,7 +396,7 @@ export function PaymentForm({ contracts, collectors, onSubmit, onBulkSubmit, isS
                 <span className="text-lg font-bold text-primary">{formatRupiah(totalBulkAmount)}</span>
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                Kupon #{nextCoupon} - #{endCoupon} akan dicatat sebagai PAID
+                Kupon {nextCoupon} - {endCoupon} akan dicatat sebagai PAID
               </p>
             </AlertDescription>
           </Alert>
@@ -470,9 +470,9 @@ export function PaymentForm({ contracts, collectors, onSubmit, onBulkSubmit, isS
             placeholder={
               lateInfo.isLate
                 ? t("collection.lateNotePlaceholder")
-                : isBulkPayment 
-                  ? `Default: Pembayaran kupon #${nextCoupon}-#${endCoupon}`
-                  : `Default: Pembayaran ke-${nextCoupon}`
+        : isBulkPayment 
+          ? `Default: Pembayaran kupon ${nextCoupon}-${endIndex}`
+          : `Default: Pembayaran ke-${nextCoupon}`
             }
             rows={2}
             className={lateInfo.isLate ? "border-destructive focus-visible:ring-destructive" : ""}

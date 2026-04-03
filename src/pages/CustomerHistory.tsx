@@ -367,7 +367,7 @@ export default function CustomerHistory() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Kupon #</TableHead>
+                      <TableHead>Kupon</TableHead>
                       <TableHead>Tanggal</TableHead>
                       <TableHead className="text-right">Jumlah</TableHead>
                       <TableHead>Kolektor</TableHead>

@@ -4,6 +4,7 @@ import { Plus, Pencil, Trash2, Eye, Printer, Check, ChevronsUpDown } from "lucid
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
   Table,
@@ -313,6 +314,68 @@ export default function Contracts() {
           toast.success("Kontrak berhasil dibuat");
         }
       }
+      setDialogOpen(false);
+    } catch (error) {
+      console.error(error);
+      toast.error("Gagal menyimpan data");
+    }
+  };
+
+  // Create contract, generate coupons (if active) and immediately trigger print flow
+  const handleCreateAndPrint = async () => {
+    if (!formData.customer_id) {
+      toast.error("Pilih pelanggan terlebih dahulu");
+      return;
+    }
+    if (!formData.start_date) {
+      toast.error("Pilih tanggal mulai terlebih dahulu");
+      return;
+    }
+
+    try {
+      const dailyAmount = formData.daily_installment_amount || calculateInstallment();
+      const tenorDays = parseInt(formData.tenor_days) || 100;
+
+      const { data: newContract } = await createContract.mutateAsync({
+        contract_ref: formData.contract_ref,
+        customer_id: formData.customer_id,
+        sales_agent_id: formData.sales_agent_id || null,
+        collector_id: formData.collector_id || null,
+        product_type: formData.product_type || null,
+        total_loan_amount: formData.total_loan_amount || 0,
+        tenor_days: tenorDays,
+        daily_installment_amount: dailyAmount,
+        start_date: formData.start_date,
+        status: formData.status,
+        omset: formData.modal || 0,
+      } as any);
+
+      // Generate installment coupons for new active contracts
+      if (formData.status === "active" && newContract?.id) {
+        await generateCoupons.mutateAsync({
+          contractId: newContract.id,
+          startDate: formData.start_date,
+          tenorDays: tenorDays,
+          dailyAmount: dailyAmount,
+        });
+        toast.success(`Kontrak dibuat dengan ${tenorDays} kupon`);
+
+        // Close modal and set selected contract so print component can load coupons
+        setDialogOpen(false);
+        setSelectedContract(newContract as ContractWithCustomer);
+
+        // Wait briefly for coupons to be available via hook, then trigger print flow
+        setTimeout(() => {
+          try {
+            handlePrintAllCoupons();
+          } catch (e) {
+            console.error('Print trigger failed', e);
+          }
+        }, 1000);
+        return;
+      }
+
+      toast.success("Kontrak berhasil dibuat");
       setDialogOpen(false);
     } catch (error) {
       console.error(error);
@@ -772,15 +835,17 @@ export default function Contracts() {
                   </div>
                 </div>
                 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="col-span-2">
                     <Label htmlFor="product_type">Jenis Produk</Label>
-                    <Input
+                    <Textarea
                       id="product_type"
                       value={formData.product_type}
                       onChange={(e) => setFormData({ ...formData, product_type: e.target.value })}
                       placeholder="Contoh: Elektronik"
+                      className="max-h-40 resize-y overflow-auto"
                     />
+                    <p className="text-xs text-muted-foreground mt-1">Tuliskan jenis produk. Jika panjang, kotak ini dapat digulir.</p>
                   </div>
                   <div>
                     <Label htmlFor="tenor_days">Tenor (Hari)</Label>
@@ -835,6 +900,18 @@ export default function Contracts() {
           
           <DialogFooter className="shrink-0 p-6 pt-4 border-t">
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Batal</Button>
+            {/** New combined action: create+generate+print */}
+            {!selectedContract && (
+              <Button
+                variant="secondary"
+                onClick={handleCreateAndPrint}
+                disabled={createContract.isPending || generateCoupons.isPending}
+                className="mr-2"
+              >
+                <Printer className="mr-2 h-4 w-4" />
+                Buat & Cetak Kupon
+              </Button>
+            )}
             <Button onClick={handleSubmit} disabled={createContract.isPending || updateContract.isPending || generateCoupons.isPending}>
               {selectedContract ? "Perbarui" : "Buat & Generate Kupon"}
             </Button>

@@ -34,7 +34,6 @@ export interface MonthlyContractDetail {
   agent_code: string;
   customer_name: string;
   product_type: string;
-  price: number; // total_loan_amount (harga barang / omset)
   modal: number;
   omset: number;
   commission: number;
@@ -58,6 +57,7 @@ export interface YearlyFinancialSummary {
   total_to_collect: number;
   total_expenses: number;
   net_profit: number;
+  net_profit_pct: number;
   contracts_count: number;
   completed_count: number;
   active_count: number;
@@ -206,12 +206,10 @@ export const useYearlyFinancialSummary = (year: Date = new Date(), statusFilter:
         const profit = omset - modal;
         
         // Calculate commission using tiered system based on contract omset
-        const commissionPct = calculateTieredCommission(omset, tiers);
-        const commission = (omset * commissionPct) / 100;
-
-        totalModal += modal;
-        totalOmset += omset;
-        totalCommission += commission;
+  // Do not compute per-contract commission here. We'll compute monthly/agent commissions
+  // using the tier rules applied to aggregated totals (to keep consistency with Sales page).
+  totalModal += modal;
+  totalOmset += omset;
         totalContractsCount++;
         
         // Count by dynamic status
@@ -239,7 +237,7 @@ export const useYearlyFinancialSummary = (year: Date = new Date(), statusFilter:
           monthData.total_modal += modal;
           monthData.total_omset += omset;
           monthData.profit += profit;
-          monthData.commission += commission;
+          // Do not add per-contract commission; compute monthly commission later from month total
           monthData.contracts_count++;
         }
 
@@ -248,15 +246,15 @@ export const useYearlyFinancialSummary = (year: Date = new Date(), statusFilter:
         const customerName = (contract as any).customers?.name || 'N/A';
         const details = monthlyContractDetails.get(monthKey);
         if (details) {
+          // Store basic contract detail for now; we will allocate commission proportionally later
           details.push({
             agent_code: agentInfo?.code || '-',
             customer_name: customerName,
             product_type: contract.product_type || '-',
-            price: omset,
             modal,
             omset,
-            commission,
-            net_profit: profit - commission,
+            commission: 0, // placeholder, will be filled after monthly totals known
+            net_profit: profit, // will adjust after commission allocation
           });
         }
 
@@ -272,11 +270,39 @@ export const useYearlyFinancialSummary = (year: Date = new Date(), statusFilter:
           agentDataMap.set(salesAgentId, {
             total_modal: existing.total_modal + modal,
             total_omset: existing.total_omset + omset,
-            total_commission: existing.total_commission + commission,
+            // we'll compute total_commission from aggregated total_omset later
+            total_commission: existing.total_commission,
             contracts_count: existing.contracts_count + 1,
           });
         }
       });
+
+      // After processing all contracts, compute monthly commissions using monthly total_omset
+      // and allocate commission proportionally to contracts in that month.
+      let recomputedTotalCommission = 0;
+      months.forEach((monthDate) => {
+        const monthKey = format(monthDate, 'yyyy-MM');
+        const md = monthlyData.get(monthKey)!;
+        // Compute commission for the month using tier rules applied to month's total omset
+        const monthCommissionPct = md.total_omset > 0 ? calculateTieredCommission(md.total_omset, tiers) : 0;
+        const monthCommission = (md.total_omset * monthCommissionPct) / 100;
+        md.commission = monthCommission;
+        recomputedTotalCommission += monthCommission;
+
+        // Allocate commission proportionally to each contract in the month
+        const details = monthlyContractDetails.get(monthKey) || [];
+        if (md.total_omset > 0 && details.length > 0) {
+          details.forEach((d) => {
+            const share = d.omset / md.total_omset;
+            const allocated = monthCommission * share;
+            d.commission = allocated;
+            d.net_profit = (d.omset - d.modal) - allocated;
+          });
+        }
+      });
+
+      // Replace totalCommission aggregated per-contract with recomputed monthly-based total
+      totalCommission = recomputedTotalCommission;
 
       // Process payments
       let totalCollected = 0;
@@ -310,7 +336,8 @@ export const useYearlyFinancialSummary = (year: Date = new Date(), statusFilter:
       // Calculate totals
       const totalProfit = totalOmset - totalModal;
       const totalToCollect = (unpaidCoupons || []).reduce((sum, c: any) => sum + Number(c.amount || 0), 0);
-      const netProfit = totalProfit - totalCommission - totalExpenses;
+  const netProfit = totalProfit - totalCommission - totalExpenses;
+  const netProfitPct = totalOmset > 0 ? (netProfit / totalOmset) * 100 : 0;
       const profitMargin = totalOmset > 0 ? (totalProfit / totalOmset) * 100 : 0;
       const expectedTotal = totalToCollect + totalCollected;
       const collectionRate = expectedTotal > 0 ? (totalCollected / expectedTotal) * 100 : 0;
@@ -325,20 +352,21 @@ export const useYearlyFinancialSummary = (year: Date = new Date(), statusFilter:
         };
         const profit = data.total_omset - data.total_modal;
 
-        // Calculate average commission percentage for display
-        const avgCommissionPct = data.total_omset > 0 
-          ? (data.total_commission / data.total_omset) * 100 
-          : 0;
+        // Use tier rules based on agent total omset to derive displayed commission %
+        // This matches how the Sales export and Sales page compute dynamic pct by total omset
+        const commissionPct = data.total_omset > 0 ? calculateTieredCommission(data.total_omset, tiers) : 0;
+
+        const computedAgentCommission = (data.total_omset * commissionPct) / 100;
 
         return {
           agent_id: agent.id,
           agent_name: agent.name,
           agent_code: agent.agent_code,
-          commission_percentage: avgCommissionPct,
+          commission_percentage: commissionPct,
           total_modal: data.total_modal,
           total_omset: data.total_omset,
           profit,
-          total_commission: data.total_commission,
+          total_commission: computedAgentCommission,
           contracts_count: data.contracts_count,
         };
       }).filter(a => a.contracts_count > 0)
@@ -366,6 +394,7 @@ export const useYearlyFinancialSummary = (year: Date = new Date(), statusFilter:
         total_to_collect: totalToCollect,
         total_expenses: totalExpenses,
         net_profit: netProfit,
+        net_profit_pct: netProfitPct,
         contracts_count: totalContractsCount,
         completed_count: completedCount,
         active_count: activeCount,

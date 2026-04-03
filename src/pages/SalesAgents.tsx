@@ -482,6 +482,16 @@ export default function SalesAgents() {
             ) : (
               paginatedItems.map((agent) => {
                 const omsetData = getAgentOmset(agent.id);
+                // Ensure we show a commission value even if the hook didn't compute it
+                const fallbackCommission = (() => {
+                  const totalOmset = omsetData?.total_omset || 0;
+                  // Try tiered commission first (if tiers present), otherwise use agent fixed pct
+                  const dynamicPct = commissionTiers && commissionTiers.length > 0
+                    ? calculateTieredCommission(totalOmset, commissionTiers)
+                    : Number(agent.commission_percentage) || 0;
+                  const computed = (totalOmset * (Number(dynamicPct) || 0)) / 100;
+                  return computed;
+                })();
                 return (
                   <TableRow 
                     key={agent.id}
@@ -495,7 +505,7 @@ export default function SalesAgents() {
                     <TableCell>{agent.phone || "-"}</TableCell>
                     <TableCell className="font-medium">{formatRupiah(omsetData?.total_omset || 0)}</TableCell>
                     <TableCell className="font-medium text-primary">
-                      {formatRupiah(omsetData?.total_commission || 0)}
+                      {formatRupiah( (omsetData?.total_commission && omsetData.total_commission > 0) ? omsetData.total_commission : fallbackCommission )}
                     </TableCell>
                     <TableCell className="text-right">
                       <Button 

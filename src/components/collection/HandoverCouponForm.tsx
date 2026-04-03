@@ -281,7 +281,7 @@ export function HandoverCouponForm({ contracts, collectors, onSubmit, isSubmitti
                   <Hash className="h-8 w-8 text-blue-500 bg-blue-100 dark:bg-blue-900/50 rounded-full p-1.5" />
                   <div>
                     <p className="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide">Kupon Saat Ini</p>
-                    <p className="font-bold text-blue-800 dark:text-blue-200">#{selectedContract.current_installment_index}</p>
+                    <p className="font-bold text-blue-800 dark:text-blue-200">{selectedContract.current_installment_index}</p>
                     <p className="text-xs text-blue-600 dark:text-blue-400">dari {selectedContract.tenor_days}</p>
                   </div>
                 </div>
@@ -337,7 +337,7 @@ export function HandoverCouponForm({ contracts, collectors, onSubmit, isSubmitti
               {selectedContract && couponCount > 0 && (
                 <div className="space-y-1">
                   <p className="text-xs text-muted-foreground font-medium">
-                    Kupon #{startIndex} - #{endIndex}
+                    Kupon {startIndex} - {endIndex}
                   </p>
                   <p className="text-xs font-bold text-orange-600 dark:text-orange-400">
                     Total: {formatRupiah(couponCount * selectedContract.daily_installment_amount)}

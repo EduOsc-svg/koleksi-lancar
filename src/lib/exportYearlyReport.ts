@@ -2,6 +2,8 @@ import ExcelJS from 'exceljs';
 import { format } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
 import type { YearlyFinancialSummary, MonthlyDetailData } from '@/hooks/useYearlyFinancialSummary';
+import { supabase } from '@/integrations/supabase/client';
+import { calculateTieredCommission, CommissionTier } from '@/hooks/useCommissionTiers';
 
 export const exportYearlyReportToExcel = async (
   data: YearlyFinancialSummary,
@@ -156,15 +158,26 @@ export const exportYearlyReportToExcel = async (
     cell.alignment = { horizontal: 'center' };
   });
 
+  // Fetch commission tiers so Excel uses the same tier rules as Sales page
+  const { data: commissionTiersData } = await supabase
+    .from('commission_tiers')
+    .select('*')
+    .order('min_amount', { ascending: true });
+  const tiers: CommissionTier[] = (commissionTiersData || []) as CommissionTier[];
+
   // Data rows with formulas
   const agentStartRow = 2;
   data.agents.forEach((agent, index) => {
     const rowNum = agentStartRow + index;
+
+    // Compute commission percentage according to tier rules based on agent total omset
+    const dynamicPct = agent.total_omset > 0 ? calculateTieredCommission(agent.total_omset, tiers) / 100 : 0;
+
     const row = agentSheet.addRow([
       index + 1,
       agent.agent_code,
       agent.agent_name,
-      agent.commission_percentage / 100,
+      dynamicPct,
       agent.total_modal,
       agent.total_omset,
       // Profit formula: Omset - Modal
@@ -222,8 +235,8 @@ export const exportYearlyReportToExcel = async (
     const sheetName = monthNames[monthIndex] || monthDetail.monthLabel;
     const sheet = workbook.addWorksheet(sheetName);
 
-    // Title
-    sheet.mergeCells('A1:I1');
+  // Title
+  sheet.mergeCells('A1:H1');
     const mTitleCell = sheet.getCell('A1');
     mTitleCell.value = `DETAIL TRANSAKSI - ${sheetName.toUpperCase()} ${year}`;
     mTitleCell.font = { bold: true, size: 14 };
@@ -231,7 +244,7 @@ export const exportYearlyReportToExcel = async (
 
     // Contract details table
     sheet.addRow([]);
-    const detailHeaders = ['No', 'Kode Sales', 'Nama Konsumen', 'Orderan Barang', 'Harga Barang', 'Modal', 'Omset', 'Komisi', 'Laba Bersih'];
+  const detailHeaders = ['No', 'Kode Sales', 'Nama Konsumen', 'Orderan Barang', 'Modal', 'Omset', 'Komisi', 'Laba Bersih'];
     const detailHeaderRow = sheet.addRow(detailHeaders);
     detailHeaderRow.font = { bold: true };
     detailHeaderRow.eachCell((cell) => {
@@ -244,21 +257,22 @@ export const exportYearlyReportToExcel = async (
       };
     });
 
-    const detailStartRow = 4;
-    if (monthDetail.contracts.length > 0) {
+  const detailStartRow = 4;
+  // detailEndRow needs to be available later for summary formulas; default to one row before start
+  let detailEndRow = detailStartRow - 1;
+  if (monthDetail.contracts.length > 0) {
       monthDetail.contracts.forEach((contract, idx) => {
         const row = sheet.addRow([
           idx + 1,
           contract.agent_code,
           contract.customer_name,
           contract.product_type,
-          contract.price,
           contract.modal,
           contract.omset,
           contract.commission,
           contract.net_profit,
         ]);
-        [5, 6, 7, 8, 9].forEach(col => {
+        [5, 6, 7, 8].forEach(col => {
           row.getCell(col).numFmt = '"Rp "#,##0';
         });
         row.eachCell((cell) => {
@@ -270,19 +284,18 @@ export const exportYearlyReportToExcel = async (
       });
 
       // Totals row with SUM formulas
-      const detailEndRow = detailStartRow + monthDetail.contracts.length - 1;
+  detailEndRow = detailStartRow + monthDetail.contracts.length - 1;
       const totalRow = sheet.addRow([
         '', '', '', 'TOTAL',
         { formula: `SUM(E${detailStartRow}:E${detailEndRow})` },
         { formula: `SUM(F${detailStartRow}:F${detailEndRow})` },
         { formula: `SUM(G${detailStartRow}:G${detailEndRow})` },
         { formula: `SUM(H${detailStartRow}:H${detailEndRow})` },
-        { formula: `SUM(I${detailStartRow}:I${detailEndRow})` },
       ]);
       totalRow.font = { bold: true };
       totalRow.eachCell((cell, colNumber) => {
         cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD9E2F3' } };
-        if (colNumber >= 5 && colNumber <= 9) {
+        if (colNumber >= 5 && colNumber <= 8) {
           cell.numFmt = '"Rp "#,##0';
         }
         cell.border = {
@@ -312,6 +325,10 @@ export const exportYearlyReportToExcel = async (
       };
     });
 
+    // We'll build a formula string for operational total so it works even when there are no ops
+    let opsSumFormula = '0';
+    let opsDataEnd = opsStartRowNum; // fallback
+
     if (monthDetail.operational_expenses.length > 0) {
       const opsDataStart = opsStartRowNum + 2;
       monthDetail.operational_expenses.forEach((exp, idx) => {
@@ -325,7 +342,7 @@ export const exportYearlyReportToExcel = async (
         });
       });
 
-      const opsDataEnd = opsDataStart + monthDetail.operational_expenses.length - 1;
+      opsDataEnd = opsDataStart + monthDetail.operational_expenses.length - 1;
       const opsTotalRow = sheet.addRow(['', '', 'TOTAL', { formula: `SUM(D${opsDataStart}:D${opsDataEnd})` }]);
       opsTotalRow.font = { bold: true };
       opsTotalRow.getCell(4).numFmt = '"Rp "#,##0';
@@ -336,19 +353,130 @@ export const exportYearlyReportToExcel = async (
           left: { style: 'thin' }, right: { style: 'thin' },
         };
       });
+
+      opsSumFormula = `SUM(D${opsDataStart}:D${opsDataEnd})`;
     } else {
       const emptyOpsRow = sheet.addRow(['', 'Tidak ada biaya operasional bulan ini']);
       emptyOpsRow.getCell(2).font = { italic: true, color: { argb: 'FF999999' } };
+      opsSumFormula = '0';
     }
 
-    // Set column widths
-    sheet.getColumn(1).width = 5;
-    sheet.getColumn(2).width = 12;
-    sheet.getColumn(3).width = 25;
-    sheet.getColumn(4).width = 20;
-    [5, 6, 7, 8, 9].forEach(col => {
-      sheet.getColumn(col).width = 18;
-    });
+    // ===== Keuntungan Akhir summary panel (placed to the right of ops) =====
+    // Contract data ranges
+    const contractProfitRange = `H${detailStartRow}:H${detailEndRow}`;
+    const contractCommissionRange = `G${detailStartRow}:G${detailEndRow}`;
+    const contractModalRange = `E${detailStartRow}:E${detailEndRow}`;
+    const contractOmsetRange = `F${detailStartRow}:F${detailEndRow}`;
+
+    // Summary formulas
+    const profitSumFormula = `SUM(${contractProfitRange})`;
+    const commissionSumFormula = `SUM(${contractCommissionRange})`;
+    const modalSumFormula = `SUM(${contractModalRange})`;
+    const omsetSumFormula = `SUM(${contractOmsetRange})`;
+    const netProfitFormula = `${profitSumFormula}-${commissionSumFormula}-${opsSumFormula}`;
+    const netProfitPctFormula = `IF(${omsetSumFormula}=0,0,(${netProfitFormula})/(${omsetSumFormula}))`;
+
+  // Place summary dynamically aligned with the operational block (Option A)
+  // Title will be merged on E{opsStartRowNum}:F{opsStartRowNum}, labels in column E,
+  // values in column F and percent in column G.
+  // Make column E a spacer/boundary so the summary panel doesn't butt against the details.
+  // Shift the summary one column to the right: labels in F, values in G, percent in H.
+  const summaryColLabel = 'F';
+  const summaryColValue = 'G';
+  const summaryColPct = 'H';
+  // Align the summary title row with the 'DETAIL OPERASIONAL' title row so they appear
+  // on the same vertical level even when the operational block length changes.
+  const summaryTitleRow = opsStartRowNum;
+  const summaryRowBase = summaryTitleRow + 1;
+
+  // Merge F and G for the title (we keep column E as a spacer/boundary)
+  sheet.mergeCells(`F${summaryTitleRow}:G${summaryTitleRow}`);
+  sheet.getCell(`${summaryColLabel}${summaryTitleRow}`).value = 'KEUNTUNGAN AKHIR';
+  const summaryTitleCell = sheet.getCell(`${summaryColLabel}${summaryTitleRow}`);
+  summaryTitleCell.font = { bold: true, size: 12, color: { argb: 'FFFFFFFF' } };
+  summaryTitleCell.alignment = { horizontal: 'center' };
+  summaryTitleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4472C4' } };
+
+    // Rows: Total Modal, Total Omset, Profit, Komisi, Operasional, Keuntungan Akhir
+  // Label + value rows
+  const labels = ['Total Modal', 'Total Omset', 'Profit (Omset - Modal)', 'Komisi', 'Operasional', 'Keuntungan Akhir'];
+  // Write labels and values
+  sheet.getCell(`${summaryColLabel}${summaryRowBase}`).value = labels[0];
+  sheet.getCell(`${summaryColValue}${summaryRowBase}`).value = { formula: modalSumFormula };
+  sheet.getCell(`${summaryColValue}${summaryRowBase}`).numFmt = '"Rp "#,##0';
+
+  sheet.getCell(`${summaryColLabel}${summaryRowBase + 1}`).value = labels[1];
+  sheet.getCell(`${summaryColValue}${summaryRowBase + 1}`).value = { formula: omsetSumFormula };
+  sheet.getCell(`${summaryColValue}${summaryRowBase + 1}`).numFmt = '"Rp "#,##0';
+
+  sheet.getCell(`${summaryColLabel}${summaryRowBase + 2}`).value = labels[2];
+  sheet.getCell(`${summaryColValue}${summaryRowBase + 2}`).value = { formula: profitSumFormula };
+  sheet.getCell(`${summaryColValue}${summaryRowBase + 2}`).numFmt = '"Rp "#,##0';
+
+  sheet.getCell(`${summaryColLabel}${summaryRowBase + 3}`).value = labels[3];
+  sheet.getCell(`${summaryColValue}${summaryRowBase + 3}`).value = { formula: commissionSumFormula };
+  sheet.getCell(`${summaryColValue}${summaryRowBase + 3}`).numFmt = '"Rp "#,##0';
+
+  sheet.getCell(`${summaryColLabel}${summaryRowBase + 4}`).value = labels[4];
+  sheet.getCell(`${summaryColValue}${summaryRowBase + 4}`).value = { formula: opsSumFormula };
+  sheet.getCell(`${summaryColValue}${summaryRowBase + 4}`).numFmt = '"Rp "#,##0';
+
+  sheet.getCell(`${summaryColLabel}${summaryRowBase + 5}`).value = labels[5];
+  const netCell = sheet.getCell(`${summaryColValue}${summaryRowBase + 5}`);
+  netCell.value = { formula: netProfitFormula };
+  netCell.numFmt = '"Rp "#,##0';
+  netCell.font = { bold: true, color: { argb: 'FF0B6623' } }; // dark green
+  netCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFC6EFCE' } }; // light green background
+
+    // Percent column (to the right)
+  const pctCell = sheet.getCell(`${summaryColPct}${summaryRowBase + 5}`);
+  pctCell.value = { formula: netProfitPctFormula };
+  pctCell.numFmt = '0.00%';
+  pctCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFC6EFCE' } };
+  pctCell.font = { bold: true };
+
+    // Apply borders and light fill to summary cells
+    // Apply borders and light fills to summary cells, with special label styling
+    for (let r = summaryRowBase; r <= summaryRowBase + 5; r++) {
+      const labelCell = sheet.getCell(`${summaryColLabel}${r}`);
+      const valueCell = sheet.getCell(`${summaryColValue}${r}`);
+      const percentCell = sheet.getCell(`${summaryColPct}${r}`);
+
+      // Label styling
+      labelCell.font = { bold: true };
+      labelCell.alignment = { horizontal: 'left' };
+      labelCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF2F2F2' } };
+
+      // Value cells already formatted as currency; give subtle background
+      // Avoid overwriting the special net profit cell (which has its own fill)
+      if (`${summaryColValue}${r}` !== `${summaryColValue}${summaryRowBase + 5}`) {
+        valueCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFFFF' } };
+      }
+
+      // Percent cell default fill (only used on the final row)
+      if (r !== summaryRowBase + 5) {
+        percentCell.value = null;
+      }
+
+      [labelCell, valueCell, percentCell].forEach(cell => {
+        cell.border = {
+          top: { style: 'thin' }, bottom: { style: 'thin' },
+          left: { style: 'thin' }, right: { style: 'thin' },
+        };
+      });
+    }
+
+      // Set column widths. Make column E (5) a small spacer/boundary so content doesn't appear cramped.
+      sheet.getColumn(1).width = 5;
+      sheet.getColumn(2).width = 12;
+      sheet.getColumn(3).width = 25;
+      sheet.getColumn(4).width = 20;
+      // Column 5 (E) is the spacer/boundary
+      sheet.getColumn(5).width = 3;
+      // Columns F(6), G(7), H(8) are for summary and regular columns
+      [6, 7, 8].forEach(col => {
+        sheet.getColumn(col).width = 18;
+      });
   });
 
   // ============ Sheet 17: Rumus Kalkulasi ============

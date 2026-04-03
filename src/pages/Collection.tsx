@@ -67,14 +67,14 @@ export default function Collection() {
     notes: string;
   }) => {
     if (!navigator.onLine) {
-      addToQueue('payment', data as unknown as Record<string, unknown>);
-      notifyQueueUpdated();
-      toast.info(`Pembayaran kupon #${data.installment_index} disimpan offline. Akan disinkronkan saat online.`);
+  addToQueue('payment', data as unknown as Record<string, unknown>);
+  notifyQueueUpdated();
+  toast.info(`Pembayaran kupon ${data.installment_index} disimpan offline. Akan disinkronkan saat online.`);
       return;
     }
     try {
       await createPayment.mutateAsync(data);
-      toast.success(`Pembayaran kupon #${data.installment_index} berhasil dicatat`);
+  toast.success(`Pembayaran kupon ${data.installment_index} berhasil dicatat`);
     } catch {
       // Fallback to offline queue on network error
       addToQueue('payment', data as unknown as Record<string, unknown>);
@@ -93,16 +93,16 @@ export default function Collection() {
     notes: string;
   }) => {
     if (!navigator.onLine) {
-      addToQueue('bulk_payment', data as unknown as Record<string, unknown>);
-      notifyQueueUpdated();
-      const endIndex = data.start_index + data.coupon_count - 1;
-      toast.info(`Pembayaran kupon #${data.start_index}-#${endIndex} disimpan offline.`);
+  addToQueue('bulk_payment', data as unknown as Record<string, unknown>);
+  notifyQueueUpdated();
+  const endIndex = data.start_index + data.coupon_count - 1;
+  toast.info(`Pembayaran kupon ${data.start_index}-${endIndex} disimpan offline.`);
       return;
     }
     try {
       await createBulkPayment.mutateAsync(data);
-      const endIndex = data.start_index + data.coupon_count - 1;
-      toast.success(`Pembayaran kupon #${data.start_index}-#${endIndex} (${data.coupon_count} kupon) berhasil dicatat`);
+  const endIndex = data.start_index + data.coupon_count - 1;
+  toast.success(`Pembayaran kupon ${data.start_index}-${endIndex} (${data.coupon_count} kupon) berhasil dicatat`);
     } catch {
       addToQueue('bulk_payment', data as unknown as Record<string, unknown>);
       notifyQueueUpdated();

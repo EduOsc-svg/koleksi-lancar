@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { calculateTieredCommission, CommissionTier } from './useCommissionTiers';
 
 export interface AgentOmsetData {
   agent_id: string;
@@ -60,6 +61,13 @@ export const useAgentOmset = () => {
         }
       });
 
+      // Fetch commission tiers so we can compute dynamic commission based on total omset
+      const { data: commissionTiersData } = await supabase
+        .from('commission_tiers')
+        .select('*')
+        .order('min_amount', { ascending: true });
+      const tiers: CommissionTier[] = (commissionTiersData || []) as CommissionTier[];
+
       // Combine with agent info
       const result: AgentOmsetData[] = (agents || []).map((agent) => {
         const data = agentOmsetMap.get(agent.id) || { 
@@ -67,7 +75,9 @@ export const useAgentOmset = () => {
           total_modal: 0,
           total_contracts: 0 
         };
-        const commissionPct = Number(agent.commission_percentage) || 0;
+        // Determine commission percentage using tiers (based on agent total omset)
+        const commissionPctFromTiers = data.total_omset > 0 ? calculateTieredCommission(data.total_omset, tiers) : 0;
+        const commissionPct = commissionPctFromTiers || Number(agent.commission_percentage) || 0;
         const profit = data.total_omset - data.total_modal; // Keuntungan = Omset - Modal
         const totalCommission = (data.total_omset * commissionPct) / 100;
         

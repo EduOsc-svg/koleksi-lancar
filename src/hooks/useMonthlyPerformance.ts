@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { calculateTieredCommission, CommissionTier } from './useCommissionTiers';
 import { startOfMonth, endOfMonth, format, startOfYear, endOfYear } from 'date-fns';
 
 export interface MonthlyPerformanceData {
@@ -40,10 +41,10 @@ export const useMonthlyPerformance = (month: Date = new Date()) => {
   return useQuery({
     queryKey: ['monthly_performance', monthStart, monthEnd],
     queryFn: async (): Promise<MonthlyPerformanceSummary> => {
-      // Get all sales agents
+      // Get all sales agents (include flag to use tiered commission)
       const { data: agents, error: agentsError } = await supabase
         .from('sales_agents')
-        .select('id, name, agent_code, commission_percentage')
+        .select('id, name, agent_code, commission_percentage, use_tiered_commission')
         .order('name');
       
       if (agentsError) throw agentsError;
@@ -120,6 +121,13 @@ export const useMonthlyPerformance = (month: Date = new Date()) => {
         }
       });
 
+      // Fetch commission tiers to support dynamic tiered commission calculations
+      const { data: commissionTiersData } = await supabase
+        .from('commission_tiers')
+        .select('*')
+        .order('min_amount', { ascending: true });
+      const tiers: CommissionTier[] = (commissionTiersData || []) as CommissionTier[];
+
       // Build result
       const agentResults: MonthlyPerformanceData[] = (agents || []).map((agent) => {
         const data = agentDataMap.get(agent.id) || {
@@ -128,7 +136,11 @@ export const useMonthlyPerformance = (month: Date = new Date()) => {
           total_contracts: 0,
           total_collected: 0,
         };
-        const commissionPct = Number(agent.commission_percentage) || 0;
+        // Determine commission percent: use tiered rules when agent opts in, otherwise use fixed percentage
+        const useTiered = Boolean((agent as any).use_tiered_commission);
+        const commissionPct = useTiered
+          ? (data.total_omset > 0 ? calculateTieredCommission(data.total_omset, tiers) : 0)
+          : Number(agent.commission_percentage) || 0;
         const totalCommission = (data.total_omset * commissionPct) / 100;
         const profit = data.total_omset - data.total_modal;
         const profitMargin = data.total_omset > 0 ? (profit / data.total_omset) * 100 : 0;
