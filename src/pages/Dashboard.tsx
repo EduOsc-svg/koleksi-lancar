@@ -224,8 +224,8 @@ export default function Dashboard() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground mb-1">Keuntungan Kotor, Sebelum Operasional</p>
-              <p className={`text-3xl font-bold ${netProfit >= 0 ? 'text-green-600' : 'text-destructive'}`}>
-                {formatRupiah(netProfit)}
+              <p className={`text-3xl font-bold ${grossProfit >= 0 ? 'text-green-600' : 'text-destructive'}`}>
+                {formatRupiah(grossProfit)}
               </p>
             </div>
             <div className="text-right">
