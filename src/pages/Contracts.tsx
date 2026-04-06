@@ -421,7 +421,7 @@ export default function Contracts() {
 
           if (couponsAvailable.length === 0) {
             // If coupons still not available, inform the user but still keep contract selected.
-            toast.warn('Kupon belum tersedia untuk dicetak. Coba cetak manual setelah beberapa saat.');
+            toast.warning('Kupon belum tersedia untuk dicetak. Coba cetak manual setelah beberapa saat.');
             // Also invalidate queries to ensure hook will refetch when user opens detail
             try { queryClient.invalidateQueries({ queryKey: ['installment_coupons', 'contract', newContract.id] }); } catch (e) { /* noop */ }
             return;
