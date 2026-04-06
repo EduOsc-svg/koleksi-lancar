@@ -471,7 +471,7 @@ export function PaymentForm({ contracts, collectors, onSubmit, onBulkSubmit, isS
               lateInfo.isLate
                 ? t("collection.lateNotePlaceholder")
         : isBulkPayment 
-          ? `Default: Pembayaran kupon ${nextCoupon}-${endIndex}`
+          ? `Default: Pembayaran kupon ${nextCoupon}-${endCoupon}`
           : `Default: Pembayaran ke-${nextCoupon}`
             }
             rows={2}
