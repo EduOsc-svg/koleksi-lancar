@@ -311,9 +311,9 @@ export default function Dashboard() {
           {isLoadingExpenses ? (
             <Skeleton className="h-[150px] w-full" />
           ) : expenses && expenses.length > 0 ? (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-              {/* Left: Expenses table (span 2 on large screens) */}
-              <div className="lg:col-span-2 rounded-md border">
+            <div className="grid grid-cols-1 gap-4">
+              {/* Left: Expenses table (full width) */}
+              <div className="rounded-md border">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -358,54 +358,7 @@ export default function Dashboard() {
                 </Table>
               </div>
 
-              {/* Right: Keuntungan Akhir summary (compact table with percent column) */}
-              <div className="lg:col-span-1 flex flex-col gap-3">
-                <div className="rounded-md border p-4">
-                  <h5 className="text-sm font-medium mb-2">Keuntungan Akhir</h5>
-                  <div className="space-y-3">
-                    {/* Keuntungan Kotor */}
-                    <div className="flex items-center justify-between">
-                      <div className="text-sm text-muted-foreground">Keuntungan Kotor</div>
-                      <div className="text-right">
-                        <div className="font-medium text-green-600">{formatRupiah(monthlyData?.total_profit ?? 0)}</div>
-                        <div className="text-xs text-muted-foreground">{monthlyData?.total_omset ? `${(((monthlyData?.total_profit ?? 0) / monthlyData.total_omset) * 100).toFixed(1)}%` : '0.0%'}</div>
-                      </div>
-                    </div>
-
-                    {/* Komisi */}
-                    <div className="flex items-center justify-between">
-                      <div className="text-sm text-muted-foreground">Komisi</div>
-                      <div className="text-right">
-                        <div className="font-medium text-purple-600">{formatRupiah(monthlyData?.total_commission ?? 0)}</div>
-                        <div className="text-xs text-muted-foreground">{monthlyData?.total_omset ? `${(((monthlyData?.total_commission ?? 0) / monthlyData.total_omset) * 100).toFixed(1)}%` : '0.0%'}</div>
-                      </div>
-                    </div>
-
-                    {/* Total Operasional */}
-                    <div className="flex items-center justify-between">
-                      <div className="text-sm text-muted-foreground">Total Operasional</div>
-                      <div className="text-right">
-                        <div className="font-medium text-orange-600">{formatRupiah(totalExpenses)}</div>
-                        <div className="text-xs text-muted-foreground">{monthlyData?.total_omset ? `${((totalExpenses / monthlyData.total_omset) * 100).toFixed(1)}%` : '0.0%'}</div>
-                      </div>
-                    </div>
-
-                    <div className="border-t pt-2">
-                      <div className="flex items-center justify-between">
-                        <div className="text-sm font-medium">Keuntungan Bersih</div>
-                        <div className={`text-right font-bold ${netProfit >= 0 ? 'text-green-600' : 'text-destructive'}`}>
-                          <div>{formatRupiah(netProfit)}</div>
-                          <div className="text-xs text-muted-foreground">{monthlyData?.total_omset ? `${((netProfit / monthlyData.total_omset) * 100).toFixed(1)}%` : '0.0%'}</div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="text-xs text-muted-foreground">
-                  Nilai persen diambil dari perbandingan terhadap Omset bulan ini.
-                </div>
-              </div>
+              {/* Keuntungan Akhir summary removed from operational container as requested */}
             </div>
           ) : (
             <div className="text-center py-8 text-muted-foreground">

@@ -138,9 +138,11 @@ export const useYearlyFinancialSummary = (year: Date = new Date(), statusFilter:
 
       // Monthly breakdown calculation
       const months = eachMonthOfInterval({ start: startOfYear(year), end: endOfYear(year) });
-      const monthlyData: Map<string, MonthlyBreakdown> = new Map();
-      const monthlyContractDetails: Map<string, MonthlyContractDetail[]> = new Map();
-      const monthlyExpenseDetails: Map<string, { description: string; amount: number; category: string | null }[]> = new Map();
+  const monthlyData: Map<string, MonthlyBreakdown> = new Map();
+  const monthlyContractDetails: Map<string, MonthlyContractDetail[]> = new Map();
+  const monthlyExpenseDetails: Map<string, { description: string; amount: number; category: string | null }[]> = new Map();
+  // track per-month, per-agent omset totals so we can apply tier rules per agent (same as Sales page)
+  const monthlyAgentTotals: Map<string, Record<string, number>> = new Map();
       
       months.forEach(monthDate => {
         const monthKey = format(monthDate, 'yyyy-MM');
@@ -241,6 +243,12 @@ export const useYearlyFinancialSummary = (year: Date = new Date(), statusFilter:
           monthData.contracts_count++;
         }
 
+        // Track per-agent totals for this month (use agent code if available, otherwise sales_agent_id)
+        const agentKey = contract.sales_agent_id ? (agentLookup.get(contract.sales_agent_id)?.code || contract.sales_agent_id) : 'UNKNOWN';
+        const agentTotalsForMonth = monthlyAgentTotals.get(monthKey) || {};
+        agentTotalsForMonth[agentKey] = (agentTotalsForMonth[agentKey] || 0) + omset;
+        monthlyAgentTotals.set(monthKey, agentTotalsForMonth);
+
         // Add to monthly contract details
         const agentInfo = contract.sales_agent_id ? agentLookup.get(contract.sales_agent_id) : null;
         const customerName = (contract as any).customers?.name || 'N/A';
@@ -277,15 +285,22 @@ export const useYearlyFinancialSummary = (year: Date = new Date(), statusFilter:
         }
       });
 
-      // After processing all contracts, compute monthly commissions using monthly total_omset
-      // and allocate commission proportionally to contracts in that month.
+      // After processing all contracts, compute monthly commissions using per-agent totals
+      // (apply tier rules per agent, sum their commissions) and allocate commission
+      // proportionally to contracts in that month. This matches the Sales page logic.
       let recomputedTotalCommission = 0;
       months.forEach((monthDate) => {
         const monthKey = format(monthDate, 'yyyy-MM');
         const md = monthlyData.get(monthKey)!;
-        // Compute commission for the month using tier rules applied to month's total omset
-        const monthCommissionPct = md.total_omset > 0 ? calculateTieredCommission(md.total_omset, tiers) : 0;
-        const monthCommission = (md.total_omset * monthCommissionPct) / 100;
+
+        // Compute month commission by summing per-agent commission (agent-level tiers)
+        const agentTotals = monthlyAgentTotals.get(monthKey) || {};
+        let monthCommission = 0;
+        Object.values(agentTotals).forEach((agentTotal) => {
+          const pct = agentTotal > 0 ? calculateTieredCommission(agentTotal, tiers) : 0;
+          monthCommission += (agentTotal * pct) / 100;
+        });
+
         md.commission = monthCommission;
         recomputedTotalCommission += monthCommission;
 

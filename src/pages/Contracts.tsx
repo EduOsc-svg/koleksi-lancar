@@ -64,6 +64,8 @@ import { TablePagination } from "@/components/TablePagination";
 import { useCouponsByContract, useGenerateCoupons, InstallmentCoupon } from "@/hooks/useInstallmentCoupons";
 import { SearchInput } from "@/components/ui/search-input";
 import { PrintCoupon8x5 } from "@/components/print/PrintCoupon8x5";
+import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from '@tanstack/react-query';
 import { CurrencyInput } from "@/components/ui/currency-input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -80,6 +82,7 @@ export default function Contracts() {
   const updateContract = useUpdateContract();
   const deleteContract = useDeleteContract();
   const generateCoupons = useGenerateCoupons();
+  const queryClient = useQueryClient();
   
   // Search state
   const [searchQuery, setSearchQuery] = useState("");
@@ -146,6 +149,8 @@ export default function Contracts() {
   };
 
   const [printMode, setPrintMode] = useState(false);
+  const [tempPrintedCoupons, setTempPrintedCoupons] = useState<InstallmentCoupon[] | null>(null);
+  const [tempPrintedContract, setTempPrintedContract] = useState<ContractWithCustomer | null>(null);
 
   // Handle highlighting item from global search
   useEffect(() => {
@@ -360,19 +365,85 @@ export default function Contracts() {
         });
         toast.success(`Kontrak dibuat dengan ${tenorDays} kupon`);
 
-        // Close modal and set selected contract so print component can load coupons
-        setDialogOpen(false);
-        setSelectedContract(newContract as ContractWithCustomer);
+        console.log('create+generate: newContract ->', newContract);
 
-        // Wait briefly for coupons to be available via hook, then trigger print flow
-        setTimeout(() => {
+          // Try to ensure coupons exist before triggering print.
+          // We'll poll the installment_coupons table a few times and wait briefly.
+          let couponsAvailable: any[] = [];
           try {
-            handlePrintAllCoupons();
+            const maxAttempts = 6;
+            for (let attempt = 0; attempt < maxAttempts; attempt++) {
+              const { data: couponsData, error: fetchError } = await supabase
+                .from('installment_coupons')
+                .select('*')
+                .eq('contract_id', newContract.id)
+                .order('installment_index', { ascending: true });
+
+              if (fetchError) {
+                console.error('Error fetching coupons after generate:', fetchError);
+                break;
+              }
+
+              console.log(`Polling attempt ${attempt + 1}/${maxAttempts} for contract ${newContract.id}: found ${Array.isArray(couponsData) ? (couponsData as any[]).length : 0} coupons`);
+
+              if (couponsData && (couponsData as any[]).length > 0) {
+                couponsAvailable = couponsData as any[];
+                break;
+              }
+
+              // wait 500ms before next attempt
+              await new Promise((res) => setTimeout(res, 500));
+            }
+          } catch (e) {
+            console.error('Polling for coupons failed', e);
+          }
+
+          // Fetch full contract with related customer/sales/collector so print has names & addresses
+          let fullContract: ContractWithCustomer | null = null;
+          try {
+            const { data: contractFullData, error: contractFetchError } = await supabase
+              .from('credit_contracts')
+              .select('*, customers(name, address, business_address, phone), sales_agents(name, agent_code), collectors(name, collector_code)')
+              .eq('id', newContract.id)
+              .single();
+            if (contractFetchError) {
+              console.error('Failed to fetch full contract for printing:', contractFetchError);
+            } else {
+              fullContract = contractFullData as ContractWithCustomer;
+            }
+          } catch (e) {
+            console.error('Error fetching full contract for printing', e);
+          }
+
+          // Close modal and set selected contract so print component can load coupons
+          setDialogOpen(false);
+          setSelectedContract((fullContract || newContract) as ContractWithCustomer);
+
+          if (couponsAvailable.length === 0) {
+            // If coupons still not available, inform the user but still keep contract selected.
+            toast.warn('Kupon belum tersedia untuk dicetak. Coba cetak manual setelah beberapa saat.');
+            // Also invalidate queries to ensure hook will refetch when user opens detail
+            try { queryClient.invalidateQueries({ queryKey: ['installment_coupons', 'contract', newContract.id] }); } catch (e) { /* noop */ }
+            return;
+          }
+
+          // Prime React Query cache for the coupons so useCouponsByContract sees them immediately
+          try {
+            queryClient.setQueryData(['installment_coupons', 'contract', newContract.id], couponsAvailable);
+          } catch (e) {
+            console.error('Failed to set query data for coupons:', e);
+          }
+
+          console.log('Coupons available after generate:', couponsAvailable.length, couponsAvailable?.slice?.(0,3));
+
+          // Coupons are available — trigger print flow using enriched contract if available
+          try {
+            // Use direct print helper with the coupons we fetched to avoid race with hook state
+            doPrint(couponsAvailable, (fullContract || newContract) as ContractWithCustomer);
           } catch (e) {
             console.error('Print trigger failed', e);
           }
-        }, 1000);
-        return;
+          return;
       }
 
       toast.success("Kontrak berhasil dibuat");
@@ -396,25 +467,47 @@ export default function Contracts() {
   };
 
   const handlePrintAllCoupons = () => {
+    // Default print path uses currently loaded coupons from hook
     if (!selectedContractCoupons?.length) {
       toast.error("Tidak ada kupon untuk dicetak");
       return;
     }
-    
-    console.log("Starting print mode with", selectedContractCoupons.length, "coupons");
-    
+    doPrint(selectedContractCoupons, selectedContract);
+  };
+
+  // Centralized print helper that accepts coupons + contract directly.
+  const doPrint = (coupons: InstallmentCoupon[] | undefined | null, contract: ContractWithCustomer | null) => {
+    if (!coupons || coupons.length === 0 || !contract) {
+      console.error('doPrint called but coupons or contract missing', { coupons, contract });
+      toast.error("Tidak ada kupon untuk dicetak");
+      return;
+    }
+
+    // Deduplicate coupons by id (defensive) and sort by installment_index
+    const uniqueMap = new Map<string, InstallmentCoupon>();
+    (coupons || []).forEach((c) => {
+      if (c && c.id) uniqueMap.set(c.id, c);
+    });
+    const uniqueCoupons = Array.from(uniqueMap.values()).sort((a, b) => (a.installment_index || 0) - (b.installment_index || 0));
+
+    console.info('doPrint: deduped coupons count', uniqueCoupons.length);
+    console.debug('doPrint: sample coupons', uniqueCoupons.slice(0,3));
+
     // Show instruction to user
     toast.info("Pastikan print dialog menggunakan orientasi Landscape dan ukuran A4", {
       duration: 4000,
     });
-    
+
+    // Use temporary state so PrintCoupon8x5 can render the coupons immediately
+  setTempPrintedCoupons(uniqueCoupons as InstallmentCoupon[]);
+    setTempPrintedContract(contract);
     setPrintMode(true);
-    
+
     // Force add print styles for landscape
     const printStyleId = 'force-landscape-print';
     const existingStyle = document.getElementById(printStyleId);
     if (existingStyle) existingStyle.remove();
-    
+
     const printStyle = document.createElement('style');
     printStyle.id = printStyleId;
     printStyle.textContent = `
@@ -438,26 +531,28 @@ export default function Contracts() {
       }
     `;
     document.head.appendChild(printStyle);
-    
+
     // Add class to body for print mode
     document.body.classList.add('printing-coupons');
-    
+
     // Give more time for the component to render via portal
     setTimeout(() => {
-      console.log("Triggering print dialog with A4 landscape settings");
+      console.log("Triggering print dialog with A4 landscape settings (direct)");
       window.print();
-      
+
       // Clean up after printing with onafterprint or timeout
       const cleanup = () => {
         setPrintMode(false);
+        setTempPrintedCoupons(null);
+        setTempPrintedContract(null);
         document.body.classList.remove('printing-coupons');
         const style = document.getElementById(printStyleId);
         if (style) style.remove();
       };
-      
+
       // Listen for print dialog close
       window.addEventListener('afterprint', cleanup, { once: true });
-      
+
       // Fallback cleanup after delay
       setTimeout(cleanup, 2000);
     }, 500);
@@ -492,6 +587,23 @@ export default function Contracts() {
             } : null,
             sales_agents: selectedContract.sales_agents || null,
             collectors: selectedContract.collectors || null,
+          }}
+        />
+      )}
+
+      {printMode && tempPrintedContract && tempPrintedCoupons && (
+        <PrintCoupon8x5
+          coupons={tempPrintedCoupons}
+          contract={{
+            contract_ref: tempPrintedContract.contract_ref,
+            tenor_days: tempPrintedContract.tenor_days,
+            customers: tempPrintedContract.customers ? {
+              name: tempPrintedContract.customers.name,
+              address: tempPrintedContract.customers.address || null,
+              business_address: tempPrintedContract.customers.business_address || null,
+            } : null,
+            sales_agents: tempPrintedContract.sales_agents || null,
+            collectors: tempPrintedContract.collectors || null,
           }}
         />
       )}
