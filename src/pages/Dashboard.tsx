@@ -223,7 +223,7 @@ export default function Dashboard() {
         <CardContent className="pt-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-muted-foreground mb-1">Keuntungan Bersih (Setelah Operasional)</p>
+              <p className="text-sm text-muted-foreground mb-1">Keuntungan Kotor, Sebelum Operasional</p>
               <p className={`text-3xl font-bold ${netProfit >= 0 ? 'text-green-600' : 'text-destructive'}`}>
                 {formatRupiah(netProfit)}
               </p>
