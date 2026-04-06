@@ -79,11 +79,11 @@ export default function Dashboard() {
     return expenses?.reduce((sum, exp) => sum + Number(exp.amount), 0) ?? 0;
   }, [expenses]);
 
-  const netProfit = useMemo(() => {
+  const grossProfit = useMemo(() => {
     const profit = monthlyData?.total_profit ?? 0;
     const commission = monthlyData?.total_commission ?? 0;
-    return profit - commission - totalExpenses;
-  }, [monthlyData?.total_profit, monthlyData?.total_commission, totalExpenses]);
+    return profit - commission;
+  }, [monthlyData?.total_profit, monthlyData?.total_commission]);
 
   const locale = i18n.language === 'id' ? 'id-ID' : 'en-US';
 
@@ -223,9 +223,9 @@ export default function Dashboard() {
         <CardContent className="pt-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-muted-foreground mb-1">Keuntungan Bersih (Setelah Operasional)</p>
-              <p className={`text-3xl font-bold ${netProfit >= 0 ? 'text-green-600' : 'text-destructive'}`}>
-                {formatRupiah(netProfit)}
+              <p className="text-sm text-muted-foreground mb-1">Keuntungan Kotor, Sebelum Operasional</p>
+              <p className={`text-3xl font-bold ${grossProfit >= 0 ? 'text-green-600' : 'text-destructive'}`}>
+                {formatRupiah(grossProfit)}
               </p>
             </div>
             <div className="text-right">
