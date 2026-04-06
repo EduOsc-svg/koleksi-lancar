@@ -79,11 +79,11 @@ export default function Dashboard() {
     return expenses?.reduce((sum, exp) => sum + Number(exp.amount), 0) ?? 0;
   }, [expenses]);
 
-  const netProfit = useMemo(() => {
+  const grossProfit = useMemo(() => {
     const profit = monthlyData?.total_profit ?? 0;
     const commission = monthlyData?.total_commission ?? 0;
-    return profit - commission - totalExpenses;
-  }, [monthlyData?.total_profit, monthlyData?.total_commission, totalExpenses]);
+    return profit - commission;
+  }, [monthlyData?.total_profit, monthlyData?.total_commission]);
 
   const locale = i18n.language === 'id' ? 'id-ID' : 'en-US';
 
