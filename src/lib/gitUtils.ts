@@ -7,6 +7,8 @@ export interface GitStatus {
   totalChanges: number;
   untrackedFiles: number;
   hasUncommittedChanges: boolean;
+  hasChanges: boolean;
+  isMoreThan3Files: boolean;
   branch: string;
   lastCommitMessage: string;
   lastCommitDate: string;
@@ -20,6 +22,8 @@ const emptyStatus: GitStatus = {
   totalChanges: 0,
   untrackedFiles: 0,
   hasUncommittedChanges: false,
+  hasChanges: false,
+  isMoreThan3Files: false,
   branch: 'main',
   lastCommitMessage: '',
   lastCommitDate: '',
@@ -30,8 +34,20 @@ export async function getGitStatus(): Promise<GitStatus> {
   return emptyStatus;
 }
 
-export async function commitAllChanges(_message?: string): Promise<string> {
-  return 'Git operations not available in browser';
+export async function checkGitWarnings(): Promise<{ warnings: string[]; recommendations: string[] }> {
+  return { warnings: [], recommendations: [] };
+}
+
+export async function commitAllChanges(_message?: string): Promise<{ success: boolean; message: string }> {
+  return { success: false, message: 'Git operations not available in browser' };
+}
+
+export async function pullFromRemote(): Promise<{ success: boolean; message: string }> {
+  return { success: false, message: 'Git operations not available in browser' };
+}
+
+export async function pushToRemote(): Promise<{ success: boolean; message: string }> {
+  return { success: false, message: 'Git operations not available in browser' };
 }
 
 export async function getCurrentBranch(): Promise<string> {
