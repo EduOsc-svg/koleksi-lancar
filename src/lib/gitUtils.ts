@@ -34,7 +34,7 @@ export async function getGitStatus(): Promise<GitStatus> {
   return emptyStatus;
 }
 
-export async function checkGitWarnings(_threshold?: number): Promise<{ warnings: string[]; recommendations: string[]; shouldWarn: boolean }> {
+export async function checkGitWarnings(_options?: { threshold?: number } | number): Promise<{ warnings: string[]; recommendations: string[]; shouldWarn: boolean }> {
   return { warnings: [], recommendations: [], shouldWarn: false };
 }
 
