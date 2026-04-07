@@ -173,8 +173,8 @@ export const exportYearlyReportToExcel = async (
     const sectionTitleRow = agentSheet.addRow([`${monthLabel.toUpperCase()}`]);
     sectionTitleRow.getCell(1).font = { bold: true, size: 12 };
 
-    // Table header for this month
-    const headers = ['No', 'Tanggal', 'Kode Sales', 'Nama Konsumen', 'Orderan Barang', 'Modal', 'Omset', 'Laba Kotor'];
+  // Table header for this month (requested columns)
+  const headers = ['No', 'Tanggal', 'Kode Kontrak', 'Nama Konsumen', 'Produk', 'Omset', 'Persentase (Total)'];
     const headerRow = agentSheet.addRow(headers);
     headerRow.font = { bold: true };
     headerRow.eachCell((cell) => {
@@ -198,20 +198,23 @@ export const exportYearlyReportToExcel = async (
       const empty = agentSheet.addRow(['', '', '', 'Tidak ada kontrak di bulan ini']);
       empty.getCell(4).font = { italic: true, color: { argb: 'FF999999' } };
     } else {
+      const monthTotal = monthDetail.total_omset || contracts.reduce((s, c) => s + Number(c.omset || 0), 0);
       contracts.forEach((contract, idx) => {
         const dateLabel = contract.start_date ? format(new Date(contract.start_date), 'yyyy-MM-dd') : '';
-        const labaKotor = Number(contract.omset || 0) - Number(contract.modal || 0);
+        const omsetVal = Number(contract.omset || 0);
+        const pct = monthTotal > 0 ? omsetVal / monthTotal : 0;
         const row = agentSheet.addRow([
           idx + 1,
           dateLabel,
-          contract.agent_code,
+          contract.contract_ref || '',
           contract.customer_name,
           contract.product_type,
-          contract.modal,
-          contract.omset,
-          labaKotor,
+          omsetVal,
+          pct,
         ]);
-        [6, 7, 8].forEach(col => row.getCell(col).numFmt = '"Rp "#,##0');
+        // format Omset and Persentase
+        row.getCell(6).numFmt = '"Rp "#,##0';
+        row.getCell(7).numFmt = '0.00%';
         row.eachCell((cell) => {
           cell.border = { top: { style: 'thin' }, bottom: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' } };
         });
@@ -219,11 +222,12 @@ export const exportYearlyReportToExcel = async (
 
       // Totals for the month
       const detailEndRow = (agentSheet.lastRow?.number || startRow) ;
-      const totalRow = agentSheet.addRow(['', '', '', 'TOTAL', '', { formula: `SUM(F${startRow}:F${detailEndRow})` }, { formula: `SUM(G${startRow}:G${detailEndRow})` }, { formula: `SUM(H${startRow}:H${detailEndRow})` }]);
+      const totalRow = agentSheet.addRow(['', '', 'TOTAL', '', '', { formula: `SUM(F${startRow}:F${detailEndRow})` }, { formula: `IF(SUM(F${startRow}:F${detailEndRow})=0,0,1)` }]);
       totalRow.font = { bold: true };
       totalRow.eachCell((cell, colNumber) => {
         cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFC6E0B4' } };
-        if (colNumber >= 6 && colNumber <= 8) cell.numFmt = '"Rp "#,##0';
+        if (colNumber === 6) cell.numFmt = '"Rp "#,##0';
+        if (colNumber === 7) cell.numFmt = '0.00%';
         cell.border = { top: { style: 'thin' }, bottom: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' } };
       });
     }
@@ -254,7 +258,7 @@ export const exportYearlyReportToExcel = async (
 
     // Contract details table
     sheet.addRow([]);
-  const detailHeaders = ['No', 'Kode Sales', 'Nama Konsumen', 'Orderan Barang', 'Modal', 'Omset', 'Laba Kotor'];
+  const detailHeaders = ['No', 'Tanggal', 'Kode Kontrak', 'Nama Konsumen', 'Produk', 'Omset', 'Persentase (Total)'];
     const detailHeaderRow = sheet.addRow(detailHeaders);
     detailHeaderRow.font = { bold: true };
     detailHeaderRow.eachCell((cell) => {
@@ -276,21 +280,23 @@ export const exportYearlyReportToExcel = async (
         return da - db;
       });
 
+      const monthTotal = monthDetail.total_omset || sortedContracts.reduce((s, c) => s + Number(c.omset || 0), 0);
       sortedContracts.forEach((contract, idx) => {
-        const labaKotor = (Number(contract.omset || 0) - Number(contract.modal || 0));
+        const dateLabel = contract.start_date ? format(new Date(contract.start_date), 'yyyy-MM-dd') : '';
+        const omsetVal = Number(contract.omset || 0);
+        const pct = monthTotal > 0 ? omsetVal / monthTotal : 0;
         const row = sheet.addRow([
           idx + 1,
-          contract.agent_code,
+          dateLabel,
+          contract.contract_ref || '',
           contract.customer_name,
           contract.product_type,
-          contract.modal,
-          contract.omset,
-          labaKotor,
+          omsetVal,
+          pct,
         ]);
-        // format currency columns (E-G)
-        [5, 6, 7].forEach(col => {
-          row.getCell(col).numFmt = '"Rp "#,##0';
-        });
+        // format Omset and Persentase
+        row.getCell(6).numFmt = '"Rp "#,##0';
+        row.getCell(7).numFmt = '0.00%';
         row.eachCell((cell) => {
           cell.border = {
             top: { style: 'thin' }, bottom: { style: 'thin' },
@@ -303,15 +309,18 @@ export const exportYearlyReportToExcel = async (
       const detailEndRow = detailStartRow + monthDetail.contracts.length - 1;
       const totalRow = sheet.addRow([
         '', '', '', 'TOTAL',
-        { formula: `SUM(E${detailStartRow}:E${detailEndRow})` },
+        '',
         { formula: `SUM(F${detailStartRow}:F${detailEndRow})` },
-        { formula: `SUM(G${detailStartRow}:G${detailEndRow})` },
+        { formula: `IF(SUM(F${detailStartRow}:F${detailEndRow})=0,0,1)` },
       ]);
       totalRow.font = { bold: true };
       totalRow.eachCell((cell, colNumber) => {
         cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD9E2F3' } };
-        if (colNumber >= 5 && colNumber <= 7) {
+        if (colNumber === 6) {
           cell.numFmt = '"Rp "#,##0';
+        }
+        if (colNumber === 7) {
+          cell.numFmt = '0.00%';
         }
         cell.border = {
           top: { style: 'thin' }, bottom: { style: 'thin' },
