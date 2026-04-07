@@ -204,16 +204,6 @@ export default function Dashboard() {
             />
           </div>
 
-          <div className="w-[180px] flex-shrink-0">
-            <StatCard
-              icon={Percent}
-              iconColor="text-emerald-500"
-              label="Margin"
-              value={monthlyData?.profit_margin ?? 0}
-              valueColor="text-emerald-600"
-              isPercentage
-            />
-          </div>
         </div>
         <ScrollBar orientation="horizontal" />
       </ScrollArea>
