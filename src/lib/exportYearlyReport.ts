@@ -45,9 +45,9 @@ export const exportYearlyReportToExcel = async (
     ['Total Modal', data.total_modal, '"Rp "#,##0', 'Total modal yang dikeluarkan'],
     ['Total Omset', data.total_omset, '"Rp "#,##0', 'Total pinjaman yang disalurkan'],
     ['Keuntungan Kotor', data.total_profit, '"Rp "#,##0', 'Omset - Modal'],
-    ['Total Komisi', data.total_commission, '"Rp "#,##0', 'Komisi sales'],
     ['Biaya Operasional', data.total_expenses, '"Rp "#,##0', 'Total biaya operasional'],
-    ['Keuntungan Bersih', data.net_profit, '"Rp "#,##0', 'Profit - Komisi - Operasional'],
+    // Show Keuntungan Bersih as Keuntungan Kotor (user requested laba bersih -> laba kotor saja)
+    ['Keuntungan Bersih', data.total_profit, '"Rp "#,##0', 'Keuntungan Kotor (Omset - Modal)'],
     ['Jumlah Kontrak', data.contracts_count, '#,##0', 'Total kontrak aktif'],
     ['Kontrak Selesai', data.completed_count, '#,##0', 'Kontrak yang sudah lunas'],
     ['Kontrak Aktif', data.active_count, '#,##0', 'Kontrak yang masih berjalan'],
@@ -65,7 +65,7 @@ export const exportYearlyReportToExcel = async (
     row.getCell(1).font = { bold: true };
     row.getCell(2).numFmt = item[2];
     
-    // Highlight net profit
+    // Highlight net profit (now mapped to gross profit per request)
     if (item[0] === 'Keuntungan Bersih') {
       row.getCell(2).font = { bold: true, color: { argb: (item[1] as number) >= 0 ? 'FF008000' : 'FFFF0000' } };
     }
@@ -87,7 +87,7 @@ export const exportYearlyReportToExcel = async (
   const monthlySheet = workbook.addWorksheet('Breakdown Bulanan');
   
   // Header
-  const monthlyHeaders = ['Bulan', 'Modal', 'Omset', 'Operasional', 'Keuntungan', 'Komisi', 'Keuntungan Bersih', '% Keuntungan', 'Tertagih', 'Jumlah Kontrak'];
+  const monthlyHeaders = ['Bulan', 'Modal', 'Omset', 'Operasional', 'Keuntungan', 'Keuntungan Bersih', '% Keuntungan', 'Tertagih', 'Jumlah Kontrak'];
   const headerRow = monthlySheet.addRow(monthlyHeaders);
   headerRow.font = { bold: true };
   headerRow.eachCell((cell) => {
@@ -106,8 +106,7 @@ export const exportYearlyReportToExcel = async (
       month.total_omset,
       month.operational,
       month.profit,
-      month.commission,
-      // placeholders for Keuntungan Bersih and % Keuntungan
+      // Keuntungan Bersih will now be Keuntungan Kotor (same as profit)
       null,
       null,
       month.collected,
@@ -115,17 +114,17 @@ export const exportYearlyReportToExcel = async (
     ]);
 
     const rowNum = monthlyStartRow + index;
-    // Keuntungan Bersih = Keuntungan - Komisi - Operasional  -> columns: E(row)=5, F=6, D=4
-    added.getCell(7).value = { formula: `E${rowNum}-F${rowNum}-D${rowNum}` };
+    // Keuntungan Bersih = Keuntungan Kotor (same as Keuntungan column E)
+    added.getCell(6).value = { formula: `E${rowNum}` };
     // % Keuntungan = IF(Omset=0,0,KeuntunganBersih / Omset) -> Omset is column C (3)
-    added.getCell(8).value = { formula: `IF(C${rowNum}=0,0,G${rowNum}/C${rowNum})` };
+    added.getCell(7).value = { formula: `IF(C${rowNum}=0,0,F${rowNum}/C${rowNum})` };
 
-    // Format currency columns (B,C,D,E,F,G = 2-7) and also column 9 (Tertagih)
-    [2, 3, 4, 5, 6, 7, 9].forEach(colIndex => {
+    // Format currency columns (B,C,D,E,F = 2-6) and also column 8 (Tertagih)
+    [2, 3, 4, 5, 6, 8].forEach(colIndex => {
       added.getCell(colIndex).numFmt = '"Rp "#,##0';
     });
-    // format percent column (8)
-    added.getCell(8).numFmt = '0.00%';
+    // format percent column (7)
+    added.getCell(7).numFmt = '0.00%';
   });
 
   // Add totals row with SUM formulas
@@ -137,19 +136,18 @@ export const exportYearlyReportToExcel = async (
     { formula: `SUM(D${monthlyStartRow}:D${dataEndRow})` },
     { formula: `SUM(E${monthlyStartRow}:E${dataEndRow})` },
     { formula: `SUM(F${monthlyStartRow}:F${dataEndRow})` },
-    { formula: `SUM(G${monthlyStartRow}:G${dataEndRow})` },
-    // For percent column, compute overall percent: IF(total Omset=0,0, SUM(G)/SUM(C) )
-    { formula: `IF(SUM(C${monthlyStartRow}:C${dataEndRow})=0,0,SUM(G${monthlyStartRow}:G${dataEndRow})/SUM(C${monthlyStartRow}:C${dataEndRow}))` },
+    // For percent column, compute overall percent: IF(total Omset=0,0, SUM(KeuntunganBersih)/SUM(Omset) )
+    { formula: `IF(SUM(C${monthlyStartRow}:C${dataEndRow})=0,0,SUM(F${monthlyStartRow}:F${dataEndRow})/SUM(C${monthlyStartRow}:C${dataEndRow}))` },
+    { formula: `SUM(H${monthlyStartRow}:H${dataEndRow})` },
     { formula: `SUM(I${monthlyStartRow}:I${dataEndRow})` },
-    { formula: `SUM(J${monthlyStartRow}:J${dataEndRow})` },
   ]);
   totalsRow.font = { bold: true };
   totalsRow.eachCell((cell, colNumber) => {
     cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD9E2F3' } };
-    if (colNumber >= 2 && colNumber <= 7 || colNumber === 9) {
+    if (colNumber >= 2 && colNumber <= 6 || colNumber === 8) {
       cell.numFmt = '"Rp "#,##0';
     }
-    if (colNumber === 8) {
+    if (colNumber === 7) {
       cell.numFmt = '0.00%';
     }
   });
@@ -157,82 +155,87 @@ export const exportYearlyReportToExcel = async (
   // Set column widths
   monthlySheet.getColumn(1).width = 15;
   // Set reasonable widths; include new columns 7 (Keuntungan Bersih) and 8 (% Keuntungan)
-  [2, 3, 4, 5, 6, 7, 9].forEach(col => {
+  [2, 3, 4, 5, 6, 8].forEach(col => {
     monthlySheet.getColumn(col).width = 18;
   });
-  monthlySheet.getColumn(8).width = 12; // percent column
-  monthlySheet.getColumn(10).width = 15;
+  monthlySheet.getColumn(7).width = 12; // percent column
+  monthlySheet.getColumn(9).width = 15;
 
-  // ============ Sheet 3: Performa Sales Agent ============
+  // ============ Sheet 3: Performa Sales Agent (per bulan, kontrak per tanggal ascending) ============
   const agentSheet = workbook.addWorksheet('Performa Sales');
-  
-  // Header
-  const agentHeaders = ['No', 'Kode', 'Nama', 'Komisi %', 'Modal', 'Omset', 'Keuntungan', 'Komisi (Rp)', 'Jumlah Kontrak'];
-  const agentHeaderRow = agentSheet.addRow(agentHeaders);
-  agentHeaderRow.font = { bold: true };
-  agentHeaderRow.eachCell((cell) => {
-    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF70AD47' } };
-    cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
-    cell.alignment = { horizontal: 'center' };
+
+  // For each month, render a labeled section with contracts sorted by start_date ascending
+  data.monthly_details.forEach((monthDetail: MonthlyDetailData) => {
+    const monthLabel = monthDetail.monthLabel || monthDetail.monthKey;
+    // Section title
+    agentSheet.addRow([]);
+    agentSheet.mergeCells(`A${agentSheet.lastRow?.number || 1}:H${agentSheet.lastRow?.number || 1}`);
+    const sectionTitleRow = agentSheet.addRow([`${monthLabel.toUpperCase()}`]);
+    sectionTitleRow.getCell(1).font = { bold: true, size: 12 };
+
+    // Table header for this month
+    const headers = ['No', 'Tanggal', 'Kode Sales', 'Nama Konsumen', 'Orderan Barang', 'Modal', 'Omset', 'Laba Kotor'];
+    const headerRow = agentSheet.addRow(headers);
+    headerRow.font = { bold: true };
+    headerRow.eachCell((cell) => {
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF70AD47' } };
+      cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+      cell.alignment = { horizontal: 'center' };
+      cell.border = {
+        top: { style: 'thin' }, bottom: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' }
+      };
+    });
+
+    // Sort contracts by start_date ascending
+    const contracts = (monthDetail.contracts || []).slice().sort((a, b) => {
+      const da = a.start_date ? new Date(a.start_date).getTime() : 0;
+      const db = b.start_date ? new Date(b.start_date).getTime() : 0;
+      return da - db;
+    });
+
+    const startRow = (agentSheet.lastRow?.number || 1) + 1;
+    if (contracts.length === 0) {
+      const empty = agentSheet.addRow(['', '', '', 'Tidak ada kontrak di bulan ini']);
+      empty.getCell(4).font = { italic: true, color: { argb: 'FF999999' } };
+    } else {
+      contracts.forEach((contract, idx) => {
+        const dateLabel = contract.start_date ? format(new Date(contract.start_date), 'yyyy-MM-dd') : '';
+        const labaKotor = Number(contract.omset || 0) - Number(contract.modal || 0);
+        const row = agentSheet.addRow([
+          idx + 1,
+          dateLabel,
+          contract.agent_code,
+          contract.customer_name,
+          contract.product_type,
+          contract.modal,
+          contract.omset,
+          labaKotor,
+        ]);
+        [6, 7, 8].forEach(col => row.getCell(col).numFmt = '"Rp "#,##0');
+        row.eachCell((cell) => {
+          cell.border = { top: { style: 'thin' }, bottom: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' } };
+        });
+      });
+
+      // Totals for the month
+      const detailEndRow = (agentSheet.lastRow?.number || startRow) ;
+      const totalRow = agentSheet.addRow(['', '', '', 'TOTAL', '', { formula: `SUM(F${startRow}:F${detailEndRow})` }, { formula: `SUM(G${startRow}:G${detailEndRow})` }, { formula: `SUM(H${startRow}:H${detailEndRow})` }]);
+      totalRow.font = { bold: true };
+      totalRow.eachCell((cell, colNumber) => {
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFC6E0B4' } };
+        if (colNumber >= 6 && colNumber <= 8) cell.numFmt = '"Rp "#,##0';
+        cell.border = { top: { style: 'thin' }, bottom: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' } };
+      });
+    }
   });
 
-  // Data rows with formulas
-  const agentStartRow = 2;
-  data.agents.forEach((agent, index) => {
-    const rowNum = agentStartRow + index;
-    const row = agentSheet.addRow([
-      index + 1,
-      agent.agent_code,
-      agent.agent_name,
-      agent.commission_percentage / 100,
-      agent.total_modal,
-      agent.total_omset,
-      // Profit formula: Omset - Modal
-      { formula: `F${rowNum}-E${rowNum}` },
-      // Commission formula: Omset * Commission %
-      { formula: `F${rowNum}*D${rowNum}` },
-      agent.contracts_count,
-    ]);
-
-    // Format cells
-    row.getCell(4).numFmt = '0%';
-    [5, 6, 7, 8].forEach(colIndex => {
-      row.getCell(colIndex).numFmt = '"Rp "#,##0';
-    });
-  });
-
-  // Add totals row with SUM formulas
-  const agentDataEndRow = agentStartRow + data.agents.length - 1;
-  if (data.agents.length > 0) {
-    const agentTotalsRow = agentSheet.addRow([
-      '',
-      '',
-      'TOTAL',
-      '',
-      { formula: `SUM(E${agentStartRow}:E${agentDataEndRow})` },
-      { formula: `SUM(F${agentStartRow}:F${agentDataEndRow})` },
-      { formula: `SUM(G${agentStartRow}:G${agentDataEndRow})` },
-      { formula: `SUM(H${agentStartRow}:H${agentDataEndRow})` },
-      { formula: `SUM(I${agentStartRow}:I${agentDataEndRow})` },
-    ]);
-    agentTotalsRow.font = { bold: true };
-    agentTotalsRow.eachCell((cell, colNumber) => {
-      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFC6E0B4' } };
-      if (colNumber >= 5 && colNumber <= 8) {
-        cell.numFmt = '"Rp "#,##0';
-      }
-    });
-  }
-
-  // Set column widths
+  // Set reasonable column widths for agent sheet
   agentSheet.getColumn(1).width = 5;
-  agentSheet.getColumn(2).width = 10;
-  agentSheet.getColumn(3).width = 25;
-  agentSheet.getColumn(4).width = 12;
-  [5, 6, 7, 8].forEach(col => {
-    agentSheet.getColumn(col).width = 18;
-  });
-  agentSheet.getColumn(9).width = 15;
+  agentSheet.getColumn(2).width = 12;
+  agentSheet.getColumn(3).width = 12;
+  agentSheet.getColumn(4).width = 25;
+  agentSheet.getColumn(5).width = 20;
+  [6, 7, 8].forEach(col => agentSheet.getColumn(col).width = 18);
 
 
   // ============ Sheet 5-16: Detail Bulanan (Jan - Des) ============
@@ -243,7 +246,7 @@ export const exportYearlyReportToExcel = async (
     const sheet = workbook.addWorksheet(sheetName);
 
   // Title
-  sheet.mergeCells('A1:H1');
+  sheet.mergeCells('A1:G1');
     const mTitleCell = sheet.getCell('A1');
     mTitleCell.value = `DETAIL TRANSAKSI - ${sheetName.toUpperCase()} ${year}`;
     mTitleCell.font = { bold: true, size: 14 };
@@ -251,7 +254,7 @@ export const exportYearlyReportToExcel = async (
 
     // Contract details table
     sheet.addRow([]);
-  const detailHeaders = ['No', 'Kode Sales', 'Nama Konsumen', 'Orderan Barang', 'Modal', 'Omset', 'Komisi', 'Laba Bersih'];
+  const detailHeaders = ['No', 'Kode Sales', 'Nama Konsumen', 'Orderan Barang', 'Modal', 'Omset', 'Laba Kotor'];
     const detailHeaderRow = sheet.addRow(detailHeaders);
     detailHeaderRow.font = { bold: true };
     detailHeaderRow.eachCell((cell) => {
@@ -266,7 +269,15 @@ export const exportYearlyReportToExcel = async (
 
     const detailStartRow = 4;
     if (monthDetail.contracts.length > 0) {
-      monthDetail.contracts.forEach((contract, idx) => {
+      // Sort contracts by start_date ascending so the earliest dates appear first
+      const sortedContracts = (monthDetail.contracts || []).slice().sort((a, b) => {
+        const da = a.start_date ? new Date(a.start_date).getTime() : 0;
+        const db = b.start_date ? new Date(b.start_date).getTime() : 0;
+        return da - db;
+      });
+
+      sortedContracts.forEach((contract, idx) => {
+        const labaKotor = (Number(contract.omset || 0) - Number(contract.modal || 0));
         const row = sheet.addRow([
           idx + 1,
           contract.agent_code,
@@ -274,11 +285,10 @@ export const exportYearlyReportToExcel = async (
           contract.product_type,
           contract.modal,
           contract.omset,
-          contract.commission,
-          contract.net_profit,
+          labaKotor,
         ]);
-        // format currency columns (E-H)
-        [5, 6, 7, 8].forEach(col => {
+        // format currency columns (E-G)
+        [5, 6, 7].forEach(col => {
           row.getCell(col).numFmt = '"Rp "#,##0';
         });
         row.eachCell((cell) => {
@@ -296,12 +306,11 @@ export const exportYearlyReportToExcel = async (
         { formula: `SUM(E${detailStartRow}:E${detailEndRow})` },
         { formula: `SUM(F${detailStartRow}:F${detailEndRow})` },
         { formula: `SUM(G${detailStartRow}:G${detailEndRow})` },
-        { formula: `SUM(H${detailStartRow}:H${detailEndRow})` },
       ]);
       totalRow.font = { bold: true };
       totalRow.eachCell((cell, colNumber) => {
         cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD9E2F3' } };
-        if (colNumber >= 5 && colNumber <= 8) {
+        if (colNumber >= 5 && colNumber <= 7) {
           cell.numFmt = '"Rp "#,##0';
         }
         cell.border = {
@@ -382,8 +391,8 @@ export const exportYearlyReportToExcel = async (
     ['Total Pinjaman (Omset)', '= Modal × 1.2', 'Margin keuntungan 20%'],
     ['Keuntungan Kotor', '= Omset - Modal', 'Selisih nilai pinjaman dan modal'],
     ['Cicilan Harian', '= Omset ÷ Tenor', 'Pembagian merata per hari kerja'],
-    ['Komisi Agen', '= Omset × Persentase Komisi', 'Komisi berdasarkan tier dinamis'],
-    ['Keuntungan Bersih', '= Profit Kotor - Komisi - Operasional', 'Laba setelah semua biaya'],
+    // Komisi dihapus dari laporan keuangan per permintaan
+    ['Keuntungan Bersih', '= Omset - Modal', 'Laba setelah penyesuaian (sekarang = Keuntungan Kotor)'],
     ['Margin Keuntungan', '= (Profit Kotor ÷ Omset) × 100%', 'Persentase margin dari omset'],
     ['Tingkat Penagihan', '= Tertagih ÷ (Tertagih + Sisa) × 100%', 'Efektivitas penagihan'],
     ['Trend Analysis', '= Rata-rata Harian × Hari dalam Bulan', 'Proyeksi penagihan bulanan'],

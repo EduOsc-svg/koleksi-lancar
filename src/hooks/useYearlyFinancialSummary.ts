@@ -38,6 +38,7 @@ export interface MonthlyContractDetail {
   omset: number;
   commission: number;
   net_profit: number;
+  start_date?: string;
 }
 
 export interface MonthlyDetailData {
@@ -263,6 +264,7 @@ export const useYearlyFinancialSummary = (year: Date = new Date(), statusFilter:
             omset,
             commission: 0, // placeholder, will be filled after monthly totals known
             net_profit: profit, // will adjust after commission allocation
+            start_date: contract.start_date,
           });
         }
 
