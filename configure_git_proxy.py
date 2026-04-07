@@ -166,7 +166,7 @@ def main():
     print("=" * 50)
     
     # Default proxy configuration
-    proxy_ip = "10.143.233.160"
+    proxy_ip = "10.57.71.7"
     proxy_port = 7071
     
     # Allow command line arguments
