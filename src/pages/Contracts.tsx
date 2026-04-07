@@ -271,6 +271,14 @@ export default function Contracts() {
       toast.error("Pilih tanggal mulai terlebih dahulu");
       return;
     }
+    if (!selectedContract && !formData.sales_agent_id) {
+      toast.error("Pilih sales agent terlebih dahulu");
+      return;
+    }
+    if (!selectedContract && !formData.collector_id) {
+      toast.error("Pilih kolektor terlebih dahulu");
+      return;
+    }
     try {
       const dailyAmount = formData.daily_installment_amount || calculateInstallment();
       const tenorDays = parseInt(formData.tenor_days) || 100;
@@ -334,6 +342,14 @@ export default function Contracts() {
     }
     if (!formData.start_date) {
       toast.error("Pilih tanggal mulai terlebih dahulu");
+      return;
+    }
+    if (!formData.sales_agent_id) {
+      toast.error("Pilih sales agent terlebih dahulu");
+      return;
+    }
+    if (!formData.collector_id) {
+      toast.error("Pilih kolektor terlebih dahulu");
       return;
     }
 
