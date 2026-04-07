@@ -526,15 +526,6 @@ export default function Dashboard() {
                   hoverInfo={`Total: ${formatRupiah(yearlyFinancial?.total_expenses ?? 0)} | Biaya operasional tahun ${selectedYear.getFullYear()}`}
                 />
 
-                <StatCard
-                  icon={CheckCircle}
-                  iconColor={(yearlyFinancial?.net_profit ?? 0) >= 0 ? "text-emerald-500" : "text-red-500"}
-                  label="Keuntungan Bersih"
-                  value={yearlyFinancial?.net_profit ?? 0}
-                  valueColor={(yearlyFinancial?.net_profit ?? 0) >= 0 ? "text-emerald-600" : "text-red-600"}
-                  subtitle={`Tahun ${selectedYear.getFullYear()}`}
-                  hoverInfo={`Total: ${formatRupiah(yearlyFinancial?.net_profit ?? 0)} | Lunas: ${yearlyFinancial?.completed_count ?? 0} | Aktif: ${yearlyFinancial?.active_count ?? 0}`}
-                />
               </div>
 
               {/* Monthly Breakdown Chart */}
