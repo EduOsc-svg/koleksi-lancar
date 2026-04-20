@@ -1,19 +1,21 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { calculateTieredCommission, CommissionTier } from './useCommissionTiers';
+import { realizeContract, sumPaymentsByContract } from '@/lib/cashBasisCalc';
 
 export interface AgentPerformanceData {
   agent_id: string;
   agent_name: string;
   agent_code: string;
   commission_percentage: number;
-  total_omset: number;  // Total revenue/penjualan dari kontrak
-  total_modal: number;  // Total modal/investasi awal
+  total_omset: number;      // realized cash basis
+  total_modal: number;      // realized cash basis
   total_contracts: number;
   total_commission: number;
-  total_to_collect: number; // Total yang harus ditagih (unpaid coupons)
-  total_collected: number;  // Total yang sudah tertagih
-  profit: number; // Omset - Modal (keuntungan bersih)
-  profit_margin: number; // Persentase keuntungan
+  total_to_collect: number;
+  total_collected: number;
+  profit: number;
+  profit_margin: number;
 }
 
 export interface AgentContractHistory {
@@ -21,9 +23,9 @@ export interface AgentContractHistory {
   customer_name: string;
   customer_code: string | null;
   product_type: string | null;
-  modal: number; // Modal awal kontrak
-  omset: number; // Total yang dibayar customer
-  profit: number; // Keuntungan = Omset - Modal
+  modal: number;            // realized (proporsional pembayaran)
+  omset: number;            // realized (= total dibayar)
+  profit: number;
   tenor_days: number;
   start_date: string;
   status: string;
@@ -31,137 +33,94 @@ export interface AgentContractHistory {
 
 export const useAgentPerformance = () => {
   return useQuery({
-    queryKey: ['agent_performance'],
+    queryKey: ['agent_performance_cash'],
     queryFn: async () => {
-      // Get all sales agents with their commission percentage
-      const { data: agents, error: agentsError } = await supabase
-        .from('sales_agents')
-        .select('id, name, agent_code, commission_percentage')
-        .order('name');
-      
+      const [
+        { data: agents, error: agentsError },
+        { data: contracts, error: contractsError },
+        { data: unpaidCoupons, error: couponsError },
+        { data: payments, error: paymentsError },
+        { data: tiersData },
+      ] = await Promise.all([
+        supabase.from('sales_agents').select('id, name, agent_code').order('name'),
+        supabase.from('credit_contracts').select('id, omset, total_loan_amount, sales_agent_id'),
+        supabase
+          .from('installment_coupons')
+          .select('amount, contract_id, credit_contracts!inner(sales_agent_id)')
+          .eq('status', 'unpaid'),
+        supabase.from('payment_logs').select('amount_paid, contract_id'),
+        supabase.from('commission_tiers').select('*').order('min_amount', { ascending: true }),
+      ]);
+
       if (agentsError) throw agentsError;
-
-      // Get all contracts with omset (modal) and loan info - now using sales_agent_id directly
-      const { data: contracts, error: contractsError } = await supabase
-        .from('credit_contracts')
-        .select('id, omset, total_loan_amount, sales_agent_id');
-      
       if (contractsError) throw contractsError;
-
-      // Get all unpaid coupons for calculating "to collect"
-      const { data: unpaidCoupons, error: couponsError } = await supabase
-        .from('installment_coupons')
-        .select(`
-          amount,
-          contract_id,
-          credit_contracts!inner(
-            sales_agent_id
-          )
-        `)
-        .eq('status', 'unpaid');
-      
       if (couponsError) throw couponsError;
-
-      // Get all payments for calculating "collected"
-      const { data: payments, error: paymentsError } = await supabase
-        .from('payment_logs')
-        .select(`
-          amount_paid,
-          contract_id,
-          credit_contracts!inner(
-            sales_agent_id
-          )
-        `);
-      
       if (paymentsError) throw paymentsError;
 
-      // Aggregate data per sales agent
-      const agentDataMap = new Map<string, {
+      const tiers: CommissionTier[] = (tiersData || []) as CommissionTier[];
+      const paidByContract = sumPaymentsByContract(payments || []);
+
+      const agentMap = new Map<string, {
         total_omset: number;
         total_modal: number;
-        total_contracts: number;
-        total_to_collect: number;
         total_collected: number;
+        total_to_collect: number;
+        contract_ids: Set<string>;
       }>();
 
-      // Process contracts - use sales_agent_id directly from contract
-      (contracts || []).forEach((contract: any) => {
-        const salesAgentId = contract.sales_agent_id;
-        if (salesAgentId) {
-          const existing = agentDataMap.get(salesAgentId) || {
-            total_omset: 0,
-            total_modal: 0,
-            total_contracts: 0,
-            total_to_collect: 0,
-            total_collected: 0,
-          };
-          
-          // Modal = field omset, Omset = total_loan_amount
-          const modal = Number(contract.omset || 0);
-          const omset = Number(contract.total_loan_amount || 0);
-          
-          agentDataMap.set(salesAgentId, {
-            ...existing,
-            total_omset: existing.total_omset + omset,
-            total_modal: existing.total_modal + modal,
-            total_contracts: existing.total_contracts + 1,
-          });
-        }
-      });
-
-      // Process unpaid coupons
-      (unpaidCoupons || []).forEach((coupon: any) => {
-        const salesAgentId = coupon.credit_contracts?.sales_agent_id;
-        if (salesAgentId) {
-          const existing = agentDataMap.get(salesAgentId);
-          if (existing) {
-            existing.total_to_collect += Number(coupon.amount || 0);
-          }
-        }
-      });
-
-      // Process payments
-      (payments || []).forEach((payment: any) => {
-        const salesAgentId = payment.credit_contracts?.sales_agent_id;
-        if (salesAgentId) {
-          const existing = agentDataMap.get(salesAgentId);
-          if (existing) {
-            existing.total_collected += Number(payment.amount_paid || 0);
-          }
-        }
-      });
-
-      // Combine with agent info
-      const result: AgentPerformanceData[] = (agents || []).map((agent) => {
-        const data = agentDataMap.get(agent.id) || {
-          total_omset: 0,
-          total_modal: 0,
-          total_contracts: 0,
-          total_to_collect: 0,
-          total_collected: 0,
+      (contracts || []).forEach((c: any) => {
+        const agentId = c.sales_agent_id;
+        if (!agentId) return;
+        const totalPaid = paidByContract.get(c.id) || 0;
+        const realized = realizeContract({
+          contract_id: c.id,
+          modal_full: Number(c.omset || 0),
+          omset_full: Number(c.total_loan_amount || 0),
+          total_paid: totalPaid,
+        });
+        const existing = agentMap.get(agentId) || {
+          total_omset: 0, total_modal: 0, total_collected: 0, total_to_collect: 0,
+          contract_ids: new Set<string>(),
         };
-        const commissionPct = Number(agent.commission_percentage) || 0;
-        const totalCommission = (data.total_omset * commissionPct) / 100;
-        const profit = data.total_omset - data.total_modal; // Keuntungan = Omset - Modal
-        const profitMargin = data.total_omset > 0 ? (profit / data.total_omset) * 100 : 0;
-        
+        existing.total_omset += realized.omset_realized;
+        existing.total_modal += realized.modal_realized;
+        existing.total_collected += totalPaid;
+        if (totalPaid > 0) existing.contract_ids.add(c.id);
+        agentMap.set(agentId, existing);
+      });
+
+      (unpaidCoupons || []).forEach((coupon: any) => {
+        const agentId = coupon.credit_contracts?.sales_agent_id;
+        if (!agentId) return;
+        const existing = agentMap.get(agentId);
+        if (existing) existing.total_to_collect += Number(coupon.amount || 0);
+      });
+
+      const result: AgentPerformanceData[] = (agents || []).map((agent) => {
+        const data = agentMap.get(agent.id);
+        const total_omset = data?.total_omset || 0;
+        const total_modal = data?.total_modal || 0;
+        const commissionPct = total_omset > 0 ? calculateTieredCommission(total_omset, tiers) : 0;
+        const totalCommission = (total_omset * commissionPct) / 100;
+        const profit = total_omset - total_modal;
+        const profitMargin = total_omset > 0 ? (profit / total_omset) * 100 : 0;
+
         return {
           agent_id: agent.id,
           agent_name: agent.name,
           agent_code: agent.agent_code,
           commission_percentage: commissionPct,
-          total_omset: data.total_omset,
-          total_modal: data.total_modal,
-          total_contracts: data.total_contracts,
+          total_omset,
+          total_modal,
+          total_contracts: data?.contract_ids.size || 0,
           total_commission: totalCommission,
-          total_to_collect: data.total_to_collect,
-          total_collected: data.total_collected,
+          total_to_collect: data?.total_to_collect || 0,
+          total_collected: data?.total_collected || 0,
           profit,
           profit_margin: profitMargin,
         };
       });
 
-      // Sort by profit descending
       return result.sort((a, b) => b.profit - a.profit);
     },
   });
@@ -169,44 +128,41 @@ export const useAgentPerformance = () => {
 
 export const useAgentContractHistory = (agentId: string | null) => {
   return useQuery({
-    queryKey: ['agent_contract_history', agentId],
+    queryKey: ['agent_contract_history_cash', agentId],
     queryFn: async () => {
       if (!agentId) return [];
 
-      const { data, error } = await supabase
-        .from('credit_contracts')
-        .select(`
-          id,
-          contract_ref,
-          product_type,
-          omset,
-          total_loan_amount,
-          tenor_days,
-          start_date,
-          status,
-          sales_agent_id,
-          customers(
-            name
-          )
-        `)
-        .eq('sales_agent_id', agentId)
-        .order('start_date', { ascending: false });
-      
+      const [
+        { data: contracts, error },
+        { data: payments },
+      ] = await Promise.all([
+        supabase
+          .from('credit_contracts')
+          .select(`id, contract_ref, product_type, omset, total_loan_amount, tenor_days, start_date, status, sales_agent_id, customers(name)`)
+          .eq('sales_agent_id', agentId)
+          .order('start_date', { ascending: false }),
+        supabase.from('payment_logs').select('amount_paid, contract_id'),
+      ]);
       if (error) throw error;
 
-      return (data || []).map((contract: any) => {
-        const modal = Number(contract.omset || 0); // Field omset sebenarnya adalah modal
-        const omset = Number(contract.total_loan_amount || 0); // Total loan amount adalah omset sebenarnya
-        const profit = omset - modal; // Keuntungan = Omset - Modal
-        
+      const paidByContract = sumPaymentsByContract(payments || []);
+
+      return (contracts || []).map((contract: any) => {
+        const totalPaid = paidByContract.get(contract.id) || 0;
+        const realized = realizeContract({
+          contract_id: contract.id,
+          modal_full: Number(contract.omset || 0),
+          omset_full: Number(contract.total_loan_amount || 0),
+          total_paid: totalPaid,
+        });
         return {
           contract_ref: contract.contract_ref,
           customer_name: contract.customers?.name || '-',
-          customer_code: contract.customers?.customer_code || null,
+          customer_code: null,
           product_type: contract.product_type,
-          modal,
-          omset,
-          profit,
+          modal: realized.modal_realized,
+          omset: realized.omset_realized,
+          profit: realized.profit_realized,
           tenor_days: contract.tenor_days,
           start_date: contract.start_date,
           status: contract.status,
