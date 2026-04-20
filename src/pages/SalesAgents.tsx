@@ -219,16 +219,28 @@ export default function SalesAgents() {
       return;
     }
 
-    // Fetch all contracts with customer details for per-agent sheets
-    const { data: allContracts, error: contractsError } = await supabase
-      .from('credit_contracts')
-      .select('id, contract_ref, product_type, total_loan_amount, start_date, sales_agent_id, customers(name, phone)')
-      .order('start_date', { ascending: false });
+    // Fetch all contracts + payments for cash-basis realisation per kontrak
+    const [
+      { data: allContracts, error: contractsError },
+      { data: allPayments, error: paymentsError },
+    ] = await Promise.all([
+      supabase
+        .from('credit_contracts')
+        .select('id, contract_ref, product_type, omset, total_loan_amount, start_date, sales_agent_id, customers(name, phone)')
+        .order('start_date', { ascending: false }),
+      supabase.from('payment_logs').select('amount_paid, contract_id'),
+    ]);
 
-    if (contractsError) {
+    if (contractsError || paymentsError) {
       toast.error("Gagal mengambil data kontrak");
       return;
     }
+
+    // Sum pembayaran per kontrak (cash basis)
+    const paidByContract = new Map<string, number>();
+    (allPayments || []).forEach((p: any) => {
+      paidByContract.set(p.contract_id, (paidByContract.get(p.contract_id) || 0) + Number(p.amount_paid || 0));
+    });
 
     const workbook = new ExcelJS.Workbook();
     workbook.creator = 'Management System Kredit';
