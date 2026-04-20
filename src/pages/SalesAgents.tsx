@@ -341,9 +341,10 @@ export default function SalesAgents() {
 
     ws1.columns = COL_WIDTHS_1.map((width) => ({ width }));
 
-    // ===== SHEET 2+: Per Sales Agent =====
-    const HEADERS_2 = ['No', 'Tanggal', 'Kode Kontrak', 'Produk', 'Nama Konsumen', 'Telepon Konsumen', 'Omset'];
-    const COL_WIDTHS_2 = [5, 14, 18, 25, 25, 20, 20];
+    // ===== SHEET 2+: Per Sales Agent (Cash Basis) =====
+    // Omset = total sudah dibayar (cash basis), bukan total_loan_amount mentah
+    const HEADERS_2 = ['No', 'Tanggal', 'Kode Kontrak', 'Produk', 'Nama Konsumen', 'Telepon Konsumen', 'Omset Tertagih'];
+    const COL_WIDTHS_2 = [5, 14, 18, 25, 25, 20, 22];
 
     agents.forEach((agent) => {
       const agentContracts = (allContracts || []).filter(
@@ -363,7 +364,7 @@ export default function SalesAgents() {
 
       sheet.mergeCells('A2:G2');
       const d1 = sheet.getCell('A2');
-      d1.value = `Per tanggal: ${new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })}`;
+      d1.value = `Per tanggal: ${new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })} (Cash Basis)`;
       d1.font = { italic: true, size: 12 };
       d1.alignment = { horizontal: 'center' };
 
@@ -380,6 +381,7 @@ export default function SalesAgents() {
       const startRow = hRow.number + 1;
 
       agentContracts.forEach((contract: any, idx: number) => {
+        const omsetRealized = paidByContract.get(contract.id) || 0;
         const dataRow = sheet.addRow([
           idx + 1,
           contract.start_date,
@@ -387,7 +389,7 @@ export default function SalesAgents() {
           contract.product_type || '-',
           contract.customers?.name || '-',
           contract.customers?.phone || '-',
-          Number(contract.total_loan_amount || 0),
+          omsetRealized,
         ]);
 
         dataRow.eachCell((cell, colNumber) => {
