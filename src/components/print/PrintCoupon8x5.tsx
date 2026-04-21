@@ -17,6 +17,7 @@ interface ContractInfo {
     name: string;
     address: string | null;
     business_address?: string | null;
+    phone?: string | null;
   } | null;
   sales_agents?: { agent_code: string } | null;
   collectors?: { collector_code: string } | null;
@@ -158,7 +159,6 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
         font-size: 10.5pt; 
         font-weight: normal; 
         color: #000;
-        text-decoration: underline;
       }
 
       .content-area {
@@ -292,7 +292,7 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
   };
 
   // --- Data Preparation ---
-  const noFakturBase = `${contract.tenor_days}/${contract.sales_agents?.agent_code || "-"}/${contract.collectors?.collector_code || "-"}`;
+  // noFakturBase removed; we'll build per-coupon identifier including installment index
   const displayAddress = contract.customers?.business_address || contract.customers?.address || "-";
   const couponPages = groupCouponsIntoPages(coupons);
 
@@ -450,18 +450,22 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
                   <div className="content-layer">
                     {/* Title Section */}
                     <div className="title-section">
-                      <div className="voucher-title">VOUCHER ANGSURAN</div>
+                      <div className="voucher-title">BRI ({REKENING_NUMBER})</div>
                     </div>
 
                     <div className="content-area">
-                        <div className="data-row">
-                            <span className="label">NO.Faktur</span>
-                            <span className="value">: {truncateText(noFakturBase, 18)}</span>
-                        </div>
+            <div className="data-row">
+              <span className="label">No. Kupon</span>
+              <span className="value">: {`${coupon.installment_index}/${contract.tenor_days}/${contract.sales_agents?.agent_code || '-'}${'/' + (contract.collectors?.collector_code || '-')}`}</span>
+            </div>
                         <div className="data-row">
                             <span className="label">Nama</span>
-                            <span className="value">: {truncateText(contract.customers?.name || "-", 20)}</span>
+              <span className="value">: {truncateText(contract.customers?.name || "-", 20)}</span>
                         </div>
+            <div className="data-row">
+              <span className="label">No HP</span>
+              <span className="value">: {contract.customers?.phone || '-'}</span>
+            </div>
                         <div className="data-row">
                             <span className="label">Alamat</span>
                             <span className="value value-alamat">: {truncateText(displayAddress, 22)}</span>
@@ -470,13 +474,8 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
                             <span className="label">Jatuh Tempo</span>
                             <span className="value">: {formatDate(coupon.due_date)}</span>
                         </div>
-                        <div className="data-row">
-                            <span className="label">Angsuran Ke-</span>
-                            <span className="value">: <span className="red-text">{coupon.installment_index}</span></span>
-                        </div>
-                        <div className="data-row">
-                            <span className="label" style={{width: "auto", fontWeight: "bold"}}>Rekening BRI ( {REKENING_NUMBER} )</span>
-                        </div>
+            {/* Angsuran Ke row removed - included in No, Kupon field as installment/tenor/sales/collector */}
+            
                     </div>
 
                     {/* Contract Code - positioned on the right side */}

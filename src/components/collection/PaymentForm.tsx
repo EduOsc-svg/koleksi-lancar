@@ -56,13 +56,17 @@ interface PaymentFormProps {
     notes: string;
   }) => Promise<void>;
   isSubmitting: boolean;
+  selectedContractId?: string;
+  setSelectedContractId?: (id: string) => void;
 }
 
-export function PaymentForm({ contracts, collectors, onSubmit, onBulkSubmit, isSubmitting }: PaymentFormProps) {
+export function PaymentForm({ contracts, collectors, onSubmit, onBulkSubmit, isSubmitting, selectedContractId, setSelectedContractId }: PaymentFormProps) {
   const { t } = useTranslation();
-  
-  const [selectedContract, setSelectedContract] = useState("");
+
+  // selectedContract is optionally provided by parent (Collection) so the dropdown can be replaced
+  const [internalSelectedContract, setInternalSelectedContract] = useState("");
   const [contractOpen, setContractOpen] = useState(false);
+  const activeSelected = selectedContractId || internalSelectedContract;
   const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split("T")[0]);
   const [paymentAmount, setPaymentAmount] = useState<number | undefined>(undefined);
   const [paymentCollector, setPaymentCollector] = useState("");
@@ -70,13 +74,13 @@ export function PaymentForm({ contracts, collectors, onSubmit, onBulkSubmit, isS
   const [paymentNotes, setPaymentNotes] = useState("");
   const [couponCount, setCouponCount] = useState(1);
 
-  const selectedContractData = contracts?.find((c) => c.id === selectedContract);
+  const selectedContractData = contracts?.find((c) => c.id === activeSelected);
   const nextCoupon = selectedContractData ? selectedContractData.current_installment_index + 1 : 1;
   const remainingCoupons = selectedContractData ? selectedContractData.tenor_days - selectedContractData.current_installment_index : 0;
   const maxCoupons = Math.min(remainingCoupons, 100); // Limit to remaining coupons
 
-  const { data: lastPaymentDate } = useLastPaymentDate(selectedContract || null);
-  const { data: nextCouponDueDate } = useNextCouponDueDate(selectedContract || null, nextCoupon);
+  const { data: lastPaymentDate } = useLastPaymentDate(activeSelected || null);
+  const { data: nextCouponDueDate } = useNextCouponDueDate(activeSelected || null, nextCoupon);
 
   const [lateInfo, setLateInfo] = useState<{
     isLate: boolean;
@@ -94,13 +98,12 @@ export function PaymentForm({ contracts, collectors, onSubmit, onBulkSubmit, isS
 
   // Auto-fill collector from contract when contract is selected
   useEffect(() => {
-    if (!selectedContract) {
+    if (!activeSelected) {
       setPaymentCollector("");
       return;
     }
-    
     // Use collector assigned to the contract directly
-    const contract = contracts?.find(c => c.id === selectedContract);
+    const contract = contracts?.find(c => c.id === activeSelected);
     if (contract?.collector_id) {
       setPaymentCollector(contract.collector_id);
     } else {
@@ -109,7 +112,7 @@ export function PaymentForm({ contracts, collectors, onSubmit, onBulkSubmit, isS
         const { data } = await supabase
           .from('coupon_handovers')
           .select('collector_id')
-          .eq('contract_id', selectedContract)
+          .eq('contract_id', activeSelected)
           .order('created_at', { ascending: false })
           .limit(1)
           .single();
@@ -119,10 +122,10 @@ export function PaymentForm({ contracts, collectors, onSubmit, onBulkSubmit, isS
       };
       fetchHandoverCollector();
     }
-  }, [selectedContract, contracts]);
+  }, [selectedContractId, internalSelectedContract, contracts]);
 
   useEffect(() => {
-    if (selectedContract && nextCouponDueDate && paymentDate) {
+    if (activeSelected && nextCouponDueDate && paymentDate) {
       const info = calculateLateNoteFromDueDate(nextCouponDueDate, paymentDate);
       setLateInfo(info);
       if (info.isLate && info.note && !paymentNotes) {
@@ -131,7 +134,7 @@ export function PaymentForm({ contracts, collectors, onSubmit, onBulkSubmit, isS
     } else {
       setLateInfo({ isLate: false, lateDays: 0, note: null, dueDate: null });
     }
-  }, [selectedContract, nextCouponDueDate, paymentDate]);
+  }, [selectedContractId, internalSelectedContract, nextCouponDueDate, paymentDate]);
 
   const handleAmountChange = (value: number | undefined) => {
     setPaymentAmount(value);
@@ -142,7 +145,8 @@ export function PaymentForm({ contracts, collectors, onSubmit, onBulkSubmit, isS
   };
 
   const handleSubmit = async () => {
-    if (!selectedContract) {
+    const activeSelected = selectedContractId || internalSelectedContract;
+    if (!activeSelected) {
       toast.error(t("errors.selectContract"));
       return;
     }
@@ -156,7 +160,7 @@ export function PaymentForm({ contracts, collectors, onSubmit, onBulkSubmit, isS
   const finalNotes = paymentNotes.trim() || defaultNote;
 
         await onBulkSubmit({
-          contract_id: selectedContract,
+          contract_id: activeSelected,
           payment_date: paymentDate,
           start_index: nextCoupon,
           coupon_count: couponCount,
@@ -170,7 +174,7 @@ export function PaymentForm({ contracts, collectors, onSubmit, onBulkSubmit, isS
         const finalNotes = paymentNotes.trim() || defaultNote;
 
         await onSubmit({
-          contract_id: selectedContract,
+          contract_id: activeSelected,
           payment_date: paymentDate,
           installment_index: nextCoupon,
           amount_paid: amount,
@@ -179,8 +183,9 @@ export function PaymentForm({ contracts, collectors, onSubmit, onBulkSubmit, isS
         });
       }
 
-      // Reset form
-      setSelectedContract("");
+      // Reset form (reset parent-selected if provided)
+      if (setSelectedContractId) setSelectedContractId("");
+      setInternalSelectedContract("");
       setPaymentAmount(undefined);
       setPaymentNotes("");
       setPaymentCollector("");
@@ -216,9 +221,9 @@ export function PaymentForm({ contracts, collectors, onSubmit, onBulkSubmit, isS
                   aria-expanded={contractOpen}
                   className="w-full justify-between font-normal"
                 >
-                  {selectedContract
+                  {activeSelected
                     ? (() => {
-                        const contract = contracts?.find((c) => c.id === selectedContract);
+                        const contract = contracts?.find((c) => c.id === activeSelected);
                         return contract ? `${contract.contract_ref} - ${contract.customers?.name}` : t("collection.chooseContract");
                       })()
                     : t("collection.chooseContract")}
@@ -236,14 +241,15 @@ export function PaymentForm({ contracts, collectors, onSubmit, onBulkSubmit, isS
                           key={contract.id}
                           value={`${contract.contract_ref} ${contract.customers?.name || ''}`}
                           onSelect={() => {
-                            setSelectedContract(contract.id);
+                            if (setSelectedContractId) setSelectedContractId(contract.id);
+                            else setInternalSelectedContract(contract.id);
                             setContractOpen(false);
                           }}
                         >
                           <Check
                             className={cn(
                               "mr-2 h-4 w-4",
-                              selectedContract === contract.id ? "opacity-100" : "opacity-0"
+                              activeSelected === contract.id ? "opacity-100" : "opacity-0"
                             )}
                           />
                           <span className="font-mono">{contract.contract_ref}</span>
@@ -485,7 +491,7 @@ export function PaymentForm({ contracts, collectors, onSubmit, onBulkSubmit, isS
         {/* Submit Button */}
         <Button
           onClick={handleSubmit}
-          disabled={!selectedContract || isSubmitting}
+          disabled={!activeSelected || isSubmitting}
           className="w-full"
           size="lg"
         >

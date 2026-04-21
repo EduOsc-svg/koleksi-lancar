@@ -121,6 +121,7 @@ export default function Contracts() {
     start_date: new Date().toISOString().split("T")[0],
     status: "active",
     modal: 0,
+    keuntungan: 0,
   });
 
   // Fetch coupons for selected contract (for detail view and printing)
@@ -229,6 +230,7 @@ export default function Contracts() {
       start_date: new Date().toISOString().split("T")[0],
       status: "active",
       modal: 0,
+      keuntungan: 0,
     });
     setDialogOpen(true);
   };
@@ -247,6 +249,7 @@ export default function Contracts() {
       start_date: contract.start_date || new Date().toISOString().split("T")[0],
       status: contract.status,
       modal: (contract as any).omset || 0,
+      keuntungan: (contract as any).keuntungan || 0,
     });
     setDialogOpen(true);
   };
@@ -296,7 +299,8 @@ export default function Contracts() {
           daily_installment_amount: dailyAmount,
           start_date: formData.start_date,
           status: formData.status,
-          omset: formData.modal || 0,
+            omset: formData.modal || 0,
+            keuntungan: formData.keuntungan || 0,
         } as any);
         toast.success("Kontrak berhasil diperbarui");
       } else {
@@ -311,7 +315,8 @@ export default function Contracts() {
           daily_installment_amount: dailyAmount,
           start_date: formData.start_date,
           status: formData.status,
-          omset: formData.modal || 0,
+            omset: formData.modal || 0,
+            keuntungan: formData.keuntungan || 0,
         } as any);
         
         // Generate installment coupons for new active contracts
@@ -601,6 +606,7 @@ export default function Contracts() {
               name: tempPrintedContract.customers.name,
               address: tempPrintedContract.customers.address || null,
               business_address: tempPrintedContract.customers.business_address || null,
+              phone: tempPrintedContract.customers.phone || null,
             } : null,
             sales_agents: tempPrintedContract.sales_agents || null,
             collectors: tempPrintedContract.collectors || null,
@@ -1007,6 +1013,18 @@ export default function Contracts() {
                     Modal awal untuk kontrak ini
                   </p>
                 </div>
+                  <div>
+                    <Label htmlFor="keuntungan">Keuntungan (opsional)</Label>
+                    <CurrencyInput
+                      id="keuntungan"
+                      value={formData.keuntungan}
+                      onValueChange={(val) => setFormData({ ...formData, keuntungan: val || 0 })}
+                      placeholder="Rp 0"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Jika tidak diisi, keuntungan akan dihitung otomatis dari Omset - Modal
+                    </p>
+                  </div>
             </div>
           </div>
           
@@ -1102,6 +1120,10 @@ export default function Contracts() {
                           <p className="text-sm text-muted-foreground">Modal</p>
                           <p className="font-semibold text-lg">{formatRupiah(selectedContract.omset || 0)}</p>
                         </div>
+                          <div>
+                            <p className="text-sm text-muted-foreground">Keuntungan</p>
+                            <p className="font-semibold text-lg">{formatRupiah((selectedContract as any).keuntungan || ((selectedContract.total_loan_amount || 0) - (selectedContract.omset || 0)))}</p>
+                          </div>
                         <div>
                           <p className="text-sm text-muted-foreground">Cicilan Harian</p>
                           <p className="font-medium">{formatRupiah(selectedContract.daily_installment_amount)}</p>
@@ -1110,6 +1132,57 @@ export default function Contracts() {
                           <p className="text-sm text-muted-foreground">Tenor</p>
                           <p className="font-medium">{selectedContract.tenor_days} hari</p>
                         </div>
+                      </div>
+
+                      {/* Customer Contracts Table - show all contracts for this customer with payment summary */}
+                      <div className="p-4 border rounded-lg">
+                        <h4 className="font-semibold mb-3">Daftar Kontrak Pelanggan</h4>
+                        {(() => {
+                          const customerContracts = (contracts || []).filter(c => c.customer_id === selectedContract.customer_id);
+                          if (!customerContracts || customerContracts.length === 0) {
+                            return <div className="text-sm text-muted-foreground">Tidak ada kontrak lain untuk pelanggan ini.</div>;
+                          }
+
+                          return (
+                            <div className="overflow-x-auto">
+                              <Table>
+                                <TableHeader>
+                                  <TableRow className="bg-muted/50">
+                                      <TableHead className="text-sm">Kode</TableHead>
+                                      <TableHead className="text-sm">Mulai</TableHead>
+                                      <TableHead className="text-sm text-right">Tenor</TableHead>
+                                      <TableHead className="text-sm text-right">Cicilan/Hari</TableHead>
+                                      <TableHead className="text-sm text-center">Terbayar</TableHead>
+                                      <TableHead className="text-sm text-center">Belum</TableHead>
+                                      <TableHead className="text-sm text-right">Sisa</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                  {customerContracts.map((c) => {
+                                    const paidCount = c.current_installment_index || 0;
+                                    const totalCount = c.tenor_days || 0;
+                                    const unpaidCount = Math.max(0, totalCount - paidCount);
+                                    const perInstallment = c.daily_installment_amount || (c.total_loan_amount && totalCount ? Math.ceil(c.total_loan_amount / totalCount) : 0);
+                                    const remainingAmount = unpaidCount * perInstallment;
+
+                                    return (
+                                      <TableRow key={c.id} className="hover:bg-muted/30">
+                                        <TableCell className="py-2 text-sm font-medium">{c.contract_ref}</TableCell>
+                                        <TableCell className="py-2 text-sm">{c.start_date ? new Date(c.start_date).toLocaleDateString('id-ID') : '-'}</TableCell>
+                                        <TableCell className="py-2 text-right text-sm">{totalCount} hari</TableCell>
+                                        <TableCell className="py-2 text-right text-sm">{formatRupiah(perInstallment)}</TableCell>
+                                        <TableCell className="py-2 text-center text-sm">{paidCount}</TableCell>
+                                        <TableCell className="py-2 text-center text-sm">{unpaidCount}</TableCell>
+                                        <TableCell className="py-2 text-right text-sm">{formatRupiah(remainingAmount)}</TableCell>
+                                        {/* aksi column removed */}
+                                      </TableRow>
+                                    );
+                                  })}
+                                </TableBody>
+                              </Table>
+                            </div>
+                          );
+                        })()}
                       </div>
 
                       {/* Progress Section */}

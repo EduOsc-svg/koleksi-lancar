@@ -85,6 +85,16 @@ export default function Dashboard() {
     return profit - commission;
   }, [monthlyData?.total_profit, monthlyData?.total_commission]);
 
+  // Margin keuntungan kotor = (keuntungan kotor / omset) * 100
+  const grossProfitMargin = useMemo(() => {
+    // New formula: margin = (omset - modal) / modal * 100
+    // This represents "berapa % markup dari modal menghasilkan omset"
+    const modal = monthlyData?.total_modal ?? 0;
+    const omset = monthlyData?.total_omset ?? 0;
+    if (modal <= 0) return 0;
+    return ((omset - modal) / modal) * 100;
+  }, [monthlyData?.total_profit, monthlyData?.total_omset]);
+
   const locale = i18n.language === 'id' ? 'id-ID' : 'en-US';
 
   // Month navigation
@@ -180,6 +190,17 @@ export default function Dashboard() {
               value={monthlyData?.total_profit ?? 0}
               valueColor="text-green-600"
               subtitle="Sebelum operasional"
+            />
+          </div>
+
+          <div className="w-[180px] flex-shrink-0">
+            <StatCard
+              icon={CircleDollarSign}
+              iconColor="text-emerald-500"
+              label="Margin Keuntungan Kotor"
+              value={grossProfitMargin}
+              isPercentage
+              valueColor={grossProfitMargin >= 0 ? 'text-green-600' : 'text-destructive'}
             />
           </div>
 
