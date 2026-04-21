@@ -2,14 +2,15 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { calculateTieredCommission, CommissionTier } from './useCommissionTiers';
 import { startOfMonth, endOfMonth, format, startOfYear, endOfYear } from 'date-fns';
+import { realizeContract, sumPaymentsByContract } from '@/lib/cashBasisCalc';
 
 export interface MonthlyPerformanceData {
   agent_id: string;
   agent_name: string;
   agent_code: string;
   commission_percentage: number;
-  total_omset: number;
-  total_modal: number;
+  total_omset: number;       // realized (cash basis)
+  total_modal: number;       // realized (cash basis)
   total_contracts: number;
   total_commission: number;
   total_to_collect: number;
@@ -33,139 +34,122 @@ export interface YearlyTargetData {
   collection_rate: number;
 }
 
-// Hook untuk performa bulanan (berdasarkan tanggal kontrak)
+/**
+ * Performa bulanan — CASH BASIS.
+ * Modal/Omset/Profit dihitung proporsional dari pembayaran yang masuk DI BULAN INI,
+ * untuk semua kontrak (tidak terbatas tanggal kontrak).
+ * Komisi: tier diterapkan ke total omset realized per agen.
+ */
 export const useMonthlyPerformance = (month: Date = new Date()) => {
   const monthStart = format(startOfMonth(month), 'yyyy-MM-dd');
   const monthEnd = format(endOfMonth(month), 'yyyy-MM-dd');
 
   return useQuery({
-    queryKey: ['monthly_performance', monthStart, monthEnd],
+    queryKey: ['monthly_performance_cash', monthStart, monthEnd],
     queryFn: async (): Promise<MonthlyPerformanceSummary> => {
-      // Get all sales agents (include flag to use tiered commission)
-      const { data: agents, error: agentsError } = await supabase
-        .from('sales_agents')
-        .select('id, name, agent_code, commission_percentage, use_tiered_commission')
-        .order('name');
-      
+      const [
+        { data: agents, error: agentsError },
+        { data: contracts, error: contractsError },
+        { data: paymentsThisMonth, error: paymentsError },
+        { data: tiersData, error: tiersError },
+      ] = await Promise.all([
+        supabase.from('sales_agents').select('id, name, agent_code').order('name'),
+        supabase.from('credit_contracts').select('id, omset, total_loan_amount, sales_agent_id'),
+        supabase
+          .from('payment_logs')
+          .select('amount_paid, payment_date, contract_id')
+          .gte('payment_date', monthStart)
+          .lte('payment_date', monthEnd),
+        supabase.from('commission_tiers').select('*').order('min_amount', { ascending: true }),
+      ]);
+
       if (agentsError) throw agentsError;
-
-      // Get contracts created within this month
-      const { data: contracts, error: contractsError } = await supabase
-        .from('credit_contracts')
-        .select('id, omset, total_loan_amount, sales_agent_id, start_date')
-        .gte('start_date', monthStart)
-        .lte('start_date', monthEnd);
-      
       if (contractsError) throw contractsError;
-
-      // Get payments made this month
-      const { data: payments, error: paymentsError } = await supabase
-        .from('payment_logs')
-        .select(`
-          amount_paid,
-          payment_date,
-          contract_id,
-          credit_contracts!inner(sales_agent_id)
-        `)
-        .gte('payment_date', monthStart)
-        .lte('payment_date', monthEnd);
-      
       if (paymentsError) throw paymentsError;
+      if (tiersError) throw tiersError;
 
-      // Aggregate per agent
+      const tiers: CommissionTier[] = (tiersData || []) as CommissionTier[];
+
+      // Sum pembayaran per kontrak (untuk bulan ini saja)
+      const paidByContract = sumPaymentsByContract(paymentsThisMonth || []);
+
+      // Map kontrak -> agent
+      const contractAgentMap = new Map<string, string>();
+      const contractFinanceMap = new Map<string, { modal_full: number; omset_full: number }>();
+      (contracts || []).forEach((c: any) => {
+        if (c.sales_agent_id) contractAgentMap.set(c.id, c.sales_agent_id);
+        contractFinanceMap.set(c.id, {
+          modal_full: Number(c.omset || 0),
+          omset_full: Number(c.total_loan_amount || 0),
+        });
+      });
+
+      // Aggregate realized per agen + jumlah kontrak yang ada pembayaran bulan ini
       const agentDataMap = new Map<string, {
         total_omset: number;
         total_modal: number;
-        total_contracts: number;
         total_collected: number;
+        contract_ids: Set<string>;
       }>();
 
-      // Process contracts
-      (contracts || []).forEach((contract: any) => {
-        const salesAgentId = contract.sales_agent_id;
-        if (salesAgentId) {
-          const existing = agentDataMap.get(salesAgentId) || {
-            total_omset: 0,
-            total_modal: 0,
-            total_contracts: 0,
-            total_collected: 0,
-          };
-          
-          const modal = Number(contract.omset || 0);
-          const omset = Number(contract.total_loan_amount || 0);
-          
-          agentDataMap.set(salesAgentId, {
-            ...existing,
-            total_omset: existing.total_omset + omset,
-            total_modal: existing.total_modal + modal,
-            total_contracts: existing.total_contracts + 1,
-          });
-        }
-      });
+      paidByContract.forEach((paidThisMonth, contractId) => {
+        const agentId = contractAgentMap.get(contractId);
+        if (!agentId) return;
+        const fin = contractFinanceMap.get(contractId);
+        if (!fin) return;
 
-      // Process payments
-      (payments || []).forEach((payment: any) => {
-        const salesAgentId = payment.credit_contracts?.sales_agent_id;
-        if (salesAgentId) {
-          const existing = agentDataMap.get(salesAgentId);
-          if (existing) {
-            existing.total_collected += Number(payment.amount_paid || 0);
-          } else {
-            agentDataMap.set(salesAgentId, {
-              total_omset: 0,
-              total_modal: 0,
-              total_contracts: 0,
-              total_collected: Number(payment.amount_paid || 0),
-            });
-          }
-        }
-      });
+        const realized = realizeContract({
+          contract_id: contractId,
+          modal_full: fin.modal_full,
+          omset_full: fin.omset_full,
+          total_paid: paidThisMonth,
+        });
 
-      // Fetch commission tiers to support dynamic tiered commission calculations
-      const { data: commissionTiersData } = await supabase
-        .from('commission_tiers')
-        .select('*')
-        .order('min_amount', { ascending: true });
-      const tiers: CommissionTier[] = (commissionTiersData || []) as CommissionTier[];
-
-      // Build result
-      const agentResults: MonthlyPerformanceData[] = (agents || []).map((agent) => {
-        const data = agentDataMap.get(agent.id) || {
+        const existing = agentDataMap.get(agentId) || {
           total_omset: 0,
           total_modal: 0,
-          total_contracts: 0,
           total_collected: 0,
+          contract_ids: new Set<string>(),
         };
-        // Determine commission percent: use tiered rules when agent opts in, otherwise use fixed percentage
-        const useTiered = Boolean((agent as any).use_tiered_commission);
-        const commissionPct = useTiered
-          ? (data.total_omset > 0 ? calculateTieredCommission(data.total_omset, tiers) : 0)
-          : Number(agent.commission_percentage) || 0;
-        const totalCommission = (data.total_omset * commissionPct) / 100;
-        const profit = data.total_omset - data.total_modal;
-        const profitMargin = data.total_omset > 0 ? (profit / data.total_omset) * 100 : 0;
-        
+        existing.total_omset += realized.omset_realized;
+        existing.total_modal += realized.modal_realized;
+        existing.total_collected += paidThisMonth;
+        existing.contract_ids.add(contractId);
+        agentDataMap.set(agentId, existing);
+      });
+
+      const agentResults: MonthlyPerformanceData[] = (agents || []).map((agent) => {
+        const data = agentDataMap.get(agent.id);
+        const total_omset = data?.total_omset || 0;
+        const total_modal = data?.total_modal || 0;
+        const total_collected = data?.total_collected || 0;
+        const total_contracts = data?.contract_ids.size || 0;
+
+        const commissionPct = total_omset > 0 ? calculateTieredCommission(total_omset, tiers) : 0;
+        const totalCommission = (total_omset * commissionPct) / 100;
+        const profit = total_omset - total_modal;
+        const profitMargin = total_omset > 0 ? (profit / total_omset) * 100 : 0;
+
         return {
           agent_id: agent.id,
           agent_name: agent.name,
           agent_code: agent.agent_code,
           commission_percentage: commissionPct,
-          total_omset: data.total_omset,
-          total_modal: data.total_modal,
-          total_contracts: data.total_contracts,
+          total_omset,
+          total_modal,
+          total_contracts,
           total_commission: totalCommission,
           total_to_collect: 0,
-          total_collected: data.total_collected,
+          total_collected,
           profit,
           profit_margin: profitMargin,
         };
       }).filter(a => a.total_contracts > 0 || a.total_collected > 0);
 
-      // Calculate totals
-      const total_modal = agentResults.reduce((sum, a) => sum + a.total_modal, 0);
-      const total_omset = agentResults.reduce((sum, a) => sum + a.total_omset, 0);
-      const total_profit = agentResults.reduce((sum, a) => sum + a.profit, 0);
-      const total_commission = agentResults.reduce((sum, a) => sum + a.total_commission, 0);
+      const total_modal = agentResults.reduce((s, a) => s + a.total_modal, 0);
+      const total_omset = agentResults.reduce((s, a) => s + a.total_omset, 0);
+      const total_profit = agentResults.reduce((s, a) => s + a.profit, 0);
+      const total_commission = agentResults.reduce((s, a) => s + a.total_commission, 0);
       const profit_margin = total_omset > 0 ? (total_profit / total_omset) * 100 : 0;
 
       return {
@@ -180,7 +164,7 @@ export const useMonthlyPerformance = (month: Date = new Date()) => {
   });
 };
 
-// Hook untuk target penagihan tahunan (sesuai tutup buku)
+// Target penagihan tahunan (tetap)
 export const useYearlyTarget = (year: Date = new Date()) => {
   const yearStart = format(startOfYear(year), 'yyyy-MM-dd');
   const yearEnd = format(endOfYear(year), 'yyyy-MM-dd');
@@ -188,42 +172,27 @@ export const useYearlyTarget = (year: Date = new Date()) => {
   return useQuery({
     queryKey: ['yearly_target', yearStart, yearEnd],
     queryFn: async (): Promise<YearlyTargetData> => {
-      // Get all unpaid coupons for contracts that started in this year
       const { data: unpaidCoupons, error: couponsError } = await supabase
         .from('installment_coupons')
-        .select(`
-          amount,
-          due_date,
-          contract_id,
-          credit_contracts!inner(start_date)
-        `)
+        .select('amount, due_date')
         .eq('status', 'unpaid')
         .gte('due_date', yearStart)
         .lte('due_date', yearEnd);
-      
       if (couponsError) throw couponsError;
 
-      // Get all payments made this year
       const { data: payments, error: paymentsError } = await supabase
         .from('payment_logs')
         .select('amount_paid, payment_date')
         .gte('payment_date', yearStart)
         .lte('payment_date', yearEnd);
-      
       if (paymentsError) throw paymentsError;
 
-      const total_to_collect = (unpaidCoupons || []).reduce((sum, c: any) => sum + Number(c.amount || 0), 0);
-      const total_collected = (payments || []).reduce((sum, p: any) => sum + Number(p.amount_paid || 0), 0);
-      
-      // Collection rate is based on total expected vs collected
+      const total_to_collect = (unpaidCoupons || []).reduce((s, c: any) => s + Number(c.amount || 0), 0);
+      const total_collected = (payments || []).reduce((s, p: any) => s + Number(p.amount_paid || 0), 0);
       const expectedTotal = total_to_collect + total_collected;
       const collection_rate = expectedTotal > 0 ? (total_collected / expectedTotal) * 100 : 0;
 
-      return {
-        total_to_collect,
-        total_collected,
-        collection_rate,
-      };
+      return { total_to_collect, total_collected, collection_rate };
     },
   });
 };

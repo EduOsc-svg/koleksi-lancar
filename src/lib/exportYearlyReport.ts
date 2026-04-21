@@ -42,13 +42,13 @@ export const exportYearlyReportToExcel = async (
   });
 
   const summaryRows: [string, number, string, string][] = [
-    ['Total Modal', data.total_modal, '"Rp "#,##0', 'Total modal yang dikeluarkan'],
-    ['Total Omset', data.total_omset, '"Rp "#,##0', 'Total pinjaman yang disalurkan'],
-    ['Keuntungan Kotor', data.total_profit, '"Rp "#,##0', 'Omset - Modal'],
+    ['Total Modal (Realized)', data.total_modal, '"Rp "#,##0', 'Modal proporsional dari pembayaran tertagih'],
+    ['Total Omset (Realized)', data.total_omset, '"Rp "#,##0', 'Omset = total pembayaran tertagih'],
+    ['Keuntungan Kotor', data.total_profit, '"Rp "#,##0', 'Omset Realized - Modal Realized'],
+    ['Total Komisi', data.total_commission, '"Rp "#,##0', 'Tier diterapkan ke total omset agen'],
     ['Biaya Operasional', data.total_expenses, '"Rp "#,##0', 'Total biaya operasional'],
-    // Show Keuntungan Bersih as Keuntungan Kotor (user requested laba bersih -> laba kotor saja)
-    ['Keuntungan Bersih', data.total_profit, '"Rp "#,##0', 'Keuntungan Kotor (Omset - Modal)'],
-    ['Jumlah Kontrak', data.contracts_count, '#,##0', 'Total kontrak aktif'],
+    ['Keuntungan Bersih', data.net_profit, '"Rp "#,##0', 'Profit - Komisi - Operasional'],
+    ['Jumlah Kontrak', data.contracts_count, '#,##0', 'Total kontrak di tahun ini'],
     ['Kontrak Selesai', data.completed_count, '#,##0', 'Kontrak yang sudah lunas'],
     ['Kontrak Aktif', data.active_count, '#,##0', 'Kontrak yang masih berjalan'],
     ['Lancar', data.lancar_count, '#,##0', 'Status pembayaran lancar'],
