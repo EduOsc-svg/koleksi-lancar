@@ -304,10 +304,9 @@ export default function Contracts() {
           daily_installment_amount: dailyAmount,
           start_date: formData.start_date,
           status: formData.status,
-            omset: formData.modal || 0,
+            omset: Math.max(0, (formData.modal || 0) - (formData.dp || 0)),
             keuntungan: formData.keuntungan || 0,
         } as any);
-        toast.success("Kontrak berhasil diperbarui");
       } else {
         const { data: newContract } = await createContract.mutateAsync({
           contract_ref: formData.contract_ref,
