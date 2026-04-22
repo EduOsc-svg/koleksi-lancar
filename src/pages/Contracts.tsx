@@ -121,6 +121,7 @@ export default function Contracts() {
     start_date: new Date().toISOString().split("T")[0],
     status: "active",
     modal: 0,
+    dp: 0,
     keuntungan: 0,
   });
 
