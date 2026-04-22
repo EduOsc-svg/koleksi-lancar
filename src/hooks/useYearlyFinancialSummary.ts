@@ -170,6 +170,9 @@ export const useYearlyFinancialSummary = (year: Date = new Date(), statusFilter:
       const agentYearlyModal = new Map<string, number>();
       const agentYearlyContracts = new Map<string, Set<string>>();
 
+      // Track allocated paid per contract so we don't exceed omset_full (handle overpayment)
+      const allocatedByContract = new Map<string, number>();
+
       // Process payments -> allocate realized modal/omset per month and per contract
       (payments || []).forEach((p: any) => {
         const contract = contractMap.get(p.contract_id);
@@ -182,16 +185,21 @@ export const useYearlyFinancialSummary = (year: Date = new Date(), statusFilter:
         const omsetFull = Number(contract.total_loan_amount || 0);
         const modalFull = Number(contract.omset || 0);
 
-        // Realisasi proporsional dari amt terhadap omsetFull
-        const ratio = omsetFull > 0 ? amt / omsetFull : 0;
-        const omsetRealized = amt; // pembayaran = pendapatan yang direalisasi
-        const modalRealized = modalFull * ratio;
+        // Clamp: don't allocate more realized omset than the contract's full omset
+        const alreadyAllocated = allocatedByContract.get(contract.id) || 0;
+        const remainingCap = omsetFull > 0 ? Math.max(0, omsetFull - alreadyAllocated) : amt;
+        const allocAmt = Math.min(amt, remainingCap);
+        allocatedByContract.set(contract.id, alreadyAllocated + allocAmt);
+
+        const ratio = omsetFull > 0 ? allocAmt / omsetFull : 0;
+        const omsetRealized = allocAmt;            // pendapatan diakui (clamped)
+        const modalRealized = modalFull * ratio;   // modal proporsional
         const profitRealized = omsetRealized - modalRealized;
 
         // Accumulate totals
         totalModal += modalRealized;
         totalOmset += omsetRealized;
-        totalCollected += amt;
+        totalCollected += amt; // uang masuk apa adanya (termasuk overpayment)
 
         // Monthly accumulations
         md.total_modal += modalRealized;
@@ -218,7 +226,7 @@ export const useYearlyFinancialSummary = (year: Date = new Date(), statusFilter:
         if (existing) {
           existing.modal += modalRealized;
           existing.omset += omsetRealized;
-          existing.net_profit = existing.omset - existing.modal; // will adjust after commission
+          existing.net_profit = existing.omset - existing.modal;
         } else {
           const agentInfo = agentId ? agentLookup.get(agentId) : null;
           detailMap.set(contract.id, {
