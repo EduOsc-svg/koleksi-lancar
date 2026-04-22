@@ -1006,17 +1006,31 @@ export default function Contracts() {
                   </div>
                 </div>
                 
-                <div>
-                  <Label htmlFor="modal">Modal</Label>
-                  <CurrencyInput
-                    id="modal"
-                    value={formData.modal}
-                    onValueChange={(val) => setFormData({ ...formData, modal: val || 0 })}
-                    placeholder="Rp 0"
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Modal awal untuk kontrak ini
-                  </p>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="modal">Modal Awal</Label>
+                    <CurrencyInput
+                      id="modal"
+                      value={formData.modal}
+                      onValueChange={(val) => setFormData({ ...formData, modal: val || 0 })}
+                      placeholder="Rp 0"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Modal awal sebelum dikurangi DP
+                    </p>
+                  </div>
+                  <div>
+                    <Label htmlFor="dp">DP (Down Payment)</Label>
+                    <CurrencyInput
+                      id="dp"
+                      value={formData.dp}
+                      onValueChange={(val) => setFormData({ ...formData, dp: val || 0 })}
+                      placeholder="Rp 0"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Modal efektif: {formatRupiah(Math.max(0, (formData.modal || 0) - (formData.dp || 0)))}
+                    </p>
+                  </div>
                 </div>
                   <div>
                     <Label htmlFor="keuntungan">Keuntungan (opsional)</Label>
@@ -1027,7 +1041,7 @@ export default function Contracts() {
                       placeholder="Rp 0"
                     />
                     <p className="text-xs text-muted-foreground mt-1">
-                      Jika tidak diisi, keuntungan akan dihitung otomatis dari Omset - Modal
+                      Jika tidak diisi, keuntungan akan dihitung otomatis dari Omset - Modal Efektif
                     </p>
                   </div>
             </div>
