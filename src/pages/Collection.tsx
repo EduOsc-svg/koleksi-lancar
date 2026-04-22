@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { FileText, CreditCard, AlertCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 
