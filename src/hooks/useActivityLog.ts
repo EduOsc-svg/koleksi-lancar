@@ -53,7 +53,7 @@ export const useLogActivity = () => {
       // Get current user info
       const { data: { user } } = await supabase.auth.getUser();
       
-      let userName = user?.email || 'Unknown';
+      const userName = user?.email || 'Unknown';
       let userRole = 'user';
 
       // Try to get user role

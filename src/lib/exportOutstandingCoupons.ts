@@ -235,7 +235,7 @@ export const exportHandoversToExcel = async (handovers: EnrichedHandover[]) => {
   const usedNames = new Set<string>();
   let collectorSheetCount = 0;
   byCollector.forEach(({ name, code, items }) => {
-    let baseName = (name || 'Unknown').substring(0, 28).replace(/[\\/*?[\]:]/g, '');
+    const baseName = (name || 'Unknown').substring(0, 28).replace(/[\\/*?[\]:]/g, '');
     let safeName = baseName;
     let suffix = 1;
     // If safeName already used, append a small numeric suffix to make it unique
@@ -250,7 +250,7 @@ export const exportHandoversToExcel = async (handovers: EnrichedHandover[]) => {
 
   // Debug: log how many sheets will be in the workbook (1 master + per-collector)
   try {
-    // eslint-disable-next-line no-console
+     
     console.info(`Export: creating ${1 + collectorSheetCount} worksheet(s) for handovers (1 master + ${collectorSheetCount} collectors)`);
   } catch (e) {
     // swallow logging errors in environments where console may be unavailable
