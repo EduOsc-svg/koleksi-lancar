@@ -5,11 +5,6 @@ import { id as idLocale } from 'date-fns/locale';
 import { calculateTieredCommission, CommissionTier } from './useCommissionTiers';
 import { realizeContract, sumPaymentsByContract } from '@/lib/cashBasisCalc';
 
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { startOfYear, endOfYear, format, eachMonthOfInterval, differenceInDays } from 'date-fns';
-import { id as idLocale } from 'date-fns/locale';
-import { calculateTieredCommission, CommissionTier } from './useCommissionTiers';
 
 export type ContractStatusFilter = 'all' | 'lancar' | 'kurang_lancar' | 'macet' | 'completed';
 
