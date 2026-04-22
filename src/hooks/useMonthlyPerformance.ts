@@ -23,6 +23,7 @@ export interface MonthlyPerformanceSummary {
   total_modal: number;
   total_omset: number;
   total_profit: number;
+  total_collected?: number;
   total_commission: number;
   profit_margin: number;
   agents: MonthlyPerformanceData[];
@@ -150,6 +151,7 @@ export const useMonthlyPerformance = (month: Date = new Date()) => {
       const total_omset = agentResults.reduce((s, a) => s + a.total_omset, 0);
       const total_profit = agentResults.reduce((s, a) => s + a.profit, 0);
       const total_commission = agentResults.reduce((s, a) => s + a.total_commission, 0);
+      const total_collected = agentResults.reduce((s, a) => s + a.total_collected, 0);
       const profit_margin = total_omset > 0 ? (total_profit / total_omset) * 100 : 0;
 
       return {
@@ -157,6 +159,7 @@ export const useMonthlyPerformance = (month: Date = new Date()) => {
         total_omset,
         total_profit,
         total_commission,
+        total_collected,
         profit_margin,
         agents: agentResults.sort((a, b) => b.profit - a.profit),
       };

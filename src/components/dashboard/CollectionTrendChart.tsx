@@ -192,8 +192,10 @@ export function CollectionTrendChart() {
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       const value = payload[0].value;
-      const date = new Date(label);
-      const formattedDate = trendPeriod === 'daily' 
+      // Prefer the underlying ISO date if the data point provided it (hooks set a `date` field)
+      const dateStr = payload[0]?.payload?.date || label;
+      const date = new Date(dateStr);
+      const formattedDate = trendPeriod === 'daily' && !isNaN(date.getTime())
         ? date.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long' })
         : label;
       

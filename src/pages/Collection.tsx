@@ -161,64 +161,39 @@ export default function Collection() {
         </TabsContent>
 
         <TabsContent value="payment" className="mt-6">
-          <div className="max-w-2xl space-y-4">
-            {/* Search by contract code to list contracts and their payment history */}
-            <div>
-              <SearchInput
-                placeholder="Cari kode kontrak atau nama pelanggan untuk melihat riwayat pembayaran..."
-                value={searchQuery}
-                onChange={setSearchQuery}
-                className="max-w-xl"
-              />
-            </div>
-
-            {/* If a search query exists, show matching contracts with collapsible payment history */}
-            <div className="space-y-3">
-              {/* Search results - clicking a contract sets the selected contract for the PaymentForm */}
-              {(searchQuery ? (contracts || []).filter(c => {
-                const q = searchQuery.toLowerCase().trim();
-                return c.contract_ref.toLowerCase().includes(q) || (c.customers?.name || '').toLowerCase().includes(q);
-              }) : []).map((c) => (
-                <div key={c.id} className="border rounded-lg p-3">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="font-medium">{c.contract_ref} - {c.customers?.name}</div>
-                      <div className="text-xs text-muted-foreground">Mulai: {c.start_date ? new Date(c.start_date).toLocaleDateString('id-ID') : '-'}</div>
-                    </div>
-                    <div className="text-right text-sm">
-                      <div>Terbayar: {c.current_installment_index}/{c.tenor_days}</div>
-                      <div className="text-muted-foreground">Sisa: {Math.max(0, c.tenor_days - c.current_installment_index)}</div>
-                    </div>
-                  </div>
-
-                  <div className="mt-3 flex items-center gap-2">
-                    <Button size="sm" onClick={() => {
-                      setPaymentSelectedContract(c.id);
-                      // focus the payment form - scroll into view
-                      const el = document.querySelector('#payment-form-root');
-                      if (el) (el as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    }}>Pilih untuk Pembayaran</Button>
-                    <div className="text-sm text-muted-foreground">atau lihat riwayat pembayaran di bawah</div>
-                  </div>
-
-                  <div className="mt-3">
-                    <ContractPayments contractId={c.id} />
-                  </div>
-                </div>
-              ))}
-
-              {/* Always show the PaymentForm so user can proceed after selecting via search */}
-              <div id="payment-form-root">
-                <PaymentForm
-                  contracts={contracts}
-                  collectors={collectors}
-                  onSubmit={handleSubmitPayment}
-                  onBulkSubmit={handleBulkSubmitPayment}
-                  isSubmitting={createPayment.isPending || createBulkPayment.isPending}
-                  selectedContractId={paymentSelectedContract}
-                  setSelectedContractId={setPaymentSelectedContract}
-                />
+          <div className="max-w-4xl space-y-4">
+            {/* Replace search-results with the Outstanding list so user can pick contract directly */}
+            {handoversLoading ? (
+              <div className="p-6">
+                <p className="text-sm text-muted-foreground">Memuat daftar penagihan...</p>
               </div>
+            ) : (handovers && handovers.length > 0) ? (
+              <OutstandingCouponsTable
+                isLoading={false}
+                handovers={handovers}
+                onSelect={(contractId) => {
+                  if (!contractId) return;
+                  setPaymentSelectedContract(contractId);
+                  const el = document.querySelector('#payment-form-root');
+                  if (el) (el as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }}
+              />
+            ) : (
+              <div className="p-6">
+                <p className="text-sm text-muted-foreground">Tidak ada data serah terima kupon untuk ditampilkan.</p>
+              </div>
+            )}
+
+            <div id="payment-form-root">
+              <PaymentForm
+                contracts={contracts}
+                collectors={collectors}
+                onSubmit={handleSubmitPayment}
+                onBulkSubmit={handleBulkSubmitPayment}
+                isSubmitting={createPayment.isPending || createBulkPayment.isPending}
+                selectedContractId={paymentSelectedContract}
+                setSelectedContractId={setPaymentSelectedContract}
+              />
             </div>
           </div>
         </TabsContent>
@@ -234,10 +209,20 @@ export default function Collection() {
             isSubmitting={createHandover.isPending}
           />
 
-          <OutstandingCouponsTable
-            isLoading={handoversLoading}
-            handovers={handovers}
-          />
+          {handoversLoading ? (
+            <div className="p-6">
+              <p className="text-sm text-muted-foreground">Memuat data serah terima...</p>
+            </div>
+          ) : (handovers && handovers.length > 0) ? (
+            <OutstandingCouponsTable
+              isLoading={false}
+              handovers={handovers}
+            />
+          ) : (
+            <div className="p-6">
+              <p className="text-sm text-muted-foreground">Belum ada serah terima kupon</p>
+            </div>
+          )}
         </TabsContent>
       </Tabs>
     </div>

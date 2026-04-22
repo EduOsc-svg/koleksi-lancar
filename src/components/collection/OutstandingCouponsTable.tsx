@@ -24,6 +24,8 @@ interface Props {
   data?: unknown;
   isLoading: boolean;
   handovers?: CouponHandover[];
+  // callback when a contract row is selected from the list
+  onSelect?: (contractId?: string) => void;
 }
 
 export type HandoverStatus = 'fully_paid' | 'partially_paid' | 'unpaid';
@@ -279,7 +281,13 @@ export function OutstandingCouponsTable({ isLoading, handovers }: Props) {
               const rate = h.coupon_count > 0 ? (h.paidInRange / h.coupon_count) * 100 : 0;
 
               return (
-                <TableRow key={h.id} className="hover:bg-muted/30">
+                  <TableRow
+                    key={h.id}
+                    className={cn('hover:bg-muted/30', onSelect ? 'cursor-pointer' : '')}
+                    onClick={() => {
+                      if (onSelect && h.credit_contracts?.id) onSelect(h.credit_contracts.id);
+                    }}
+                  >
                   <TableCell className="text-sm text-muted-foreground py-3">
                     {(currentPage - 1) * ITEMS_PER_PAGE + i + 1}
                   </TableCell>

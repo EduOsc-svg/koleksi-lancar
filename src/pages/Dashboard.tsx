@@ -247,8 +247,9 @@ export default function Dashboard() {
             <StatCard
               icon={TrendingUp}
               iconColor="text-green-500"
-              label="Keuntungan"
-              value={monthlyData?.total_profit ?? 0}
+              label="Keuntungan Kotor"
+              // Per request: take Keuntungan Kotor from already collected (tertaged)
+              value={monthlyData?.total_collected ?? 0}
               valueColor="text-green-600"
               subtitle="Sebelum operasional"
             />
@@ -295,7 +296,7 @@ export default function Dashboard() {
         <CardContent className="pt-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-muted-foreground mb-1">Keuntungan Kotor, Sebelum Operasional</p>
+              <p className="text-sm text-muted-foreground mb-1">Keuntungan Bersih</p>
               <p className={`text-3xl font-bold ${grossProfit >= 0 ? 'text-green-600' : 'text-destructive'}`}>
                 {formatRupiah(grossProfit)}
               </p>

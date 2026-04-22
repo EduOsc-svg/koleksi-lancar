@@ -86,6 +86,8 @@ export default function Contracts() {
   
   // Search state
   const [searchQuery, setSearchQuery] = useState("");
+  // Sort state for contracts
+  const [contractSort, setContractSort] = useState<string>('start_newest');
   
   // Filter contracts based on search query
   // Only search by contract_ref and customer name to avoid confusion
@@ -93,9 +95,29 @@ export default function Contracts() {
     contract.contract_ref.toLowerCase().includes(searchQuery.toLowerCase()) ||
     (contract.customers?.name && contract.customers.name.toLowerCase().includes(searchQuery.toLowerCase()))
   ) || [];
+
+  const sortedContracts = (() => {
+    const arr = [...filteredContracts];
+    switch (contractSort) {
+      case 'start_newest':
+        return arr.sort((a, b) => new Date(b.start_date || 0).getTime() - new Date(a.start_date || 0).getTime());
+      case 'start_oldest':
+        return arr.sort((a, b) => new Date(a.start_date || 0).getTime() - new Date(b.start_date || 0).getTime());
+      case 'ref_asc':
+        return arr.sort((a, b) => (a.contract_ref || '').localeCompare(b.contract_ref || ''));
+      case 'ref_desc':
+        return arr.sort((a, b) => (b.contract_ref || '').localeCompare(a.contract_ref || ''));
+      case 'omset_desc':
+        return arr.sort((a, b) => (Number(b.total_loan_amount || 0) - Number(a.total_loan_amount || 0)));
+      case 'omset_asc':
+        return arr.sort((a, b) => (Number(a.total_loan_amount || 0) - Number(b.total_loan_amount || 0)));
+      default:
+        return arr;
+    }
+  })();
   
   const ITEMS_PER_PAGE = 5;
-  const { currentPage, totalPages, paginatedItems, goToPage, totalItems } = usePagination(filteredContracts, ITEMS_PER_PAGE);
+  const { currentPage, totalPages, paginatedItems, goToPage, totalItems } = usePagination(sortedContracts, ITEMS_PER_PAGE);
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -633,6 +655,23 @@ export default function Contracts() {
           placeholder="Cari kontrak berdasarkan nomor kontrak atau nama pelanggan..."
           className="max-w-lg"
         />
+        <div className="flex items-center gap-3">
+          <div className="w-56">
+            <Select onValueChange={(v) => setContractSort(v)} defaultValue={contractSort}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Urutkan" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="start_newest">Mulai: Terbaru</SelectItem>
+                <SelectItem value="start_oldest">Mulai: Terlama</SelectItem>
+                <SelectItem value="ref_asc">Kode Kontrak A → Z</SelectItem>
+                <SelectItem value="ref_desc">Kode Kontrak Z → A</SelectItem>
+                <SelectItem value="omset_desc">Omset Tertinggi</SelectItem>
+                <SelectItem value="omset_asc">Omset Terendah</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
         <div className="text-sm text-muted-foreground">
           Menampilkan {totalItems} dari {contracts?.length || 0} kontrak
         </div>

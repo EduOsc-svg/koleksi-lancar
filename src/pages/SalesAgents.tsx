@@ -517,7 +517,7 @@ export default function SalesAgents() {
                     <TableCell className="font-medium">{agent.agent_code}</TableCell>
                     <TableCell>{agent.name}</TableCell>
                     <TableCell>{agent.phone || "-"}</TableCell>
-                    <TableCell className="font-medium">{formatRupiah(omsetData?.total_omset || 0)}</TableCell>
+                    <TableCell className="font-medium">{formatRupiah((omsetData?.booked_total_omset ?? omsetData?.total_omset) || 0)}</TableCell>
                     <TableCell className="font-medium text-primary">
                       {formatRupiah( (omsetData?.total_commission && omsetData.total_commission > 0) ? omsetData.total_commission : fallbackCommission )}
                     </TableCell>

@@ -78,9 +78,29 @@ export default function Customers() {
     (customer.phone || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
     (customer.address || '').toLowerCase().includes(searchQuery.toLowerCase())
   ) || [];
+
+  // Sorting for customers
+  const [customerSort, setCustomerSort] = useState<string>('name_asc');
+  const sortedCustomers = (() => {
+    const arr = [...filteredCustomers];
+    switch (customerSort) {
+      case 'name_asc':
+        return arr.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+      case 'name_desc':
+        return arr.sort((a, b) => (b.name || '').localeCompare(a.name || ''));
+      case 'phone_asc':
+        return arr.sort((a, b) => (a.phone || '').localeCompare(b.phone || ''));
+      case 'newest':
+        return arr.sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
+      case 'oldest':
+        return arr.sort((a, b) => new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime());
+      default:
+        return arr;
+    }
+  })();
   
   const ITEMS_PER_PAGE = 5;
-  const { currentPage, totalPages, paginatedItems, goToPage, totalItems } = usePagination(filteredCustomers, ITEMS_PER_PAGE);
+  const { currentPage, totalPages, paginatedItems, goToPage, totalItems } = usePagination(sortedCustomers, ITEMS_PER_PAGE);
   const [formData, setFormData] = useState({
     name: "",
     nik: "",
@@ -246,6 +266,22 @@ export default function Customers() {
           className="mt-1"
           onClear={() => setSearchQuery("")}
         />
+        <div className="flex items-center gap-3">
+          <div className="w-56">
+            <Select onValueChange={(v) => setCustomerSort(v)} defaultValue={customerSort}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Urutkan" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="name_asc">Nama A → Z</SelectItem>
+                <SelectItem value="name_desc">Nama Z → A</SelectItem>
+                <SelectItem value="phone_asc">No. HP (A → Z)</SelectItem>
+                <SelectItem value="newest">Pelanggan Baru</SelectItem>
+                <SelectItem value="oldest">Pelanggan Lama</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
         <div className="text-sm text-gray-500">
           {searchQuery ? (
             <span>

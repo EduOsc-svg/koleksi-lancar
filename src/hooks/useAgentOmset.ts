@@ -11,6 +11,10 @@ export interface AgentOmsetData {
   total_omset: number;      // realized (cash basis lifetime)
   total_modal: number;      // realized (cash basis lifetime)
   total_contracts: number;  // jumlah kontrak yg pernah ada pembayaran
+  // Booked (contract-basis) totals
+  booked_total_omset?: number; // sum total_loan_amount for agent's contracts
+  booked_total_modal?: number; // sum omset (modal) for agent's contracts
+  booked_contracts_count?: number;
   profit: number;
   total_commission: number;
 }
@@ -46,6 +50,19 @@ export const useAgentOmset = () => {
       // Aggregate per agent
       const agentMap = new Map<string, { total_omset: number; total_modal: number; contract_ids: Set<string> }>();
 
+      // Also compute booked totals per agent (contract-basis)
+      const bookedMap = new Map<string, { booked_omset: number; booked_modal: number; booked_contracts: number }>();
+
+      (contracts || []).forEach((c: any) => {
+        const agentId = c.sales_agent_id;
+        if (!agentId) return;
+        const existingBooked = bookedMap.get(agentId) || { booked_omset: 0, booked_modal: 0, booked_contracts: 0 };
+        existingBooked.booked_omset += Number(c.total_loan_amount || 0);
+        existingBooked.booked_modal += Number(c.omset || 0);
+        existingBooked.booked_contracts += 1;
+        bookedMap.set(agentId, existingBooked);
+      });
+
       (contracts || []).forEach((c: any) => {
         const agentId = c.sales_agent_id;
         if (!agentId) return;
@@ -74,6 +91,8 @@ export const useAgentOmset = () => {
         const profit = total_omset - total_modal;
         const totalCommission = (total_omset * commissionPct) / 100;
 
+        const booked = bookedMap.get(agent.id) || { booked_omset: 0, booked_modal: 0, booked_contracts: 0 };
+
         return {
           agent_id: agent.id,
           agent_name: agent.name,
@@ -82,6 +101,9 @@ export const useAgentOmset = () => {
           total_omset,
           total_modal,
           total_contracts: data?.contract_ids.size || 0,
+          booked_total_omset: booked.booked_omset,
+          booked_total_modal: booked.booked_modal,
+          booked_contracts_count: booked.booked_contracts,
           profit,
           total_commission: totalCommission,
         };

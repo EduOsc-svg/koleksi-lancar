@@ -453,7 +453,13 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
                     <div className="content-area">
             <div className="data-row">
               <span className="label">No. Kupon</span>
-              <span className="value">: <span className="red-text">{coupon.installment_index}</span>-{contract.tenor_days}. {contract.sales_agents?.agent_code || '-'}{'/' + (contract.collectors?.collector_code || '-')}</span>
+              <span className="value">
+                : <span className="red-text">{coupon.installment_index}</span>-{contract.tenor_days}
+                {'\u00A0'.repeat(5)}
+                {contract.sales_agents?.agent_code || '-'}
+                {'/'}
+                {contract.collectors?.collector_code || '-'}
+              </span>
             </div>
                         <div className="data-row">
                             <span className="label">Nama</span>
