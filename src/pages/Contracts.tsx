@@ -319,7 +319,7 @@ export default function Contracts() {
           daily_installment_amount: dailyAmount,
           start_date: formData.start_date,
           status: formData.status,
-            omset: formData.modal || 0,
+            omset: Math.max(0, (formData.modal || 0) - (formData.dp || 0)),
             keuntungan: formData.keuntungan || 0,
         } as any);
         
@@ -377,7 +377,7 @@ export default function Contracts() {
         daily_installment_amount: dailyAmount,
         start_date: formData.start_date,
         status: formData.status,
-        omset: formData.modal || 0,
+        omset: Math.max(0, (formData.modal || 0) - (formData.dp || 0)),
       } as any);
 
       // Generate installment coupons for new active contracts
