@@ -5,40 +5,62 @@ declare module "recharts" {
   import * as React from "react";
 
   type AnyProps = Record<string, any>;
+  type AnyFC = React.FC<AnyProps>;
 
-  // Override the problematic class-component exports as permissive function components.
-  export const XAxis: React.FC<AnyProps>;
-  export const YAxis: React.FC<AnyProps>;
-  export const ZAxis: React.FC<AnyProps>;
-  export const Tooltip: React.FC<AnyProps>;
-  export const Legend: React.FC<AnyProps>;
-  export const Line: React.FC<AnyProps>;
-  export const Bar: React.FC<AnyProps>;
-  export const Area: React.FC<AnyProps>;
-  export const Pie: React.FC<AnyProps>;
-  export const Cell: React.FC<AnyProps>;
-  export const ReferenceLine: React.FC<AnyProps>;
-  export const ReferenceArea: React.FC<AnyProps>;
-  export const ReferenceDot: React.FC<AnyProps>;
-  export const Brush: React.FC<AnyProps>;
-  export const ErrorBar: React.FC<AnyProps>;
-  export const LabelList: React.FC<AnyProps>;
-  export const Label: React.FC<AnyProps>;
-  export const PolarAngleAxis: React.FC<AnyProps>;
-  export const PolarRadiusAxis: React.FC<AnyProps>;
-  export const PolarGrid: React.FC<AnyProps>;
-  export const Radar: React.FC<AnyProps>;
-  export const RadialBar: React.FC<AnyProps>;
-  export const Scatter: React.FC<AnyProps>;
-  export const Funnel: React.FC<AnyProps>;
-  export const Trapezoid: React.FC<AnyProps>;
-  export const Customized: React.FC<AnyProps>;
-  export const Cross: React.FC<AnyProps>;
-  export const Curve: React.FC<AnyProps>;
-  export const Dot: React.FC<AnyProps>;
-  export const Polygon: React.FC<AnyProps>;
-  export const Rectangle: React.FC<AnyProps>;
-  export const Sector: React.FC<AnyProps>;
-  export const Symbols: React.FC<AnyProps>;
-  export const Text: React.FC<AnyProps>;
+  // Chart containers
+  export const LineChart: AnyFC;
+  export const BarChart: AnyFC;
+  export const AreaChart: AnyFC;
+  export const PieChart: AnyFC;
+  export const RadarChart: AnyFC;
+  export const RadialBarChart: AnyFC;
+  export const ScatterChart: AnyFC;
+  export const ComposedChart: AnyFC;
+  export const FunnelChart: AnyFC;
+  export const Treemap: AnyFC;
+  export const Sankey: AnyFC;
+  export const ResponsiveContainer: AnyFC;
+  export const CartesianGrid: AnyFC;
+  export const CartesianAxis: AnyFC;
+
+  // Axes & cartesian elements
+  export const XAxis: AnyFC;
+  export const YAxis: AnyFC;
+  export const ZAxis: AnyFC;
+  export const Tooltip: AnyFC;
+  export const Legend: AnyFC;
+  export const Line: AnyFC;
+  export const Bar: AnyFC;
+  export const Area: AnyFC;
+  export const Pie: AnyFC;
+  export const Cell: AnyFC;
+  export const ReferenceLine: AnyFC;
+  export const ReferenceArea: AnyFC;
+  export const ReferenceDot: AnyFC;
+  export const Brush: AnyFC;
+  export const ErrorBar: AnyFC;
+  export const LabelList: AnyFC;
+  export const Label: AnyFC;
+  export const PolarAngleAxis: AnyFC;
+  export const PolarRadiusAxis: AnyFC;
+  export const PolarGrid: AnyFC;
+  export const Radar: AnyFC;
+  export const RadialBar: AnyFC;
+  export const Scatter: AnyFC;
+  export const Funnel: AnyFC;
+  export const Trapezoid: AnyFC;
+  export const Customized: AnyFC;
+  export const Cross: AnyFC;
+  export const Curve: AnyFC;
+  export const Dot: AnyFC;
+  export const Polygon: AnyFC;
+  export const Rectangle: AnyFC;
+  export const Sector: AnyFC;
+  export const Symbols: AnyFC;
+  export const Text: AnyFC;
+  export const Surface: AnyFC;
+
+  // Loose prop types
+  export type LegendProps = AnyProps;
+  export type TooltipProps<TValue = any, TName = any> = AnyProps;
 }
