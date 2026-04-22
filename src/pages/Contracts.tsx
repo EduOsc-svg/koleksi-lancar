@@ -208,6 +208,7 @@ export default function Contracts() {
           start_date: new Date().toISOString().split("T")[0],
           status: "active",
           modal: 0,
+          dp: 0,
           keuntungan: 0,
         });
         setDialogOpen(true);
@@ -232,6 +233,7 @@ export default function Contracts() {
       start_date: new Date().toISOString().split("T")[0],
       status: "active",
       modal: 0,
+      dp: 0,
       keuntungan: 0,
     });
     setDialogOpen(true);
@@ -251,6 +253,7 @@ export default function Contracts() {
       start_date: contract.start_date || new Date().toISOString().split("T")[0],
       status: contract.status,
       modal: (contract as any).omset || 0,
+      dp: 0,
       keuntungan: (contract as any).keuntungan || 0,
     });
     setDialogOpen(true);
