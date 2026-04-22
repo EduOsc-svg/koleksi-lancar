@@ -159,6 +159,7 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
         font-size: 10.5pt; 
         font-weight: normal; 
         color: #000;
+        text-decoration: underline;
       }
 
       .content-area {
@@ -194,11 +195,7 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
 
       .red-text { 
         color: red; 
-        font-weight: bold;
-        margin-left: 5mm;
-        text-align: center;
-        display: inline-block;
-        width: 15mm;
+      
       }
 
       .contract-code {
@@ -230,7 +227,7 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
 
       .footer {
         position: absolute; 
-        bottom: 1.5mm; 
+        bottom: 1.3mm; 
         width: 100%; 
         text-align: center;
         font-size: 10pt; 
@@ -297,7 +294,7 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
   const couponPages = groupCouponsIntoPages(coupons);
 
   // Constants
-  const REKENING_NUMBER = "008201003537567";
+  const REKENING_NUMBER = "0082-0100-3537-567";
   const KANTOR_NUMBER = "0821 8802 0656";
   const BG_IMAGE_URL = "https://uploads.onecompiler.io/3zcmc9fyy/448fk8uyf/Background%20WM%20SME2.jpg";
   
@@ -450,13 +447,13 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
                   <div className="content-layer">
                     {/* Title Section */}
                     <div className="title-section">
-                      <div className="voucher-title">BRI ({REKENING_NUMBER})</div>
+                      <div className="voucher-title">VOUCHER ANGSURAN</div>
                     </div>
 
                     <div className="content-area">
             <div className="data-row">
               <span className="label">No. Kupon</span>
-              <span className="value">: {`${coupon.installment_index}/${contract.tenor_days}/${contract.sales_agents?.agent_code || '-'}${'/' + (contract.collectors?.collector_code || '-')}`}</span>
+              <span className="value">: <span className="red-text">{coupon.installment_index}</span>-{contract.tenor_days}.      {contract.sales_agents?.agent_code || '-'}{'/' + (contract.collectors?.collector_code || '-')}</span>
             </div>
                         <div className="data-row">
                             <span className="label">Nama</span>
@@ -475,7 +472,13 @@ export function PrintCoupon8x5({ coupons, contract }: PrintCoupon8x5Props) {
                             <span className="value">: {formatDate(coupon.due_date)}</span>
                         </div>
             {/* Angsuran Ke row removed - included in No, Kupon field as installment/tenor/sales/collector */}
-            
+            <div className="data-row" >
+              <span style={{ fontWeight: 'bold' }} className="label">Rekening BRI( {REKENING_NUMBER})</span>
+            </div>
+            <div className="data-row">
+              <span className="label">A. N Sumber Mutiara Elektronik</span>
+            </div>
+
                     </div>
 
                     {/* Contract Code - positioned on the right side */}
