@@ -29,6 +29,9 @@ export interface AgentContractHistory {
   tenor_days: number;
   start_date: string;
   status: string;
+  customer_created_at?: string | null;
+  is_new_customer?: boolean;
+  is_new_contract?: boolean;
 }
 
 export const useAgentPerformance = () => {
@@ -138,7 +141,7 @@ export const useAgentContractHistory = (agentId: string | null) => {
       ] = await Promise.all([
         supabase
           .from('credit_contracts')
-          .select(`id, contract_ref, product_type, omset, total_loan_amount, tenor_days, start_date, status, sales_agent_id, customers(name)`)
+          .select(`id, contract_ref, product_type, omset, total_loan_amount, tenor_days, start_date, status, sales_agent_id, customers(name, created_at)`)
           .eq('sales_agent_id', agentId)
           .order('start_date', { ascending: false }),
         supabase.from('payment_logs').select('amount_paid, contract_id'),
@@ -155,6 +158,13 @@ export const useAgentContractHistory = (agentId: string | null) => {
           omset_full: Number(contract.total_loan_amount || 0),
           total_paid: totalPaid,
         });
+        const customerCreatedAt = contract.customers?.created_at || null;
+        const startDate = contract.start_date ? new Date(contract.start_date) : null;
+        const now = new Date();
+        const daysSinceContract = startDate ? Math.floor((now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) : null;
+        const daysSinceCustomer = customerCreatedAt ? Math.floor((now.getTime() - new Date(customerCreatedAt).getTime()) / (1000 * 60 * 60 * 24)) : null;
+        const isNewContract = daysSinceContract !== null ? (daysSinceContract <= 7) : false;
+        const isNewCustomer = daysSinceCustomer !== null ? (daysSinceCustomer <= 7) : false;
         return {
           contract_ref: contract.contract_ref,
           customer_name: contract.customers?.name || '-',
@@ -163,6 +173,9 @@ export const useAgentContractHistory = (agentId: string | null) => {
           modal: realized.modal_realized,
           omset: realized.omset_realized,
           profit: realized.profit_realized,
+          customer_created_at: customerCreatedAt,
+          is_new_customer: isNewCustomer,
+          is_new_contract: isNewContract,
           tenor_days: contract.tenor_days,
           start_date: contract.start_date,
           status: contract.status,

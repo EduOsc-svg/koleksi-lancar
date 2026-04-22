@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useMonthlyPerformance, useYearlyTarget } from "@/hooks/useMonthlyPerformance";
 import { useYearlyFinancialSummary } from "@/hooks/useYearlyFinancialSummary";
+import { useContracts } from '@/hooks/useContracts';
 import { useOperationalExpenses, useOperationalExpenseMutations, OperationalExpenseInput } from "@/hooks/useOperationalExpenses";
 import { useAgentContractHistory } from "@/hooks/useAgentPerformance";
 import { formatRupiah } from "@/lib/format";
@@ -58,6 +59,7 @@ export default function Dashboard() {
   });
   
   const { data: monthlyData, isLoading: isLoadingMonthly } = useMonthlyPerformance(selectedMonth);
+  const { data: contracts } = useContracts();
   const { data: yearlyData, isLoading: isLoadingYearly } = useYearlyTarget(selectedYear);
   const { data: yearlyFinancial, isLoading: isLoadingYearlyFinancial } = useYearlyFinancialSummary(selectedYear);
   const { data: expenses, isLoading: isLoadingExpenses } = useOperationalExpenses(selectedMonth);
@@ -78,6 +80,65 @@ export default function Dashboard() {
   const totalExpenses = useMemo(() => {
     return expenses?.reduce((sum, exp) => sum + Number(exp.amount), 0) ?? 0;
   }, [expenses]);
+
+  // Calculate total modal & omset based on contracts for the selected month
+  const contractTotals = useMemo(() => {
+    // Count contracts that are active during the selected month (not only those that start in that month)
+    // This avoids missing contracts that started earlier but are still active in the month.
+    if (!contracts) return { total_modal: 0, total_omset: 0 };
+    const monthStart = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth(), 1);
+    const monthEnd = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() + 1, 0);
+
+    let total_modal = 0;
+    let total_omset = 0;
+
+    contracts.forEach((c) => {
+      if (!c.start_date) return;
+      const start = new Date(c.start_date);
+      const end = new Date(start);
+      // tenor_days may be number of days; if missing, treat as single-day contract
+      end.setDate(end.getDate() + (Number(c.tenor_days || 0)));
+
+      // If contract period intersects the selected month, include it
+      if (start <= monthEnd && end >= monthStart) {
+        total_modal += Number(c.omset || 0);
+        total_omset += Number(c.total_loan_amount || 0);
+      }
+    });
+
+    return { total_modal, total_omset };
+  }, [contracts, selectedMonth]);
+
+  // Yearly contract totals (contract-basis) for selected year
+  const yearlyContractTotals = useMemo(() => {
+    if (!contracts) return { total_modal: 0, total_omset: 0 };
+    const yearNum = selectedYear.getFullYear();
+    let total_modal = 0;
+    let total_omset = 0;
+    contracts.forEach((c) => {
+      if (!c.start_date) return;
+      const s = new Date(c.start_date);
+      if (s.getFullYear() === yearNum) {
+        total_modal += Number(c.omset || 0);
+        total_omset += Number(c.total_loan_amount || 0);
+      }
+    });
+    return { total_modal, total_omset };
+  }, [contracts, selectedYear]);
+
+  // Calculate total modal & omset based on contracts for the selected YEAR (accrual basis)
+  const contractTotalsYearly = useMemo(() => {
+    if (!contracts) return { total_modal: 0, total_omset: 0 };
+    const yearNum = selectedYear.getFullYear();
+    const filtered = contracts.filter(c => {
+      if (!c.start_date) return false;
+      const d = new Date(c.start_date);
+      return d.getFullYear() === yearNum;
+    });
+    const total_modal = filtered.reduce((s, c) => s + Number(c.omset || 0), 0);
+    const total_omset = filtered.reduce((s, c) => s + Number(c.total_loan_amount || 0), 0);
+    return { total_modal, total_omset };
+  }, [contracts, selectedYear]);
 
   const grossProfit = useMemo(() => {
     const profit = monthlyData?.total_profit ?? 0;
@@ -169,7 +230,7 @@ export default function Dashboard() {
               icon={DollarSign}
               iconColor="text-blue-500"
               label="Total Modal"
-              value={monthlyData?.total_modal ?? 0}
+              value={contractTotals.total_modal}
             />
           </div>
           
@@ -178,7 +239,7 @@ export default function Dashboard() {
               icon={Wallet}
               iconColor="text-indigo-500"
               label="Omset"
-              value={monthlyData?.total_omset ?? 0}
+              value={contractTotals.total_omset}
             />
           </div>
 
@@ -502,7 +563,7 @@ export default function Dashboard() {
                   icon={DollarSign}
                   iconColor="text-blue-500"
                   label="Total Modal"
-                  value={yearlyFinancial?.total_modal ?? 0}
+                  value={contractTotalsYearly.total_modal}
                   subtitle={`Tahun ${selectedYear.getFullYear()}`}
                   hoverInfo={`Total: ${formatRupiah(yearlyFinancial?.total_modal ?? 0)} | ${yearlyFinancial?.contracts_count ?? 0} kontrak • Lancar: ${yearlyFinancial?.lancar_count ?? 0} | K.Lancar: ${yearlyFinancial?.kurang_lancar_count ?? 0} | Macet: ${yearlyFinancial?.macet_count ?? 0} | Lunas: ${yearlyFinancial?.completed_count ?? 0}`}
                 />
@@ -511,7 +572,7 @@ export default function Dashboard() {
                   icon={Wallet}
                   iconColor="text-indigo-500"
                   label="Total Omset"
-                  value={yearlyFinancial?.total_omset ?? 0}
+                  value={contractTotalsYearly.total_omset}
                   subtitle={`Tahun ${selectedYear.getFullYear()}`}
                   hoverInfo={`Total: ${formatRupiah(yearlyFinancial?.total_omset ?? 0)} | ${yearlyFinancial?.contracts_count ?? 0} kontrak • Lancar: ${yearlyFinancial?.lancar_count ?? 0} | K.Lancar: ${yearlyFinancial?.kurang_lancar_count ?? 0} | Macet: ${yearlyFinancial?.macet_count ?? 0} | Lunas: ${yearlyFinancial?.completed_count ?? 0}`}
                 />
@@ -709,8 +770,18 @@ export default function Dashboard() {
                         </TableCell>
                         <TableCell>
                           <div>
-                            <p className="font-mono text-sm">{item.contract_ref}</p>
-                            <p className="text-xs text-muted-foreground">{item.customer_name}</p>
+                            <div className="flex items-center gap-2">
+                              <p className="font-mono text-sm">{item.contract_ref}</p>
+                              {item.is_new_contract && (
+                                <span className="ml-2 px-2 py-0.5 rounded-full text-xs bg-blue-100 text-blue-700">Kontrak Baru</span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <p className="text-xs text-muted-foreground">{item.customer_name}</p>
+                              {item.is_new_customer && (
+                                <span className="ml-2 px-2 py-0.5 rounded-full text-xs bg-emerald-100 text-emerald-700">Pelanggan Baru</span>
+                              )}
+                            </div>
                           </div>
                         </TableCell>
                         <TableCell>{item.product_type || '-'}</TableCell>
