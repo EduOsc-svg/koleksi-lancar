@@ -283,10 +283,7 @@ export function OutstandingCouponsTable({ isLoading, handovers }: Props) {
               return (
                   <TableRow
                     key={h.id}
-                    className={cn('hover:bg-muted/30', onSelect ? 'cursor-pointer' : '')}
-                    onClick={() => {
-                      if (onSelect && h.credit_contracts?.id) onSelect(h.credit_contracts.id);
-                    }}
+                    className="hover:bg-muted/30"
                   >
                   <TableCell className="text-sm text-muted-foreground py-3">
                     {(currentPage - 1) * ITEMS_PER_PAGE + i + 1}
