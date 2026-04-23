@@ -81,33 +81,19 @@ export default function Dashboard() {
     return expenses?.reduce((sum, exp) => sum + Number(exp.amount), 0) ?? 0;
   }, [expenses]);
 
-  // Calculate total modal & omset based on contracts for the selected month
-  const contractTotals = useMemo(() => {
-    // Count contracts that are active during the selected month (not only those that start in that month)
-    // This avoids missing contracts that started earlier but are still active in the month.
-    if (!contracts) return { total_modal: 0, total_omset: 0 };
-    const monthStart = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth(), 1);
-    const monthEnd = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() + 1, 0);
+  // ===== CASH-BASIS TOTALS (konsisten dgn Profit & Komisi) =====
+  // Modal & Omset diakui PROPORSIONAL dari pembayaran yang masuk di bulan ini.
+  // Sumber: useMonthlyPerformance → realizeContract() per kontrak.
+  const contractTotals = useMemo(() => ({
+    total_modal: monthlyData?.total_modal ?? 0,
+    total_omset: monthlyData?.total_omset ?? 0,
+  }), [monthlyData?.total_modal, monthlyData?.total_omset]);
 
-    let total_modal = 0;
-    let total_omset = 0;
-
-    contracts.forEach((c) => {
-      if (!c.start_date) return;
-      const start = new Date(c.start_date);
-      const end = new Date(start);
-      // tenor_days may be number of days; if missing, treat as single-day contract
-      end.setDate(end.getDate() + (Number(c.tenor_days || 0)));
-
-      // If contract period intersects the selected month, include it
-      if (start <= monthEnd && end >= monthStart) {
-        total_modal += Number(c.omset || 0);
-        total_omset += Number(c.total_loan_amount || 0);
-      }
-    });
-
-    return { total_modal, total_omset };
-  }, [contracts, selectedMonth]);
+  // Total uang yang benar-benar tertagih bulan ini (cash inflow apa adanya)
+  const totalCollected = useMemo(
+    () => monthlyData?.total_collected ?? 0,
+    [monthlyData?.total_collected]
+  );
 
   // Yearly contract totals (contract-basis) for selected year
   const yearlyContractTotals = useMemo(() => {
@@ -150,15 +136,14 @@ export default function Dashboard() {
     return profit - commission - totalExpenses;
   }, [monthlyData?.total_profit, monthlyData?.total_commission, totalExpenses]);
 
-  // Margin keuntungan kotor = (keuntungan kotor / omset) * 100
+  // Margin keuntungan kotor cash-basis: (omset_realized - modal_realized) / modal_realized * 100
+  // = "berapa % markup dari modal terealisasi yang sudah menghasilkan omset"
   const grossProfitMargin = useMemo(() => {
-    // New formula: margin = (omset - modal) / modal * 100
-    // This represents "berapa % markup dari modal menghasilkan omset"
     const modal = monthlyData?.total_modal ?? 0;
     const omset = monthlyData?.total_omset ?? 0;
     if (modal <= 0) return 0;
     return ((omset - modal) / modal) * 100;
-  }, [monthlyData?.total_profit, monthlyData?.total_omset]);
+  }, [monthlyData?.total_modal, monthlyData?.total_omset]);
 
   const locale = i18n.language === 'id' ? 'id-ID' : 'en-US';
 
@@ -233,17 +218,21 @@ export default function Dashboard() {
             <StatCard
               icon={DollarSign}
               iconColor="text-blue-500"
-              label="Total Modal"
+              label="Modal Tertagih"
               value={contractTotals.total_modal}
+              subtitle="Realized bulan ini"
+              hoverInfo="Modal yang sudah terealisasi proporsional dari pembayaran masuk bulan ini (cash basis)."
             />
           </div>
-          
+
           <div className="w-[180px] flex-shrink-0">
             <StatCard
               icon={Wallet}
               iconColor="text-indigo-500"
-              label="Omset"
+              label="Omset Tertagih"
               value={contractTotals.total_omset}
+              subtitle="Realized bulan ini"
+              hoverInfo="Omset (harga jual) yang diakui dari pembayaran masuk bulan ini, proporsional thd nilai kontrak."
             />
           </div>
 
@@ -252,10 +241,10 @@ export default function Dashboard() {
               icon={TrendingUp}
               iconColor="text-green-500"
               label="Keuntungan Kotor"
-              // Keuntungan Kotor: gunakan cash-basis (realized) — omset_realized - modal_realized
               value={realizedProfit}
               valueColor="text-green-600"
-              subtitle="Sebelum operasional (Realized)"
+              subtitle="Omset − Modal (realized)"
+              hoverInfo="Keuntungan kotor dari uang yang sudah tertagih, sebelum dikurangi komisi & operasional."
             />
           </div>
 
@@ -263,10 +252,24 @@ export default function Dashboard() {
             <StatCard
               icon={CircleDollarSign}
               iconColor="text-emerald-500"
-              label="Margin Keuntungan Kotor"
+              label="Margin Kotor"
               value={grossProfitMargin}
               isPercentage
               valueColor={grossProfitMargin >= 0 ? 'text-green-600' : 'text-destructive'}
+              subtitle="(Omset − Modal) / Modal"
+              hoverInfo="Persentase markup dari modal terealisasi. Mis: 25% berarti tiap Rp 100 modal hasilkan Rp 25 keuntungan kotor."
+            />
+          </div>
+
+          <div className="w-[180px] flex-shrink-0">
+            <StatCard
+              icon={Percent}
+              iconColor="text-purple-500"
+              label="Total Komisi"
+              value={monthlyData?.total_commission ?? 0}
+              valueColor="text-purple-600"
+              subtitle="Semua sales bulan ini"
+              hoverInfo="Total komisi seluruh sales agent, dihitung dari omset tertagih × tier komisi masing-masing."
             />
           </div>
 
@@ -278,16 +281,8 @@ export default function Dashboard() {
               value={totalExpenses}
               valueColor="text-orange-600"
               isNegative
-            />
-          </div>
-
-          <div className="w-[180px] flex-shrink-0">
-            <StatCard
-              icon={Percent}
-              iconColor="text-purple-500"
-              label="Total Komisi"
-              value={monthlyData?.total_commission ?? 0}
-              valueColor="text-purple-600"
+              subtitle="Pengeluaran bulan ini"
+              hoverInfo="Total biaya operasional yang dicatat di bulan ini (transport, komunikasi, dll)."
             />
           </div>
 
