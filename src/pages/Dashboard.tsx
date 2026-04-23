@@ -140,11 +140,15 @@ export default function Dashboard() {
     return { total_modal, total_omset };
   }, [contracts, selectedYear]);
 
-  const grossProfit = useMemo(() => {
+  // Keuntungan Kotor berdasarkan cash-basis (realized): omset_realized - modal_realized
+  const realizedProfit = useMemo(() => monthlyData?.total_profit ?? 0, [monthlyData?.total_profit]);
+
+  // Keuntungan Bersih (net): realized profit dikurangi komisi dan biaya operasional
+  const netProfit = useMemo(() => {
     const profit = monthlyData?.total_profit ?? 0;
     const commission = monthlyData?.total_commission ?? 0;
-    return profit - commission;
-  }, [monthlyData?.total_profit, monthlyData?.total_commission]);
+    return profit - commission - totalExpenses;
+  }, [monthlyData?.total_profit, monthlyData?.total_commission, totalExpenses]);
 
   // Margin keuntungan kotor = (keuntungan kotor / omset) * 100
   const grossProfitMargin = useMemo(() => {
@@ -248,10 +252,10 @@ export default function Dashboard() {
               icon={TrendingUp}
               iconColor="text-green-500"
               label="Keuntungan Kotor"
-              // Per request: take Keuntungan Kotor from already collected (tertaged)
-              value={monthlyData?.total_collected ?? 0}
+              // Keuntungan Kotor: gunakan cash-basis (realized) — omset_realized - modal_realized
+              value={realizedProfit}
               valueColor="text-green-600"
-              subtitle="Sebelum operasional"
+              subtitle="Sebelum operasional (Realized)"
             />
           </div>
 
@@ -297,8 +301,8 @@ export default function Dashboard() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground mb-1">Keuntungan Bersih</p>
-              <p className={`text-3xl font-bold ${grossProfit >= 0 ? 'text-green-600' : 'text-destructive'}`}>
-                {formatRupiah(grossProfit)}
+              <p className={`text-3xl font-bold ${netProfit >= 0 ? 'text-green-600' : 'text-destructive'}`}>
+                {formatRupiah(netProfit)}
               </p>
             </div>
             <div className="text-right">

@@ -130,7 +130,10 @@ export const useYearlyFinancialSummary = (year: Date = new Date(), statusFilter:
       if (couponsError) throw couponsError;
       if (tiersError) throw tiersError;
 
-      const tiers = (tiersData || []) as CommissionTier[];
+  const tiers = (tiersData || []) as CommissionTier[];
+
+  // Year selector for booked calculations
+  const selectedYear = year.getFullYear();
 
       // Lookups
       const agentLookup = new Map<string, { code: string; name: string }>();
@@ -169,6 +172,25 @@ export const useYearlyFinancialSummary = (year: Date = new Date(), statusFilter:
       const agentYearlyOmset = new Map<string, number>();
       const agentYearlyModal = new Map<string, number>();
       const agentYearlyContracts = new Map<string, Set<string>>();
+
+      // Also compute booked (contract-basis) totals per agent for the selected year
+      // so commissions can "menyesuaikan omset" (use booked omset when present)
+      const agentYearlyBookedOmset = new Map<string, number>();
+      const agentYearlyBookedModal = new Map<string, number>();
+      const agentYearlyBookedContracts = new Map<string, Set<string>>();
+      (contracts || []).forEach((contract: any) => {
+        const startYear = contract.start_date ? new Date(contract.start_date).getFullYear() : NaN;
+        if (startYear !== selectedYear) return;
+        const dynamicStatus = calculateContractStatus(contract);
+        if (statusFilter !== 'all' && dynamicStatus !== statusFilter) return;
+        const agentId = contract.sales_agent_id;
+        if (!agentId) return;
+        agentYearlyBookedOmset.set(agentId, (agentYearlyBookedOmset.get(agentId) || 0) + Number(contract.total_loan_amount || 0));
+        agentYearlyBookedModal.set(agentId, (agentYearlyBookedModal.get(agentId) || 0) + Number(contract.omset || 0));
+        const set = agentYearlyBookedContracts.get(agentId) || new Set<string>();
+        set.add(contract.id);
+        agentYearlyBookedContracts.set(agentId, set);
+      });
 
       // Track allocated paid per contract so we don't exceed omset_full (handle overpayment)
       const allocatedByContract = new Map<string, number>();
@@ -243,29 +265,35 @@ export const useYearlyFinancialSummary = (year: Date = new Date(), statusFilter:
         }
       });
 
-      // Hitung komisi tahunan per agen berdasarkan omset tahunan yang direalisasi
+      // Hitung komisi per bulan per agen berdasarkan omset bulan tersebut (rekap tiap tanggal 1)
+      // Komisi tahunan agen = jumlah komisi tiap bulan (12 bulan atau rentang bulan yang dihitung)
       let totalCommission = 0;
       const agentYearlyCommission = new Map<string, number>();
-      agentYearlyOmset.forEach((omsetTotal, agentId) => {
-        const pct = omsetTotal > 0 ? calculateTieredCommission(omsetTotal, tiers) : 0;
-        const commission = (omsetTotal * pct) / 100;
-        agentYearlyCommission.set(agentId, commission);
-        totalCommission += commission;
+      const agentMonthlyCommission = new Map<string, Map<string, number>>(); // agentId -> monthKey -> commission
+
+      months.forEach((monthDate) => {
+        const monthKey = format(monthDate, 'yyyy-MM');
+        const agentMonth = monthlyAgentOmset.get(monthKey)!;
+        // compute commission for each agent for this month based on that month's omset
+        agentMonth.forEach((omsetMonth, agentId) => {
+          const commissionPct = omsetMonth > 0 ? calculateTieredCommission(omsetMonth, tiers) : 0;
+          const commissionForMonth = (omsetMonth * commissionPct) / 100;
+          if (!agentMonthlyCommission.has(agentId)) agentMonthlyCommission.set(agentId, new Map());
+          agentMonthlyCommission.get(agentId)!.set(monthKey, commissionForMonth);
+          // accumulate yearly per-agent
+          agentYearlyCommission.set(agentId, (agentYearlyCommission.get(agentId) || 0) + commissionForMonth);
+          totalCommission += commissionForMonth;
+        });
       });
 
-      // Alokasi komisi ke bulan dan ke kontrak proporsional terhadap omset bulan
+      // Alokasi komisi ke bulan dan ke kontrak: untuk setiap bulan, md.commission = jumlah komisi semua agen di bulan itu
       months.forEach((monthDate) => {
         const monthKey = format(monthDate, 'yyyy-MM');
         const md = monthlyData.get(monthKey)!;
-        const agentMonth = monthlyAgentOmset.get(monthKey)!;
         let monthCommission = 0;
-
-        agentMonth.forEach((omsetMonth, agentId) => {
-          const yearlyOmset = agentYearlyOmset.get(agentId) || 0;
-          const yearlyCommission = agentYearlyCommission.get(agentId) || 0;
-          if (yearlyOmset > 0) {
-            monthCommission += yearlyCommission * (omsetMonth / yearlyOmset);
-          }
+        // Sum commissions of all agents for this month
+        agentMonthlyCommission.forEach((monthMap) => {
+          monthCommission += monthMap.get(monthKey) || 0;
         });
 
         md.commission = monthCommission;
@@ -295,8 +323,7 @@ export const useYearlyFinancialSummary = (year: Date = new Date(), statusFilter:
 
       // Status counts (berdasarkan kontrak yang relevan dgn tahun ini)
       let completedCount = 0, activeCount = 0, lancarCount = 0, kurangLancarCount = 0, macetCount = 0;
-      let totalContractsCount = 0;
-      const selectedYear = year.getFullYear();
+  let totalContractsCount = 0;
 
       (contracts || []).forEach((contract: any) => {
         const startYear = new Date(contract.start_date).getFullYear();
@@ -327,7 +354,10 @@ export const useYearlyFinancialSummary = (year: Date = new Date(), statusFilter:
         const total_omset = agentYearlyOmset.get(agent.id) || 0;
         const total_modal = agentYearlyModal.get(agent.id) || 0;
         const total_commission = agentYearlyCommission.get(agent.id) || 0;
-        const commissionPct = total_omset > 0 ? calculateTieredCommission(total_omset, tiers) : 0;
+        // Commission percentage should be derived from the commission base (booked if present)
+        const bookedBase = agentYearlyBookedOmset.get(agent.id) || 0;
+        const commissionBase = bookedBase > 0 ? bookedBase : total_omset;
+        const commissionPct = commissionBase > 0 ? calculateTieredCommission(commissionBase, tiers) : 0;
         return {
           agent_id: agent.id,
           agent_name: agent.name,

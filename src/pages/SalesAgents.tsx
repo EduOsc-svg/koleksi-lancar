@@ -286,10 +286,11 @@ export default function SalesAgents() {
     const startRow1 = hRow1.number + 1;
 
     agents.forEach((agent, i) => {
-      const rowNum = startRow1 + i;
-      const omsetData = getAgentOmset(agent.id);
-      const totalOmset = omsetData?.total_omset || 0;
-      const dynamicPct = calculateTieredCommission(totalOmset, commissionTiers) / 100;
+  const rowNum = startRow1 + i;
+  const omsetData = getAgentOmset(agent.id);
+  // Use booked omset if available so commission follows displayed omset
+  const displayOmset = (omsetData?.booked_total_omset ?? omsetData?.total_omset) || 0;
+  const dynamicPct = calculateTieredCommission(displayOmset, commissionTiers) / 100;
 
       const dataRow = ws1.addRow([
         i + 1,
@@ -498,12 +499,12 @@ export default function SalesAgents() {
                 const omsetData = getAgentOmset(agent.id);
                 // Ensure we show a commission value even if the hook didn't compute it
                 const fallbackCommission = (() => {
-                  const totalOmset = omsetData?.total_omset || 0;
+                  const displayOmsetLocal = (omsetData?.booked_total_omset ?? omsetData?.total_omset) || 0;
                   // Try tiered commission first (if tiers present), otherwise use agent fixed pct
-                  const dynamicPct = commissionTiers && commissionTiers.length > 0
-                    ? calculateTieredCommission(totalOmset, commissionTiers)
+                  const dynamicPctLocal = commissionTiers && commissionTiers.length > 0
+                    ? calculateTieredCommission(displayOmsetLocal, commissionTiers)
                     : Number(agent.commission_percentage) || 0;
-                  const computed = (totalOmset * (Number(dynamicPct) || 0)) / 100;
+                  const computed = (displayOmsetLocal * (Number(dynamicPctLocal) || 0)) / 100;
                   return computed;
                 })();
                 return (

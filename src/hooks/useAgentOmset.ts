@@ -85,13 +85,17 @@ export const useAgentOmset = () => {
 
       const result: AgentOmsetData[] = (agents || []).map((agent) => {
         const data = agentMap.get(agent.id);
-        const total_omset = data?.total_omset || 0;
-        const total_modal = data?.total_modal || 0;
-        const commissionPct = total_omset > 0 ? calculateTieredCommission(total_omset, tiers) : 0;
-        const profit = total_omset - total_modal;
-        const totalCommission = (total_omset * commissionPct) / 100;
+    const total_omset = data?.total_omset || 0;
+    const total_modal = data?.total_modal || 0;
+    const booked = bookedMap.get(agent.id) || { booked_omset: 0, booked_modal: 0, booked_contracts: 0 };
 
-        const booked = bookedMap.get(agent.id) || { booked_omset: 0, booked_modal: 0, booked_contracts: 0 };
+    // Determine base omset for commission calculation:
+    // If the agent has booked (contract-basis) omset, use that as the commission base
+    // so that commission "menyesuaikan omset" (follows the displayed omset). Otherwise fall back to realized (cash-basis) omset.
+    const commissionBase = (booked.booked_omset && booked.booked_omset > 0) ? booked.booked_omset : total_omset;
+    const commissionPct = commissionBase > 0 ? calculateTieredCommission(commissionBase, tiers) : 0;
+    const profit = total_omset - total_modal;
+    const totalCommission = (commissionBase * commissionPct) / 100;
 
         return {
           agent_id: agent.id,
