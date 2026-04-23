@@ -298,7 +298,7 @@ export default function SalesAgents() {
         agent.name,
         agent.phone || '-',
         dynamicPct,
-        totalOmset,
+        displayOmset,
         { formula: `F${rowNum}*E${rowNum}` },
         omsetData?.total_contracts || 0,
       ]);
