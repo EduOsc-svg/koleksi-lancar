@@ -81,33 +81,19 @@ export default function Dashboard() {
     return expenses?.reduce((sum, exp) => sum + Number(exp.amount), 0) ?? 0;
   }, [expenses]);
 
-  // Calculate total modal & omset based on contracts for the selected month
-  const contractTotals = useMemo(() => {
-    // Count contracts that are active during the selected month (not only those that start in that month)
-    // This avoids missing contracts that started earlier but are still active in the month.
-    if (!contracts) return { total_modal: 0, total_omset: 0 };
-    const monthStart = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth(), 1);
-    const monthEnd = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() + 1, 0);
+  // ===== CASH-BASIS TOTALS (konsisten dgn Profit & Komisi) =====
+  // Modal & Omset diakui PROPORSIONAL dari pembayaran yang masuk di bulan ini.
+  // Sumber: useMonthlyPerformance → realizeContract() per kontrak.
+  const contractTotals = useMemo(() => ({
+    total_modal: monthlyData?.total_modal ?? 0,
+    total_omset: monthlyData?.total_omset ?? 0,
+  }), [monthlyData?.total_modal, monthlyData?.total_omset]);
 
-    let total_modal = 0;
-    let total_omset = 0;
-
-    contracts.forEach((c) => {
-      if (!c.start_date) return;
-      const start = new Date(c.start_date);
-      const end = new Date(start);
-      // tenor_days may be number of days; if missing, treat as single-day contract
-      end.setDate(end.getDate() + (Number(c.tenor_days || 0)));
-
-      // If contract period intersects the selected month, include it
-      if (start <= monthEnd && end >= monthStart) {
-        total_modal += Number(c.omset || 0);
-        total_omset += Number(c.total_loan_amount || 0);
-      }
-    });
-
-    return { total_modal, total_omset };
-  }, [contracts, selectedMonth]);
+  // Total uang yang benar-benar tertagih bulan ini (cash inflow apa adanya)
+  const totalCollected = useMemo(
+    () => monthlyData?.total_collected ?? 0,
+    [monthlyData?.total_collected]
+  );
 
   // Yearly contract totals (contract-basis) for selected year
   const yearlyContractTotals = useMemo(() => {
