@@ -136,15 +136,14 @@ export default function Dashboard() {
     return profit - commission - totalExpenses;
   }, [monthlyData?.total_profit, monthlyData?.total_commission, totalExpenses]);
 
-  // Margin keuntungan kotor = (keuntungan kotor / omset) * 100
+  // Margin keuntungan kotor cash-basis: (omset_realized - modal_realized) / modal_realized * 100
+  // = "berapa % markup dari modal terealisasi yang sudah menghasilkan omset"
   const grossProfitMargin = useMemo(() => {
-    // New formula: margin = (omset - modal) / modal * 100
-    // This represents "berapa % markup dari modal menghasilkan omset"
     const modal = monthlyData?.total_modal ?? 0;
     const omset = monthlyData?.total_omset ?? 0;
     if (modal <= 0) return 0;
     return ((omset - modal) / modal) * 100;
-  }, [monthlyData?.total_profit, monthlyData?.total_omset]);
+  }, [monthlyData?.total_modal, monthlyData?.total_omset]);
 
   const locale = i18n.language === 'id' ? 'id-ID' : 'en-US';
 
