@@ -42,6 +42,8 @@ import {
   SalesAgent,
 } from "@/hooks/useSalesAgents";
 import { useAgentOmset } from "@/hooks/useAgentOmset";
+import { useMonthlyPerformance } from '@/hooks/useMonthlyPerformance';
+import { useYearlyFinancialSummary } from '@/hooks/useYearlyFinancialSummary';
 import { usePagination } from "@/hooks/usePagination";
 import { TablePagination } from "@/components/TablePagination";
 import { formatRupiah } from "@/lib/format";
@@ -56,6 +58,17 @@ export default function SalesAgents() {
   const highlightId = searchParams.get('highlight');
   const { data: agents, isLoading } = useSalesAgents();
   const { data: agentOmsetData } = useAgentOmset();
+  // period can be 'monthly' | 'yearly' | 'lifetime'
+  const periodParam = searchParams.get('period') || 'monthly';
+  const monthParam = searchParams.get('month'); // optional yyyy-MM or yyyy-MM-dd
+  const yearParam = searchParams.get('year');
+
+  // resolve month/year for hooks
+  const selectedMonthForHook = monthParam ? new Date(monthParam) : new Date();
+  const selectedYearForHook = yearParam ? new Date(Number(yearParam), 0, 1) : new Date();
+
+  const { data: monthlyData } = useMonthlyPerformance(selectedMonthForHook);
+  const { data: yearlyFinancial } = useYearlyFinancialSummary(selectedYearForHook as Date);
   const { data: commissionTiers } = useCommissionTiers();
   const createAgent = useCreateSalesAgent();
   const updateAgent = useUpdateSalesAgent();
@@ -179,8 +192,41 @@ export default function SalesAgents() {
   };
 
   const getAgentOmset = (agentId: string) => {
-    return agentOmsetData?.find((d) => d.agent_id === agentId);
+    // Build a period-specific map for quick lookup
+    // monthlyData.agents (if period=monthly) and yearlyFinancial.agents (if period=yearly) contain per-agent summaries
+    let periodRecord: any = undefined;
+    if (periodParam === 'monthly' && monthlyData?.agents) {
+      periodRecord = monthlyData.agents.find((a: any) => a.agent_id === agentId || a.agent_code === getAgentCode(agentId));
+    } else if (periodParam === 'yearly' && yearlyFinancial?.agents) {
+      periodRecord = yearlyFinancial.agents.find((a: any) => a.agent_id === agentId || a.agent_code === getAgentCode(agentId));
+    }
+
+    const lifetime = agentOmsetData?.find((d) => d.agent_id === agentId);
+
+    // Normalize fields expected by the UI: total_omset, total_commission, commission_percentage, total_contracts
+    const normalized: any = {
+      agent_id: agentId,
+      agent_name: undefined,
+      agent_code: undefined,
+      commission_percentage: periodRecord?.commission_percentage ?? lifetime?.commission_percentage ?? 0,
+      total_omset: periodRecord?.total_omset ?? lifetime?.total_omset ?? 0,
+      total_modal: periodRecord?.total_modal ?? lifetime?.total_modal ?? 0,
+      total_contracts: periodRecord?.total_contracts ?? lifetime?.total_contracts ?? 0,
+      total_commission: periodRecord?.total_commission ?? lifetime?.total_commission ?? 0,
+      booked_total_omset: lifetime?.booked_total_omset,
+      booked_total_modal: lifetime?.booked_total_modal,
+      booked_contracts_count: lifetime?.booked_contracts_count,
+      profit: periodRecord?.profit ?? lifetime?.profit ?? 0,
+    };
+
+    return normalized;
   };
+
+  // helper to map agent id -> agent_code (sales agent objects provide code)
+  const getAgentCode = (agentId: string) => {
+    const ag = agents?.find(a => a.id === agentId);
+    return ag?.agent_code;
+  }
 
   const handleSubmit = async () => {
     try {
