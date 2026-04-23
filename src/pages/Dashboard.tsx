@@ -218,17 +218,21 @@ export default function Dashboard() {
             <StatCard
               icon={DollarSign}
               iconColor="text-blue-500"
-              label="Total Modal"
+              label="Modal Tertagih"
               value={contractTotals.total_modal}
+              subtitle="Realized bulan ini"
+              hoverInfo="Modal yang sudah terealisasi proporsional dari pembayaran masuk bulan ini (cash basis)."
             />
           </div>
-          
+
           <div className="w-[180px] flex-shrink-0">
             <StatCard
               icon={Wallet}
               iconColor="text-indigo-500"
-              label="Omset"
+              label="Omset Tertagih"
               value={contractTotals.total_omset}
+              subtitle="Realized bulan ini"
+              hoverInfo="Omset (harga jual) yang diakui dari pembayaran masuk bulan ini, proporsional thd nilai kontrak."
             />
           </div>
 
@@ -237,10 +241,10 @@ export default function Dashboard() {
               icon={TrendingUp}
               iconColor="text-green-500"
               label="Keuntungan Kotor"
-              // Keuntungan Kotor: gunakan cash-basis (realized) — omset_realized - modal_realized
               value={realizedProfit}
               valueColor="text-green-600"
-              subtitle="Sebelum operasional (Realized)"
+              subtitle="Omset − Modal (realized)"
+              hoverInfo="Keuntungan kotor dari uang yang sudah tertagih, sebelum dikurangi komisi & operasional."
             />
           </div>
 
@@ -248,10 +252,24 @@ export default function Dashboard() {
             <StatCard
               icon={CircleDollarSign}
               iconColor="text-emerald-500"
-              label="Margin Keuntungan Kotor"
+              label="Margin Kotor"
               value={grossProfitMargin}
               isPercentage
               valueColor={grossProfitMargin >= 0 ? 'text-green-600' : 'text-destructive'}
+              subtitle="(Omset − Modal) / Modal"
+              hoverInfo="Persentase markup dari modal terealisasi. Mis: 25% berarti tiap Rp 100 modal hasilkan Rp 25 keuntungan kotor."
+            />
+          </div>
+
+          <div className="w-[180px] flex-shrink-0">
+            <StatCard
+              icon={Percent}
+              iconColor="text-purple-500"
+              label="Total Komisi"
+              value={monthlyData?.total_commission ?? 0}
+              valueColor="text-purple-600"
+              subtitle="Semua sales bulan ini"
+              hoverInfo="Total komisi seluruh sales agent, dihitung dari omset tertagih × tier komisi masing-masing."
             />
           </div>
 
@@ -263,16 +281,8 @@ export default function Dashboard() {
               value={totalExpenses}
               valueColor="text-orange-600"
               isNegative
-            />
-          </div>
-
-          <div className="w-[180px] flex-shrink-0">
-            <StatCard
-              icon={Percent}
-              iconColor="text-purple-500"
-              label="Total Komisi"
-              value={monthlyData?.total_commission ?? 0}
-              valueColor="text-purple-600"
+              subtitle="Pengeluaran bulan ini"
+              hoverInfo="Total biaya operasional yang dicatat di bulan ini (transport, komunikasi, dll)."
             />
           </div>
 
